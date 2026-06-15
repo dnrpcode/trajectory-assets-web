@@ -23,7 +23,9 @@ export class FirebaseUserRepository implements IUserRepository {
     const ref = doc(db, 'users', id);
     const snap = await getDoc(ref);
     if (!snap.exists()) return null;
-    return fromFirestore(snap.data() as Record<string, unknown>);
+    const user = fromFirestore(snap.data() as Record<string, unknown>);
+    // Ensure id is set from document ID
+    return { ...user, id: snap.id };
   }
 
   async create(user: User): Promise<void> {
