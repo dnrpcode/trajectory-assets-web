@@ -2,8 +2,9 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, writeBatch } from 'firebase/firestore';
+import { getFirestore, collection, doc, writeBatch } from 'firebase/firestore';
 import { config } from 'dotenv';
+import readline from 'readline';
 
 config();
 
@@ -20,10 +21,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const TEST_EMAIL = 'test@trajectory.local';
-const TEST_PASSWORD = 'Test123456!';
-const TEST_USER_ID = 'GZoWUjiyC7gYFwVYv6s1oLoDf3g1';
-
 function stripUndefined(obj) {
   const result = {};
   for (const [key, value] of Object.entries(obj)) {
@@ -32,38 +29,47 @@ function stripUndefined(obj) {
   return result;
 }
 
-async function seedData() {
-  console.log('🌱 Starting Firebase seed...');
+function prompt(question) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer);
+    });
+  });
+}
+
+async function seedDataForEmail(email, password, displayName) {
+  console.log(`\n🌱 Seeding data for: ${email}`);
 
   try {
-    // 1. Create or sign in test user
-    let userId = TEST_USER_ID;
+    let userId;
     try {
-      const userCred = await createUserWithEmailAndPassword(auth, TEST_EMAIL, TEST_PASSWORD);
-      await updateProfile(userCred.user, { displayName: 'Test Investor' });
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCred.user, { displayName });
       userId = userCred.user.uid;
-      console.log('✓ Created test user:', TEST_EMAIL);
+      console.log('✓ Created new user');
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
-        await signInWithEmailAndPassword(auth, TEST_EMAIL, TEST_PASSWORD);
-        console.log('✓ Signed in to existing user:', TEST_EMAIL);
+        await signInWithEmailAndPassword(auth, email, password);
+        const currentUser = auth.currentUser;
+        userId = currentUser.uid;
+        console.log('✓ Signed in to existing user');
       } else {
         throw err;
       }
     }
 
-    // Get the actual user ID from auth
-    const currentUser = auth.currentUser;
-    if (!currentUser) throw new Error('Failed to authenticate');
-    userId = currentUser.uid;
-
     const batch = writeBatch(db);
 
-    // 2. Create User document
+    // Create User document
     const userDocRef = doc(db, 'users', userId);
     batch.set(userDocRef, {
-      email: TEST_EMAIL,
-      displayName: 'Test Investor',
+      email,
+      displayName,
       riskProfile: 'moderate',
       investmentHorizon: 'medium',
       onboardingComplete: true,
@@ -80,7 +86,7 @@ async function seedData() {
       updatedAt: new Date(),
     });
 
-    // 3. Create Assets & Entries
+    // Create Assets & Entries
     const assets = [
       { name: 'BBCA', category: 'saham', platform: 'Stockbit' },
       { name: 'BMRI', category: 'saham', platform: 'Stockbit' },
@@ -94,15 +100,13 @@ async function seedData() {
     const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
     const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
+    let entryCount = 0;
+
     for (const asset of assets) {
       const assetId = `${userId}_${asset.name.toLowerCase().replace(/\s+/g, '_')}_${asset.category}`;
 
-      // Create entries for this asset
-      const entryIds = [];
-
       // Entry 1: new_position (2 months ago)
       const entry1Id = doc(collection(db, 'users', userId, 'entries')).id;
-      entryIds.push(entry1Id);
       batch.set(doc(db, 'users', userId, 'entries', entry1Id), stripUndefined({
         id: entry1Id,
         userId,
@@ -122,10 +126,10 @@ async function seedData() {
         updatedAt: new Date(twoMonthsAgo.getFullYear(), twoMonthsAgo.getMonth(), 15),
         isCorrected: false,
       }));
+      entryCount++;
 
       // Entry 2: price_update (1 month ago)
       const entry2Id = doc(collection(db, 'users', userId, 'entries')).id;
-      entryIds.push(entry2Id);
       batch.set(doc(db, 'users', userId, 'entries', entry2Id), stripUndefined({
         id: entry2Id,
         userId,
@@ -144,10 +148,10 @@ async function seedData() {
         updatedAt: new Date(oneMonthAgo.getFullYear(), oneMonthAgo.getMonth(), 15),
         isCorrected: false,
       }));
+      entryCount++;
 
       // Entry 3: income (current month)
       const entry3Id = doc(collection(db, 'users', userId, 'entries')).id;
-      entryIds.push(entry3Id);
       batch.set(doc(db, 'users', userId, 'entries', entry3Id), stripUndefined({
         id: entry3Id,
         userId,
@@ -167,8 +171,9 @@ async function seedData() {
         updatedAt: new Date(now.getFullYear(), now.getMonth(), 10),
         isCorrected: false,
       }));
+      entryCount++;
 
-      // Create Asset projection (computed from entries)
+      // Create Asset projection
       const firstEntry = {
         id: entry1Id,
         pricePerUnit: Math.floor(Math.random() * 100000) + 10000,
@@ -210,8 +215,8 @@ async function seedData() {
       }));
     }
 
-    // 4. Create Portfolio History (monthly snapshots)
-    let baseValue = 50000000; // Rp 50 juta
+    // Create Portfolio History
+    let baseValue = 50000000;
     for (let i = 2; i >= 0; i--) {
       const historyDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthStr = `${historyDate.getFullYear()}-${String(historyDate.getMonth() + 1).padStart(2, '0')}`;
@@ -237,33 +242,36 @@ async function seedData() {
       });
     }
 
-    // Commit all writes
+    // Commit
     await batch.commit();
-    console.log('✓ Batch committed successfully!');
 
-    console.log('\n📊 Seed data summary:');
-    console.log(`  • User ID: ${userId}`);
-    console.log(`  • Assets created: 6`);
-    console.log(`  • Entries per asset: 3`);
-    console.log(`  • Total entries: 18`);
-    console.log(`  • Portfolio history months: 3`);
-
-    console.log('\n✅ Seed data created successfully!');
-    console.log('\nTest credentials:');
-    console.log(`  Email: ${TEST_EMAIL}`);
-    console.log(`  Password: ${TEST_PASSWORD}`);
-    console.log('\nYou can now log in and see:');
-    console.log('  • 6 assets (saham, reksa_dana, obligasi_sbn, emas, kripto)');
-    console.log('  • Multiple entries (new_position, price_update, income)');
-    console.log('  • Portfolio history (3 months of data)');
-    console.log('  • Dashboard with allocation chart and wealth growth');
+    console.log(`✓ Batch committed!`);
+    console.log(`\n📊 Summary:`);
+    console.log(`  • Assets: 6`);
+    console.log(`  • Entries: ${entryCount}`);
+    console.log(`  • Portfolio months: 3`);
+    console.log(`\n✅ Done!\n`);
 
   } catch (error) {
-    console.error('❌ Error seeding data:', error.message);
-    console.error('Code:', error.code);
-    console.error('Full error:', error);
+    console.error('❌ Error:', error.message);
+    throw error;
+  }
+}
+
+async function main() {
+  console.log('📧 Seed Custom Email\n');
+
+  const email = await prompt('Email address: ');
+  const password = await prompt('Password: ');
+  const displayName = await prompt('Display name: ');
+
+  try {
+    await seedDataForEmail(email, password, displayName);
+    console.log(`✨ All done! Login with ${email}`);
+  } catch (error) {
+    console.error('Failed:', error.message);
     process.exit(1);
   }
 }
 
-seedData();
+main();

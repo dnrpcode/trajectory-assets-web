@@ -1,122 +1,153 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bot, Send } from 'lucide-react';
+import { Bot, Send, Check, X, AlertTriangle, ShieldCheck, PieChart } from 'lucide-react';
 import { Asset } from '../../../domain/entities/Asset';
 import { User } from '../../../domain/entities/User';
-import { computeCategoryBreakdown, getRebalancingRecommendations } from '../../../shared/utils/portfolioProjections';
-import { formatCurrencyCompact } from '../../../shared/utils/formatCurrency';
+import { AllocationTarget, RiskProfile } from '../../../shared/types';
+import { useClaudeAdvisor, PendingAction } from '../../hooks/useClaudeAdvisor';
+import { CATEGORY_LABELS } from '../../../shared/constants/categories';
 
 interface Props {
   assets: Asset[];
   user: User;
-}
-
-interface Message {
-  id: string;
-  role: 'user' | 'robo';
-  text: string;
-  timestamp: Date;
+  onUpdateRiskProfile?: (riskProfile: RiskProfile) => Promise<void>;
+  onUpdateTargetAllocation?: (allocation: AllocationTarget) => Promise<void>;
 }
 
 const QUICK_PROMPTS = [
   'Bagaimana kondisi portofolio saya?',
-  'Apa rekomendasi rebalancing?',
-  'Jelaskan profil risiko saya',
-  'Estimasi proyeksi CAGR saya',
+  'Rekomendasikan rebalancing',
+  'Ubah profil risiko saya',
+  'Jelaskan target alokasi saya',
 ];
 
-function buildWelcome(user: User): string {
-  return `Halo, ${user.displayName?.split(' ')[0] ?? 'Investor'}! 👋 Saya Robo Advisor Trajectory. Saat ini profil risiko Anda adalah **${user.riskProfile}** dengan horizon investasi **${user.investmentHorizon}**. Tanyakan apa saja seputar portofolio, rebalancing, atau proyeksi investasi Anda.`;
+const RISK_LABEL: Record<RiskProfile, string> = {
+  conservative: 'Konservatif',
+  moderate: 'Moderat',
+  aggressive: 'Agresif',
+};
+
+function renderMarkdown(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith('**') && part.endsWith('**')
+      ? <strong key={i}>{part.slice(2, -2)}</strong>
+      : <span key={i}>{part}</span>,
+  );
 }
 
-function processQuery(query: string, assets: Asset[], user: User): string {
-  const activeAssets = assets.filter((a) => a.status === 'active');
-  const totalValue = activeAssets.reduce((s, a) => s + a.currentValueIDR, 0);
+function ActionCard({
+  action,
+  isApplying,
+  onConfirm,
+  onDismiss,
+}: {
+  action: PendingAction;
+  isApplying: boolean;
+  onConfirm: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      className="mx-1 rounded-2xl p-4"
+      style={{ background: 'var(--bg-raised)', border: '1px solid var(--ai-accent)', borderBottomLeftRadius: '4px' }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        {action.type === 'updateRiskProfile' ? (
+          <ShieldCheck size={15} style={{ color: 'var(--ai-accent)' }} strokeWidth={2} />
+        ) : (
+          <PieChart size={15} style={{ color: 'var(--ai-accent)' }} strokeWidth={2} />
+        )}
+        <span className="text-xs font-semibold" style={{ color: 'var(--ai-accent)' }}>
+          Usulan Perubahan
+        </span>
+      </div>
 
-  const q = query.toLowerCase();
+      <p className="text-sm mb-3" style={{ color: 'var(--text-primary)', lineHeight: 'var(--leading-relaxed)' }}>
+        {action.summary}
+      </p>
 
-  if (q.includes('kondisi') || q.includes('overview') || q.includes('ringkasan') || q.includes('summary')) {
-    if (totalValue === 0) {
-      return 'Portofolio Anda masih kosong. Mulai dengan menambah posisi investasi pertama Anda di halaman Portfolio.';
-    }
-    const topAsset = [...activeAssets].sort((a, b) => b.currentValueIDR - a.currentValueIDR)[0];
-    const unrealized = activeAssets.reduce((s, a) => s + a.unrealizedGainIDR, 0);
-    const unrealizedPct = totalValue > 0 ? (unrealized / activeAssets.reduce((s, a) => s + a.totalCostBasisIDR, 0)) * 100 : 0;
-    return `Portofolio Anda saat ini bernilai **${formatCurrencyCompact(totalValue)}** dengan ${activeAssets.length} aset aktif. Unrealized gain/loss: **${unrealizedPct >= 0 ? '+' : ''}${unrealizedPct.toFixed(2)}%** (${formatCurrencyCompact(unrealized)}). Aset terbesar: **${topAsset?.assetName ?? '-'}** senilai ${formatCurrencyCompact(topAsset?.currentValueIDR ?? 0)}.`;
-  }
+      {action.type === 'updateRiskProfile' && action.riskProfile && (
+        <div
+          className="rounded-lg px-3 py-2 mb-3 text-sm font-medium"
+          style={{ background: 'var(--bg-overlay)', color: 'var(--text-secondary)' }}
+        >
+          Profil baru: <strong style={{ color: 'var(--text-primary)' }}>{RISK_LABEL[action.riskProfile]}</strong>
+        </div>
+      )}
 
-  if (q.includes('rebalancing') || q.includes('alokasi') || q.includes('distribusi') || q.includes('rekomendasi')) {
-    if (totalValue === 0) {
-      return 'Belum ada aset aktif untuk dianalisis. Tambahkan posisi investasi terlebih dahulu.';
-    }
-    const breakdown = computeCategoryBreakdown(assets, user);
-    const { score, advices } = getRebalancingRecommendations(breakdown, totalValue);
-    if (advices.length === 0) {
-      return `Skor rebalancing Anda **${score}/100** — portofolio Anda sudah cukup seimbang dengan profil risiko ${user.riskProfile}. Pertahankan alokasi saat ini dan lakukan review bulanan.`;
-    }
-    const topAdvice = advices[0];
-    return `Skor rebalancing Anda **${score}/100**. Rekomendasi utama: ${topAdvice.description} Total ada ${advices.length} rekomendasi — lihat halaman Rebalancing untuk detail lengkap.`;
-  }
+      {action.type === 'updateTargetAllocation' && action.targetAllocation && (
+        <div
+          className="rounded-lg px-3 py-2 mb-3 space-y-1"
+          style={{ background: 'var(--bg-overlay)' }}
+        >
+          {(Object.entries(action.targetAllocation) as [keyof AllocationTarget, number][])
+            .filter(([, v]) => v > 0)
+            .sort(([, a], [, b]) => b - a)
+            .map(([cat, pct]) => (
+              <div key={cat} className="flex items-center justify-between text-xs">
+                <span style={{ color: 'var(--text-secondary)' }}>{CATEGORY_LABELS[cat]}</span>
+                <span className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>{pct}%</span>
+              </div>
+            ))}
+        </div>
+      )}
 
-  if (q.includes('profil risiko') || q.includes('risk profile') || q.includes('konservatif') || q.includes('moderat') || q.includes('agresif')) {
-    const desc: Record<string, string> = {
-      conservative: 'Profil Konservatif mengutamakan keamanan modal. Alokasi lebih besar ke obligasi, reksa dana pendapatan tetap, dan emas. Cocok untuk investor yang tidak suka volatilitas tinggi.',
-      moderate: 'Profil Moderat menyeimbangkan antara pertumbuhan dan stabilitas. Kombinasi saham, reksa dana campuran, dan obligasi. Volatilitas sedang dengan potensi return menengah.',
-      aggressive: 'Profil Agresif mengejar return maksimal dengan toleransi risiko tinggi. Porsi saham dan kripto lebih besar. Cocok untuk investor jangka panjang yang siap dengan fluktuasi besar.',
-    };
-    return `Profil risiko Anda saat ini: **${user.riskProfile}** (horizon: ${user.investmentHorizon}). ${desc[user.riskProfile] ?? ''} Ubah profil risiko kapan saja di halaman Pengaturan.`;
-  }
-
-  if (q.includes('cagr') || q.includes('proyeksi') || q.includes('pertumbuhan') || q.includes('simulasi')) {
-    if (totalValue === 0) {
-      return 'Belum ada data portofolio untuk menghitung proyeksi CAGR. Tambahkan aset terlebih dahulu.';
-    }
-    const defaultRate = 8.5;
-    const optimistic = Math.min(40, defaultRate * 1.5).toFixed(1);
-    const pessimistic = Math.max(2, defaultRate * 0.5).toFixed(1);
-    return `Berdasarkan kontribusi bulanan Anda, proyeksi CAGR estimasi base rate sekitar **${defaultRate}%/tahun**. Skenario optimis: ~${optimistic}%/tahun, pesimis: ~${pessimistic}%/tahun. Kunjungi halaman Simulasi CAGR untuk menyesuaikan parameter dan melihat grafik proyeksi lengkap.`;
-  }
-
-  if (q.includes('saham') || q.includes('reksa dana') || q.includes('emas') || q.includes('kripto') || q.includes('obligasi')) {
-    const breakdown = computeCategoryBreakdown(assets, user);
-    const matches = breakdown.filter((b) => q.includes(b.label.toLowerCase()) || q.includes(b.category));
-    if (matches.length > 0) {
-      const cat = matches[0];
-      return `Alokasi **${cat.label}** Anda saat ini **${cat.actualPercentage.toFixed(1)}%** (target: ${cat.targetPercentage}%). Gap: ${cat.gap > 0 ? '+' : ''}${cat.gap.toFixed(1)}%. ${Math.abs(cat.gap) > 3 ? (cat.gap > 0 ? 'Kategori ini overweight — pertimbangkan pengurangan.' : 'Kategori ini underweight — pertimbangkan penambahan.') : 'Alokasi sudah mendekati target.'}`;
-    }
-  }
-
-  return `Maaf, saya belum bisa menjawab pertanyaan tersebut secara spesifik. Coba tanyakan tentang: kondisi portofolio, rekomendasi rebalancing, profil risiko Anda, atau proyeksi CAGR. Gunakan tombol cepat di bawah untuk memulai.`;
+      <div className="flex gap-2">
+        <button
+          onClick={onConfirm}
+          disabled={isApplying}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity disabled:opacity-50"
+          style={{ background: 'var(--ai-accent)', color: '#fff' }}
+        >
+          <Check size={12} strokeWidth={2.5} />
+          {isApplying ? 'Menyimpan...' : 'Terapkan'}
+        </button>
+        <button
+          onClick={onDismiss}
+          disabled={isApplying}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity disabled:opacity-50"
+          style={{ background: 'var(--bg-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }}
+        >
+          <X size={12} strokeWidth={2.5} />
+          Batalkan
+        </button>
+      </div>
+    </div>
+  );
 }
 
-export function RoboAdvisorChat({ assets, user }: Props) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '0',
-      role: 'robo',
-      text: buildWelcome(user),
-      timestamp: new Date(),
-    },
-  ]);
+function NoApiKeyBanner() {
+  return (
+    <div
+      className="flex items-start gap-3 mx-4 my-4 p-4 rounded-xl"
+      style={{ background: 'var(--warn-tint)', border: '1px solid var(--warn-400)' }}
+    >
+      <AlertTriangle size={16} strokeWidth={2} style={{ color: 'var(--warn-400)', flexShrink: 0, marginTop: 1 }} />
+      <div>
+        <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>API Key Belum Dikonfigurasi</p>
+        <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: 'var(--leading-relaxed)' }}>
+          Tambahkan <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>VITE_ANTHROPIC_API_KEY</code> ke file <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>.env</code> lalu restart dev server.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTargetAllocation }: Props) {
+  const { messages, isLoading, pendingAction, hasApiKey, sendMessage, dismissAction } = useClaudeAdvisor(assets, user);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [messages, isLoading, pendingAction]);
 
   const send = (text: string) => {
-    if (!text.trim()) return;
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', text: text.trim(), timestamp: new Date() };
-    setMessages((prev) => [...prev, userMsg]);
+    if (!text.trim() || isLoading) return;
+    sendMessage(text);
     setInput('');
-    setIsTyping(true);
-    setTimeout(() => {
-      const reply = processQuery(text, assets, user);
-      const roboMsg: Message = { id: (Date.now() + 1).toString(), role: 'robo', text: reply, timestamp: new Date() };
-      setMessages((prev) => [...prev, roboMsg]);
-      setIsTyping(false);
-    }, 700);
   };
 
   const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -126,21 +157,30 @@ export function RoboAdvisorChat({ assets, user }: Props) {
     }
   };
 
-  const renderText = (text: string) => {
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i}>{part.slice(2, -2)}</strong>;
+  const handleConfirmAction = async () => {
+    if (!pendingAction || isApplying) return;
+    setIsApplying(true);
+    try {
+      if (pendingAction.type === 'updateRiskProfile' && pendingAction.riskProfile && onUpdateRiskProfile) {
+        await onUpdateRiskProfile(pendingAction.riskProfile);
+        setSuccessMsg(`Profil risiko diubah ke ${RISK_LABEL[pendingAction.riskProfile]}`);
+      } else if (pendingAction.type === 'updateTargetAllocation' && pendingAction.targetAllocation && onUpdateTargetAllocation) {
+        await onUpdateTargetAllocation(pendingAction.targetAllocation);
+        setSuccessMsg('Target alokasi berhasil diperbarui');
       }
-      return <span key={i}>{part}</span>;
-    });
+      dismissAction();
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   return (
     <div
       className="flex flex-col rounded-3xl overflow-hidden"
-      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', height: '520px' }}
+      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', height: '560px' }}
     >
+      {/* Header */}
       <div
         className="flex items-center gap-3 px-5 py-4 border-b flex-shrink-0"
         style={{ background: 'var(--bg-raised)', borderColor: 'var(--border-subtle)' }}
@@ -153,32 +193,81 @@ export function RoboAdvisorChat({ assets, user }: Props) {
         </div>
         <div>
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Robo Advisor</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Berbasis data portofolio Anda</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>claude-haiku-4-5 · data portofolio real-time</p>
         </div>
         <div
           className="ml-auto text-xs px-2 py-1 rounded-full"
-          style={{ background: 'var(--gain-tint)', color: 'var(--gain-400)', border: '1px solid rgba(15,186,130,0.22)' }}
+          style={
+            hasApiKey
+              ? { background: 'var(--gain-tint)', color: 'var(--gain-400)', border: '1px solid rgba(15,186,130,0.22)' }
+              : { background: 'var(--warn-tint)', color: 'var(--warn-400)', border: '1px solid rgba(245,158,11,0.22)' }
+          }
         >
-          Online
+          {hasApiKey ? 'Online' : 'Setup diperlukan'}
         </div>
       </div>
 
+      {!hasApiKey && <NoApiKeyBanner />}
+
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+        {messages.length === 0 && hasApiKey && (
+          <div className="flex justify-center items-center h-full">
+            <div className="text-center">
+              <div
+                className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center"
+                style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-subtle)' }}
+              >
+                <Bot size={22} strokeWidth={1.75} style={{ color: 'var(--ai-accent)' }} />
+              </div>
+              <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                Halo, {user.displayName?.split(' ')[0]}!
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Tanyakan apa saja tentang portofolio Anda
+              </p>
+            </div>
+          </div>
+        )}
+
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className="max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
+              className="max-w-[85%] rounded-2xl px-4 py-3 text-sm"
               style={
                 msg.role === 'user'
-                  ? { background: 'var(--blue-500)', color: 'var(--text-on-accent)', borderBottomRightRadius: '4px' }
+                  ? { background: 'var(--blue-500)', color: 'var(--text-on-accent)', borderBottomRightRadius: '4px', lineHeight: 'var(--leading-relaxed)' }
                   : { background: 'var(--bg-raised)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', borderBottomLeftRadius: '4px', lineHeight: 'var(--leading-relaxed)' }
               }
             >
-              {renderText(msg.text)}
+              {renderMarkdown(msg.content)}
             </div>
           </div>
         ))}
-        {isTyping && (
+
+        {/* Pending action card */}
+        {pendingAction && (
+          <ActionCard
+            action={pendingAction}
+            isApplying={isApplying}
+            onConfirm={handleConfirmAction}
+            onDismiss={dismissAction}
+          />
+        )}
+
+        {/* Success toast */}
+        {successMsg && (
+          <div
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium"
+            style={{ background: 'var(--gain-tint)', color: 'var(--gain-400)', border: '1px solid rgba(15,186,130,0.22)' }}
+          >
+            <Check size={13} strokeWidth={2.5} />
+            {successMsg}
+          </div>
+        )}
+
+        {/* Typing indicator */}
+        {isLoading && (
           <div className="flex justify-start">
             <div
               className="rounded-2xl px-4 py-3 flex items-center gap-1.5"
@@ -197,13 +286,15 @@ export function RoboAdvisorChat({ assets, user }: Props) {
         <div ref={bottomRef} />
       </div>
 
-      <div className="flex-shrink-0 px-4 pb-3">
+      {/* Input area */}
+      <div className="flex-shrink-0 px-4 pb-4 pt-2">
         <div className="flex gap-2 mb-3 flex-wrap">
           {QUICK_PROMPTS.map((prompt) => (
             <button
               key={prompt}
               onClick={() => send(prompt)}
-              className="text-xs px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
+              disabled={isLoading || !hasApiKey}
+              className="text-xs px-3 py-1.5 rounded-full transition-opacity hover:opacity-80 disabled:opacity-40"
               style={{ background: 'var(--blue-tint)', color: 'var(--blue-300)', border: '1px solid rgba(77,124,255,0.22)' }}
             >
               {prompt}
@@ -212,16 +303,17 @@ export function RoboAdvisorChat({ assets, user }: Props) {
         </div>
         <div className="flex gap-2">
           <input
-            className="flex-1 rounded-xl text-sm px-4 py-2.5 outline-none transition-colors"
+            className="flex-1 rounded-xl text-sm px-4 py-2.5 outline-none"
             style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
-            placeholder="Ketik pertanyaan..."
+            placeholder={hasApiKey ? 'Ketik pertanyaan...' : 'Konfigurasi API key terlebih dahulu'}
             value={input}
+            disabled={!hasApiKey}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
           />
           <button
             onClick={() => send(input)}
-            disabled={!input.trim() || isTyping}
+            disabled={!input.trim() || isLoading || !hasApiKey}
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-40"
             style={{ background: 'var(--blue-500)', color: '#fff' }}
           >
