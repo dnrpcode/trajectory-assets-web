@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  User, Mail, Shield, Clock, Bot, Moon, Sun, Globe, LogOut, Check, Save,
+  User, Mail, Shield, Clock, Bot, Moon, Sun, Globe, LogOut, Check, Save, TrendingUp,
 } from 'lucide-react';
 import { Layout } from '../../components/ui/Layout';
 import { Button } from '../../components/ui/Button';
@@ -14,7 +14,8 @@ import { useAuthStore } from '../../hooks/useAuth';
 import { useThemeContext } from '../../contexts/ThemeContext';
 import { updateUserProfile, logout } from '../../../infrastructure/di/container';
 import { getAllocationTarget } from '../../../shared/constants/allocationTargets';
-import { RiskProfile, InvestmentHorizon } from '../../../shared/types';
+import { RiskProfile, InvestmentHorizon, AllocationTarget, AssetCategory } from '../../../shared/types';
+import { CATEGORY_LABELS, CATEGORY_COLORS } from '../../../shared/constants/categories';
 
 const schema = z.object({
   displayName: z.string().min(2, 'Minimal 2 karakter'),
@@ -85,6 +86,100 @@ function OptionCard({
   );
 }
 
+const CATEGORIES: AssetCategory[] = ['saham', 'reksa_dana', 'obligasi_sbn', 'emas', 'kripto', 'cash', 'lainnya'];
+
+function AllocationSimulation({
+  current,
+  preview,
+  changed,
+}: {
+  current: AllocationTarget;
+  preview: AllocationTarget;
+  changed: boolean;
+}) {
+  return (
+    <div style={{ background: 'var(--bg-surface)', border: `1.5px solid ${changed ? 'var(--blue-400)' : 'var(--border-subtle)'}`, borderRadius: 16, overflow: 'hidden', transition: 'border-color 300ms' }}>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--bg-raised)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--blue-400)' }}>
+            <TrendingUp size={14} strokeWidth={2} />
+          </div>
+          <h2 style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, margin: 0 }}>Simulasi Alokasi</h2>
+        </div>
+        {changed && (
+          <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--blue-tint)', color: 'var(--blue-300)', border: '1px solid rgba(77,124,255,0.25)', letterSpacing: '0.04em' }}>
+            BERUBAH
+          </span>
+        )}
+      </div>
+
+      {/* Stacked bar */}
+      <div style={{ padding: '16px 18px 12px' }}>
+        <p style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 8 }}>
+          {changed ? 'Preview alokasi baru' : 'Alokasi saat ini'}
+        </p>
+        <div style={{ display: 'flex', height: 10, borderRadius: 6, overflow: 'hidden', gap: 1 }}>
+          {CATEGORIES.filter((c) => preview[c] > 0).map((cat) => (
+            <div
+              key={cat}
+              title={`${CATEGORY_LABELS[cat]}: ${preview[cat]}%`}
+              style={{
+                flex: preview[cat],
+                background: CATEGORY_COLORS[cat],
+                transition: 'flex 400ms cubic-bezier(0.4,0,0.2,1)',
+                minWidth: preview[cat] > 0 ? 2 : 0,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Per-category rows */}
+      <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {CATEGORIES.map((cat) => {
+          const cur = current[cat];
+          const nxt = preview[cat];
+          const diff = nxt - cur;
+          if (cur === 0 && nxt === 0) return null;
+          return (
+            <div key={cat} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center' }}>
+              {/* Label + bar */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: CATEGORY_COLORS[cat], flexShrink: 0 }} />
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>{CATEGORY_LABELS[cat]}</span>
+                </div>
+                <div style={{ height: 3, borderRadius: 2, background: 'var(--bg-overlay)', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${nxt}%`,
+                    background: CATEGORY_COLORS[cat],
+                    transition: 'width 400ms cubic-bezier(0.4,0,0.2,1)',
+                    borderRadius: 2,
+                  }} />
+                </div>
+              </div>
+              {/* New pct */}
+              <span style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', minWidth: 32, textAlign: 'right' }}>
+                {nxt}%
+              </span>
+              {/* Diff badge */}
+              <span style={{
+                fontSize: '10px', fontWeight: 600, minWidth: 36, textAlign: 'right',
+                color: diff > 0 ? 'var(--gain-400)' : diff < 0 ? 'var(--loss-400)' : 'var(--text-muted)',
+                opacity: changed && diff !== 0 ? 1 : 0,
+                transition: 'opacity 250ms',
+              }}>
+                {diff > 0 ? `+${diff}%` : `${diff}%`}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
@@ -133,6 +228,10 @@ export function SettingsPage() {
   const riskProfile = useWatch({ control, name: 'riskProfile' });
   const investmentHorizon = useWatch({ control, name: 'investmentHorizon' });
   const aiHistoryEnabled = useWatch({ control, name: 'aiHistoryEnabled' });
+
+  const currentAllocation = user?.targetAllocation ?? getAllocationTarget(user?.riskProfile ?? 'moderate', user?.investmentHorizon ?? 'medium');
+  const previewAllocation = getAllocationTarget(riskProfile as RiskProfile, investmentHorizon as InvestmentHorizon);
+  const allocationChanged = riskProfile !== user?.riskProfile || investmentHorizon !== user?.investmentHorizon;
 
   const onSubmit = async (data: FormValues) => {
     if (!user) return;
@@ -271,6 +370,13 @@ export function SettingsPage() {
 
           {/* ── Right column ── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Allocation simulation */}
+            <AllocationSimulation
+              current={currentAllocation}
+              preview={previewAllocation}
+              changed={allocationChanged}
+            />
 
             {/* AI & Appearance */}
             <SectionCard icon={<Bot size={14} strokeWidth={2} />} title="AI & Tampilan">
