@@ -184,7 +184,7 @@ function NoApiKeyBanner() {
 }
 
 export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTargetAllocation }: Props) {
-  const { messages, isLoading, pendingAction, hasApiKey, sendMessage, dismissAction } = useClaudeAdvisor(assets, user);
+  const { messages, isLoading, isTyping, pendingAction, hasApiKey, sendMessage, dismissAction } = useClaudeAdvisor(assets, user);
   const [input, setInput] = useState('');
   const [isApplying, setIsApplying] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -192,7 +192,7 @@ export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTar
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading, pendingAction]);
+  }, [messages, isLoading, isTyping, pendingAction]);
 
   const send = (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -243,7 +243,7 @@ export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTar
         </div>
         <div>
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Robo Advisor</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>claude-haiku-4-5 · data portofolio real-time</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>AI berbasis {import.meta.env.VITE_AI_MODEL?.split('/')[1] || 'model'} · real-time</p>
         </div>
         <div
           className="ml-auto text-xs px-2 py-1 rounded-full"
@@ -317,7 +317,7 @@ export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTar
         )}
 
         {/* Typing indicator */}
-        {isLoading && (
+        {(isLoading || isTyping) && (
           <div className="flex justify-start">
             <div
               className="rounded-2xl px-4 py-3 flex items-center gap-1.5"
