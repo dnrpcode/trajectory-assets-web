@@ -16,6 +16,10 @@ export const GOLD_PLATFORMS = [
   'Pegadaian', 'ANTAMLogam', 'Tokopedia Emas', 'Pluang', 'Lainnya',
 ];
 
+export const BANK_PLATFORMS = [
+  'BCA Blu', 'Mandiri', 'BCA', 'BRI', 'BNI', 'CIMB Niaga', 'Permata',
+];
+
 export const DEFAULT_PLATFORMS = ['Lainnya'];
 
 export const ALL_PLATFORMS = [
@@ -24,5 +28,6 @@ export const ALL_PLATFORMS = [
     ...REKSA_DANA_PLATFORMS,
     ...CRYPTO_PLATFORMS,
     ...GOLD_PLATFORMS,
+    ...BANK_PLATFORMS,
   ]),
 ];

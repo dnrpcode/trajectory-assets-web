@@ -11,6 +11,7 @@ import { ALL_PLATFORMS } from '../../../shared/constants/platforms';
 import { useCreateEntry } from '../../hooks/useEntries';
 import { useAuthStore } from '../../hooks/useAuth';
 import { useThemeContext } from '../../contexts/ThemeContext';
+import { formatCurrency } from '../../../shared/utils/formatCurrency';
 
 const formEntryTypes = [
   'new_position',
@@ -170,6 +171,8 @@ export function EntryForm({
 
   const entryType = watch('entryType');
   const currency = watch('currency');
+  const watchedPrice = watch('pricePerUnit');
+  const watchedUnits = watch('units');
 
   const needsPrice   = ['new_position', 'price_update', 'top_up', 'partial_sell', 'full_sell'].includes(entryType);
   const needsUnits   = ['new_position', 'top_up', 'partial_sell'].includes(entryType);
@@ -356,6 +359,7 @@ export function EntryForm({
               label={`${t('entry.pricePerUnit')} (${currency}) *`}
               placeholder="0"
               prefix={currency === 'IDR' ? 'Rp' : currency}
+              allowDecimal
               error={errors.pricePerUnit?.message}
               value={field.value}
               onChange={field.onChange}
@@ -382,6 +386,33 @@ export function EntryForm({
             />
           )}
         />
+      )}
+
+      {/* Total estimate: price × units */}
+      {needsPrice && needsUnits && watchedPrice && watchedUnits && watchedPrice > 0 && watchedUnits > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'var(--bg-overlay)',
+            border: '1px solid var(--border-dim)',
+            borderRadius: 'var(--radius-md)',
+            padding: '8px 14px',
+          }}
+        >
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {watchedUnits.toLocaleString('id-ID', { maximumFractionDigits: 8 })} unit
+            {' × '}
+            {currency !== 'IDR' ? currency + ' ' : 'Rp '}
+            {watchedPrice.toLocaleString('id-ID', { maximumFractionDigits: 8 })}
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+            {currency === 'IDR'
+              ? formatCurrency(watchedPrice * watchedUnits)
+              : `${currency} ${(watchedPrice * watchedUnits).toLocaleString('id-ID', { maximumFractionDigits: 4 })}`}
+          </span>
+        </div>
       )}
 
       {/* Income / fee category */}
