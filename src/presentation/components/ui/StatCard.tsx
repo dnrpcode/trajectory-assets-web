@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/shared/utils/cn';
 
 interface StatCardProps {
-  label: string;
+  label: React.ReactNode;
   value: string | number;
   change?: number;
   changeLabel?: string;

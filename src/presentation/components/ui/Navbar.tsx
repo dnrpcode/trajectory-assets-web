@@ -1,47 +1,20 @@
 
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut } from 'lucide-react';
+import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut, BookOpen } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { useAuthStore } from '@/presentation/hooks/useAuth';
 import { logout as logoutUseCase } from '@/infrastructure/di/container';
 
 const navItems = [
-  {
-    to: '/dashboard',
-    labelKey: 'nav.dashboard',
-    icon: <LayoutGrid size={18} strokeWidth={1.75} />,
-  },
-  {
-    to: '/portfolio',
-    labelKey: 'nav.portfolio',
-    icon: <Activity size={18} strokeWidth={1.75} />,
-  },
-  {
-    to: '/journal',
-    labelKey: 'nav.journal',
-    icon: <FileText size={18} strokeWidth={1.75} />,
-  },
-  {
-    to: '/advisory',
-    labelKey: 'nav.advisory',
-    icon: <ShieldCheck size={18} strokeWidth={1.75} />,
-  },
-  {
-    to: '/projections',
-    labelKey: 'nav.projections',
-    icon: <TrendingUp size={18} strokeWidth={1.75} />,
-  },
-  {
-    to: '/chat',
-    labelKey: 'nav.chat',
-    icon: <MessageSquare size={18} strokeWidth={1.75} />,
-  },
-  {
-    to: '/settings',
-    labelKey: 'nav.settings',
-    icon: <Settings size={18} strokeWidth={1.75} />,
-  },
+  { to: '/dashboard', labelKey: 'nav.dashboard', icon: <LayoutGrid size={18} strokeWidth={1.75} />, dataTour: 'nav-dashboard' },
+  { to: '/portfolio', labelKey: 'nav.portfolio', icon: <Activity size={18} strokeWidth={1.75} />, dataTour: 'nav-portfolio' },
+  { to: '/advisory', labelKey: 'nav.advisory', icon: <ShieldCheck size={18} strokeWidth={1.75} />, dataTour: 'nav-advisory' },
+  { to: '/projections', labelKey: 'nav.projections', icon: <TrendingUp size={18} strokeWidth={1.75} />, dataTour: 'nav-projections' },
+  { to: '/chat', labelKey: 'nav.chat', icon: <MessageSquare size={18} strokeWidth={1.75} />, dataTour: 'nav-chat' },
+  { to: '/journal', labelKey: 'nav.journal', icon: <FileText size={18} strokeWidth={1.75} />, dataTour: 'nav-journal' },
+  { to: '/settings', labelKey: 'nav.settings', icon: <Settings size={18} strokeWidth={1.75} />, dataTour: 'nav-settings' },
+  { to: '/help', labelKey: 'nav.help', icon: <BookOpen size={18} strokeWidth={1.75} />, dataTour: 'nav-help' },
 ];
 
 function LogoMark({ size = 28 }: { size?: number }) {
@@ -87,10 +60,11 @@ export function Navbar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map(({ to, labelKey, icon }) => (
+        {navItems.map(({ to, labelKey, icon, dataTour }) => (
           <NavLink
             key={to}
             to={to}
+            data-tour={dataTour}
             className={({ isActive }) =>
               cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-[background,color] duration-150 group',

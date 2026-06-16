@@ -28,7 +28,7 @@ const INCOME_FEE_CATEGORY_VALUES = [
   'dividend', 'coupon', 'interest', 'platform_fee', 'tax', 'other',
 ] as const;
 
-const schema = z.object({
+const baseSchema = z.object({
   entryType: z.enum(formEntryTypes),
   assetId: z.string().optional(),
   assetName: z.string().min(1, 'Nama aset wajib diisi'),
@@ -45,7 +45,34 @@ const schema = z.object({
   notes: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+const schema = baseSchema
+  .refine(
+    (d) => d.currency === 'IDR' || (d.exchangeRateToIDR != null && d.exchangeRateToIDR > 0),
+    { message: 'Kurs ke IDR wajib diisi (> 0)', path: ['exchangeRateToIDR'] },
+  )
+  .refine(
+    (d) => {
+      const needs = ['new_position', 'price_update', 'top_up', 'partial_sell', 'full_sell'].includes(d.entryType);
+      return !needs || (d.pricePerUnit != null && d.pricePerUnit > 0);
+    },
+    { message: 'Harga per unit wajib diisi', path: ['pricePerUnit'] },
+  )
+  .refine(
+    (d) => {
+      const needs = ['new_position', 'top_up', 'partial_sell'].includes(d.entryType);
+      return !needs || (d.units != null && d.units > 0);
+    },
+    { message: 'Jumlah unit wajib diisi', path: ['units'] },
+  )
+  .refine(
+    (d) => {
+      const needs = ['income', 'fee'].includes(d.entryType);
+      return !needs || (d.amount != null && d.amount > 0);
+    },
+    { message: 'Jumlah wajib diisi', path: ['amount'] },
+  );
+
+type FormValues = z.infer<typeof baseSchema>;
 
 
 interface Props {
@@ -170,7 +197,7 @@ export function EntryForm({
       entryType: data.entryType,
       month,
       currency: data.currency,
-      exchangeRateToIDR: currency === 'IDR' ? 1 : (data.exchangeRateToIDR ?? 1),
+      exchangeRateToIDR: data.currency === 'IDR' ? 1 : data.exchangeRateToIDR!,
       pricePerUnit: data.pricePerUnit || undefined,
       units: data.units || undefined,
       amount: data.amount || undefined,
@@ -307,8 +334,9 @@ export function EntryForm({
             control={control}
             render={({ field }) => (
               <NumericInput
-                label={t('entry.exchangeRate')}
+                label={`${t('entry.exchangeRate')} *`}
                 placeholder="cth: 15.800"
+                error={errors.exchangeRateToIDR?.message}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { registerWithEmail, loginWithGoogle, getUserById } from '@/infrastructure/di/container';
 import { Button } from '@/presentation/components/ui/Button';
 import { Input } from '@/presentation/components/ui/Input';
@@ -35,6 +36,7 @@ function LogoMark() {
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [error, setError] = useState('');
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -46,7 +48,7 @@ export function RegisterPage() {
       await registerWithEmail.execute(email, password, displayName);
       navigate('/onboarding');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Registrasi gagal');
+      setError(e instanceof Error ? e.message : t('auth.registerFailed'));
     }
   };
 
@@ -57,7 +59,7 @@ export function RegisterPage() {
       const user = await getUserById.execute(authUser.uid);
       navigate(user?.onboardingComplete ? '/dashboard' : '/onboarding');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Login gagal');
+      setError(e instanceof Error ? e.message : t('auth.loginFailed'));
     }
   };
 
@@ -68,7 +70,7 @@ export function RegisterPage() {
           <LogoMark />
           <div className="text-center">
             <h1 className="text-2xl font-bold text-[var(--text-primary)]" style={{ letterSpacing: 'var(--tracking-snug)' }}>Trajectory</h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Mulai perjalanan investasi Anda</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{t('auth.registerTagline')}</p>
           </div>
         </div>
 
@@ -77,7 +79,7 @@ export function RegisterPage() {
           style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
         >
           <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-6" style={{ letterSpacing: 'var(--tracking-snug)' }}>
-            Buat akun baru
+            {t('auth.registerTitle')}
           </h2>
 
           {error && (
@@ -91,34 +93,34 @@ export function RegisterPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
-              label="Nama Lengkap"
-              placeholder="Nama kamu"
+              label={t('auth.fullName')}
+              placeholder={t('auth.fullNamePlaceholder')}
               error={errors.displayName?.message}
               {...register('displayName')}
             />
             <Input
-              label="Email"
+              label={t('auth.email')}
               type="email"
-              placeholder="kamu@email.com"
+              placeholder={t('auth.emailPlaceholder')}
               error={errors.email?.message}
               {...register('email')}
             />
             <Input
-              label="Password"
+              label={t('auth.password')}
               type="password"
-              placeholder="Minimal 6 karakter"
+              placeholder={t('auth.passwordMinPlaceholder')}
               error={errors.password?.message}
               {...register('password')}
             />
             <Input
-              label="Konfirmasi Password"
+              label={t('auth.confirmPassword')}
               type="password"
-              placeholder="Ulangi password"
+              placeholder={t('auth.confirmPasswordPlaceholder')}
               error={errors.confirmPassword?.message}
               {...register('confirmPassword')}
             />
             <Button type="submit" loading={isSubmitting} fullWidth size="lg" className="mt-2">
-              Buat Akun
+              {t('auth.createAccount')}
             </Button>
           </form>
 
@@ -130,7 +132,7 @@ export function RegisterPage() {
               className="relative flex justify-center text-xs px-2"
               style={{ color: 'var(--text-muted)', background: 'var(--bg-surface)' }}
             >
-              atau
+              {t('common.or')}
             </div>
           </div>
 
@@ -148,13 +150,13 @@ export function RegisterPage() {
               </svg>
             }
           >
-            Daftar dengan Google
+            {t('auth.registerWithGoogle')}
           </Button>
 
           <p className="text-center text-sm mt-6" style={{ color: 'var(--text-secondary)' }}>
-            Sudah punya akun?{' '}
+            {t('auth.hasAccount')}{' '}
             <Link to="/login" className="font-medium hover:underline" style={{ color: 'var(--blue-400)' }}>
-              Masuk di sini
+              {t('auth.loginNow')}
             </Link>
           </p>
         </div>

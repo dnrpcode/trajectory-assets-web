@@ -16,8 +16,9 @@ import { usePortfolioSummary, usePortfolioHistory } from '@/presentation/hooks/u
 import { useActiveAssets } from '@/presentation/hooks/useAssets';
 import { useAuthStore } from '@/presentation/hooks/useAuth';
 import { formatCurrencyCompact, formatPercent } from '@/shared/utils/formatCurrency';
+import { InfoTooltip } from '@/presentation/components/ui/InfoTooltip';
 import { CATEGORY_LABELS } from '@/shared/constants/categories';
-import { calculateCAGR, computeCategoryBreakdown, getRebalancingRecommendations } from '@/shared/utils/portfolioProjections';
+import { computeSmartCAGR, computeCategoryBreakdown, getRebalancingRecommendations } from '@/shared/utils/portfolioProjections';
 
 export function DashboardPage() {
   const { t } = useTranslation();
@@ -35,13 +36,11 @@ export function DashboardPage() {
     ? (monthOverMonth / history[history.length - 2].totalValueIDR) * 100
     : 0;
 
-  let cagrRate = 8.5;
-  if (history.length >= 2) {
-    const start = history[0].totalValueIDR;
-    const end = history[history.length - 1].totalValueIDR;
-    const calc = calculateCAGR(start, end, history.length - 1);
-    if (calc > 0 && calc < 150) cagrRate = Math.round(calc * 100) / 100;
-  }
+  const { rate: cagrRate } = computeSmartCAGR(
+    history,
+    summary?.allocationActual,
+    user?.riskProfile ?? 'moderate',
+  );
 
   const totalAssetValue = assets.filter((a) => a.status === 'active').reduce((s, a) => s + a.currentValueIDR, 0);
   const breakdown = user ? computeCategoryBreakdown(assets, user) : [];
@@ -83,7 +82,7 @@ export function DashboardPage() {
         <EmptyState onAdd={() => setAddModalOpen(true)} />
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-tour="dashboard-stats">
             <StatCard
               label={t('dashboard.totalValue')}
               value={formatCurrencyCompact(summary.totalValueIDR)}
@@ -94,14 +93,14 @@ export function DashboardPage() {
               className="col-span-2"
             />
             <StatCard
-              label={t('dashboard.unrealizedGain')}
+              label={<span className="flex items-center gap-1">{t('dashboard.unrealizedGain')} <InfoTooltip content={t('tooltip.unrealizedGain')} /></span>}
               value={formatCurrencyCompact(summary.unrealizedGainIDR)}
               change={parseFloat(summary.unrealizedGainPct.toFixed(2))}
               changeLabel={formatPercent(summary.unrealizedGainPct)}
               mono={false}
             />
             <StatCard
-              label={t('dashboard.cagrLabel')}
+              label={<span className="flex items-center gap-1">{t('dashboard.cagrLabel')} <InfoTooltip content={t('tooltip.cagr')} /></span>}
               value={`${cagrRate.toFixed(1)}%`}
               changeLabel={t('dashboard.cagrSuffix')}
               mono={false}
@@ -137,12 +136,13 @@ export function DashboardPage() {
               </Card>
 
               <div
+                data-tour="rebalancing-score"
                 className="rounded-[var(--card-radius)] p-5 flex flex-col items-center cursor-pointer transition-opacity hover:opacity-80"
                 style={{ background: scoreBg, border: `1px solid ${scoreColor}33` }}
                 onClick={() => navigate('/advisory')}
               >
-                <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--text-secondary)', letterSpacing: 'var(--tracking-caps)' }}>
-                  {t('dashboard.rebalancingScore')}
+                <p className="text-xs font-semibold uppercase mb-2 flex items-center gap-1" style={{ color: 'var(--text-secondary)', letterSpacing: 'var(--tracking-caps)' }}>
+                  {t('dashboard.rebalancingScore')} <InfoTooltip content={t('tooltip.rebalancingScore')} />
                 </p>
                 <div
                   className="w-16 h-16 rounded-full flex flex-col items-center justify-center mb-2"

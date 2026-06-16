@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bot, Send, Check, X, AlertTriangle, ShieldCheck, PieChart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Asset } from '../../../domain/entities/Asset';
 import { User } from '../../../domain/entities/User';
 import { AllocationTarget, RiskProfile } from '../../../shared/types';
@@ -12,19 +13,6 @@ interface Props {
   onUpdateRiskProfile?: (riskProfile: RiskProfile) => Promise<void>;
   onUpdateTargetAllocation?: (allocation: AllocationTarget) => Promise<void>;
 }
-
-const QUICK_PROMPTS = [
-  'Bagaimana kondisi portofolio saya?',
-  'Rekomendasikan rebalancing',
-  'Ubah profil risiko saya',
-  'Jelaskan target alokasi saya',
-];
-
-const RISK_LABEL: Record<RiskProfile, string> = {
-  conservative: 'Konservatif',
-  moderate: 'Moderat',
-  aggressive: 'Agresif',
-};
 
 function renderMarkdown(text: string) {
   const lines = text.split('\n');
@@ -96,6 +84,14 @@ function ActionCard({
   onConfirm: () => void;
   onDismiss: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const RISK_LABEL: Record<RiskProfile, string> = {
+    conservative: t('onboarding.conservative'),
+    moderate: t('onboarding.moderate'),
+    aggressive: t('onboarding.aggressive'),
+  };
+
   return (
     <div
       className="mx-1 rounded-2xl p-4"
@@ -108,7 +104,7 @@ function ActionCard({
           <PieChart size={15} style={{ color: 'var(--ai-accent)' }} strokeWidth={2} />
         )}
         <span className="text-xs font-semibold" style={{ color: 'var(--ai-accent)' }}>
-          Usulan Perubahan
+          {t('chat.proposedChange')}
         </span>
       </div>
 
@@ -121,7 +117,7 @@ function ActionCard({
           className="rounded-lg px-3 py-2 mb-3 text-sm font-medium"
           style={{ background: 'var(--bg-overlay)', color: 'var(--text-secondary)' }}
         >
-          Profil baru: <strong style={{ color: 'var(--text-primary)' }}>{RISK_LABEL[action.riskProfile]}</strong>
+          {t('chat.newProfile')} <strong style={{ color: 'var(--text-primary)' }}>{RISK_LABEL[action.riskProfile]}</strong>
         </div>
       )}
 
@@ -150,7 +146,7 @@ function ActionCard({
           style={{ background: 'var(--ai-accent)', color: '#fff' }}
         >
           <Check size={12} strokeWidth={2.5} />
-          {isApplying ? 'Menyimpan...' : 'Terapkan'}
+          {isApplying ? t('chat.applying') : t('chat.apply')}
         </button>
         <button
           onClick={onDismiss}
@@ -159,7 +155,7 @@ function ActionCard({
           style={{ background: 'var(--bg-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }}
         >
           <X size={12} strokeWidth={2.5} />
-          Batalkan
+          {t('chat.dismiss')}
         </button>
       </div>
     </div>
@@ -167,6 +163,7 @@ function ActionCard({
 }
 
 function NoApiKeyBanner() {
+  const { t } = useTranslation();
   return (
     <div
       className="flex items-start gap-3 mx-4 my-4 p-4 rounded-xl"
@@ -174,9 +171,9 @@ function NoApiKeyBanner() {
     >
       <AlertTriangle size={16} strokeWidth={2} style={{ color: 'var(--warn-400)', flexShrink: 0, marginTop: 1 }} />
       <div>
-        <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>API Key Belum Dikonfigurasi</p>
+        <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>{t('chat.noApiKeyTitle')}</p>
         <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: 'var(--leading-relaxed)' }}>
-          Tambahkan <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>VITE_AI_API_KEY</code>, <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>VITE_AI_API_URL</code>, dan <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>VITE_AI_MODEL</code> ke <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>.env</code> lalu restart dev server.
+          {t('chat.noApiKeyDesc')}
         </p>
       </div>
     </div>
@@ -184,11 +181,25 @@ function NoApiKeyBanner() {
 }
 
 export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTargetAllocation }: Props) {
+  const { t } = useTranslation();
   const { messages, isLoading, isTyping, pendingAction, hasApiKey, sendMessage, dismissAction } = useClaudeAdvisor(assets, user);
   const [input, setInput] = useState('');
   const [isApplying, setIsApplying] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const RISK_LABEL: Record<RiskProfile, string> = {
+    conservative: t('onboarding.conservative'),
+    moderate: t('onboarding.moderate'),
+    aggressive: t('onboarding.aggressive'),
+  };
+
+  const QUICK_PROMPTS = [
+    t('chat.quickPrompt1'),
+    t('chat.quickPrompt2'),
+    t('chat.quickPrompt3'),
+    t('chat.quickPrompt4'),
+  ];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -213,10 +224,10 @@ export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTar
     try {
       if (pendingAction.type === 'updateRiskProfile' && pendingAction.riskProfile && onUpdateRiskProfile) {
         await onUpdateRiskProfile(pendingAction.riskProfile);
-        setSuccessMsg(`Profil risiko diubah ke ${RISK_LABEL[pendingAction.riskProfile]}`);
+        setSuccessMsg(t('chat.riskUpdated', { profile: RISK_LABEL[pendingAction.riskProfile] }));
       } else if (pendingAction.type === 'updateTargetAllocation' && pendingAction.targetAllocation && onUpdateTargetAllocation) {
         await onUpdateTargetAllocation(pendingAction.targetAllocation);
-        setSuccessMsg('Target alokasi berhasil diperbarui');
+        setSuccessMsg(t('chat.allocationUpdated'));
       }
       dismissAction();
       setTimeout(() => setSuccessMsg(null), 3000);
@@ -242,8 +253,10 @@ export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTar
           <Bot size={20} strokeWidth={2} style={{ color: 'var(--ai-accent)' }} />
         </div>
         <div>
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Robo Advisor</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>AI berbasis {import.meta.env.VITE_AI_MODEL?.split('/')[1] || 'model'} · real-time</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{t('chat.title')}</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            {t('chat.subtitle', { model: import.meta.env.VITE_AI_MODEL?.split('/')[1] || 'model' })}
+          </p>
         </div>
         <div
           className="ml-auto text-xs px-2 py-1 rounded-full"
@@ -253,7 +266,7 @@ export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTar
               : { background: 'var(--warn-tint)', color: 'var(--warn-400)', border: '1px solid rgba(245,158,11,0.22)' }
           }
         >
-          {hasApiKey ? 'Online' : 'Setup diperlukan'}
+          {hasApiKey ? t('chat.online') : t('chat.setupRequired')}
         </div>
       </div>
 
@@ -271,10 +284,10 @@ export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTar
                 <Bot size={22} strokeWidth={1.75} style={{ color: 'var(--ai-accent)' }} />
               </div>
               <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                Halo, {user.displayName?.split(' ')[0]}!
+                {t('chat.greeting', { name: user.displayName?.split(' ')[0] })}
               </p>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                Tanyakan apa saja tentang portofolio Anda
+                {t('chat.greetingDesc')}
               </p>
             </div>
           </div>
@@ -355,7 +368,7 @@ export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTar
           <input
             className="flex-1 rounded-xl text-sm px-4 py-2.5 outline-none"
             style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
-            placeholder={hasApiKey ? 'Ketik pertanyaan...' : 'Konfigurasi API key terlebih dahulu'}
+            placeholder={hasApiKey ? t('chat.placeholder') : t('chat.placeholderDisabled')}
             value={input}
             disabled={!hasApiKey}
             onChange={(e) => setInput(e.target.value)}

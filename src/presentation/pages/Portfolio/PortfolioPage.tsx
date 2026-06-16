@@ -8,7 +8,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Spinner } from '../../components/ui/Spinner';
 import { AssetCard } from '../../components/portfolio/AssetCard';
 import { EntryForm } from '../../components/forms/EntryForm';
-import { useActiveAssets } from '../../hooks/useAssets';
+import { useActiveAssets, useAllAssets } from '../../hooks/useAssets';
 import { AssetCategory } from '../../../shared/types';
 import { CATEGORY_LABELS, ALL_CATEGORIES } from '../../../shared/constants/categories';
 
@@ -17,6 +17,8 @@ export function PortfolioPage() {
   const [searchParams] = useSearchParams();
   const staleFilter = searchParams.get('filter') === 'stale';
   const { data: assets = [], isLoading } = useActiveAssets();
+  const { data: allAssets = [] } = useAllAssets();
+  const hasClosedAssets = assets.length === 0 && allAssets.some((a) => a.status === 'closed');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<AssetCategory | 'all'>('all');
 
@@ -82,14 +84,21 @@ export function PortfolioPage() {
             <Briefcase size={24} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
           </div>
           <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-            {t('portfolio.noAssets')}
+            {hasClosedAssets ? t('portfolio.allClosed') : t('portfolio.noAssets')}
           </p>
           <p className="text-xs mb-6" style={{ color: 'var(--text-secondary)' }}>
-            {assets.length === 0
-              ? t('dashboard.noAssets')
-              : t('common.filter')}
+            {hasClosedAssets
+              ? t('portfolio.allClosedDesc')
+              : assets.length === 0
+                ? t('dashboard.noAssets')
+                : t('common.filter')}
           </p>
-          {assets.length === 0 && (
+          {!hasClosedAssets && assets.length === 0 && (
+            <Button onClick={() => setAddModalOpen(true)} size="md">
+              {t('portfolio.addPosition')}
+            </Button>
+          )}
+          {hasClosedAssets && (
             <Button onClick={() => setAddModalOpen(true)} size="md">
               {t('portfolio.addPosition')}
             </Button>

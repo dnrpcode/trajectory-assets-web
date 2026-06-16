@@ -1,5 +1,9 @@
+function getLocale(): string {
+  return localStorage.getItem('lang') === 'en' ? 'en-US' : 'id-ID';
+}
+
 export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('id-ID', {
+  return new Intl.DateTimeFormat(getLocale(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -9,7 +13,7 @@ export function formatDate(date: Date): string {
 export function formatMonth(month: string): string {
   const [year, m] = month.split('-');
   const date = new Date(parseInt(year), parseInt(m) - 1, 1);
-  return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat(getLocale(), { month: 'long', year: 'numeric' }).format(date);
 }
 
 export function getCurrentMonth(): string {

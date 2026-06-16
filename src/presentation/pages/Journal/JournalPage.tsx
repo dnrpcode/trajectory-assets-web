@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, BookOpen } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../../components/ui/Layout';
 import { Spinner } from '../../components/ui/Spinner';
 import { Badge } from '../../components/ui/Badge';
@@ -8,17 +9,6 @@ import { formatDate, formatMonth } from '../../../shared/utils/formatDate';
 import { formatCurrency } from '../../../shared/utils/formatCurrency';
 import { EntryType } from '../../../shared/types';
 import { AssetEntry } from '../../../domain/entities/AssetEntry';
-
-const ENTRY_TYPE_LABELS: Record<EntryType, string> = {
-  new_position: 'Posisi Baru',
-  price_update: 'Update Harga',
-  top_up:       'Top Up',
-  partial_sell: 'Jual Sebagian',
-  full_sell:    'Jual Semua',
-  income:       'Dividen/Kupon',
-  fee:          'Biaya',
-  correction:   'Koreksi',
-};
 
 function EntryIcon({ type }: { type: EntryType }) {
   const props = { size: 14, strokeWidth: 2 };
@@ -69,6 +59,7 @@ function groupByMonth(entries: AssetEntry[]): Map<string, AssetEntry[]> {
 const FILTER_TYPES: (EntryType | 'all')[] = ['all', 'new_position', 'price_update', 'top_up', 'partial_sell', 'full_sell', 'income', 'fee'];
 
 export function JournalPage() {
+  const { t } = useTranslation();
   const { data: entries = [], isLoading } = useEntries();
   const [typeFilter, setTypeFilter] = useState<EntryType | 'all'>('all');
 
@@ -83,21 +74,21 @@ export function JournalPage() {
     <Layout>
       <div className="mb-6">
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-          Jurnal Transaksi
+          {t('journal.journalTitle')}
         </h1>
         <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-          {entries.length} entri tercatat
+          {t('journal.entriesCount', { count: entries.length })}
         </p>
       </div>
 
       {/* Type filter chips */}
       <div className="flex gap-2 flex-wrap mb-6">
-        {FILTER_TYPES.map((t) => {
-          const active = typeFilter === t;
+        {FILTER_TYPES.map((type) => {
+          const active = typeFilter === type;
           return (
             <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
+              key={type}
+              onClick={() => setTypeFilter(type)}
               className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150"
               style={{
                 background: active ? 'var(--blue-400)' : 'var(--bg-raised)',
@@ -107,7 +98,7 @@ export function JournalPage() {
                 textTransform: 'uppercase',
               }}
             >
-              {t === 'all' ? 'Semua' : ENTRY_TYPE_LABELS[t]}
+              {type === 'all' ? t('journal.filterAll') : t(`entry.${type}`)}
             </button>
           );
         })}
@@ -123,8 +114,8 @@ export function JournalPage() {
           >
             <BookOpen size={24} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
           </div>
-          <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Belum ada entri jurnal</p>
-          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Tambahkan aset pertama dari halaman Portofolio</p>
+          <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>{t('journal.noEntriesTitle')}</p>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('journal.noEntriesDesc')}</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -150,6 +141,7 @@ export function JournalPage() {
 }
 
 function EntryRow({ entry }: { entry: AssetEntry }) {
+  const { t } = useTranslation();
   const isGain = ['new_position', 'top_up', 'income'].includes(entry.entryType);
   const isLoss = ['partial_sell', 'full_sell', 'fee'].includes(entry.entryType);
 
@@ -181,9 +173,9 @@ function EntryRow({ entry }: { entry: AssetEntry }) {
             {entry.assetName ?? '—'}
           </p>
           <Badge variant={ENTRY_TYPE_BADGE[entry.entryType]}>
-            {ENTRY_TYPE_LABELS[entry.entryType]}
+            {t(`entry.${entry.entryType}`)}
           </Badge>
-          {entry.isCorrected && <Badge variant="neutral">Dikoreksi</Badge>}
+          {entry.isCorrected && <Badge variant="neutral">{t('journal.corrected')}</Badge>}
           {entry.platform && (
             <span className="text-[0.6875rem]" style={{ color: 'var(--text-muted)' }}>
               {entry.platform}

@@ -2,6 +2,9 @@ import React from 'react';
 import { ThemeProvider } from './presentation/contexts/ThemeContext';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TourProvider } from './presentation/contexts/TourContext';
+import { TourOverlay } from './presentation/components/tour/TourOverlay';
+import { ToastProvider } from './presentation/components/ui/Toast';
 import { useAuth } from './presentation/hooks/useAuth';
 import { FullPageSpinner } from './presentation/components/ui/Spinner';
 import { LoginPage } from './presentation/pages/Auth/LoginPage';
@@ -15,6 +18,7 @@ import { SettingsPage } from './presentation/pages/Settings/SettingsPage';
 import { AdvisoryPage } from './presentation/pages/Advisory/AdvisoryPage';
 import { ProjectionsPage } from './presentation/pages/Projections/ProjectionsPage';
 import { ChatPage } from './presentation/pages/Chat/ChatPage';
+import { HelpPage } from './presentation/pages/Help/HelpPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,6 +124,14 @@ function AppRoutes() {
           </OnboardingGuard>
         }
       />
+      <Route
+        path="/help"
+        element={
+          <OnboardingGuard>
+            <HelpPage />
+          </OnboardingGuard>
+        }
+      />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
@@ -130,7 +142,12 @@ export default function App() {
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <AppRoutes />
+          <ToastProvider>
+            <TourProvider>
+              <AppRoutes />
+              <TourOverlay />
+            </TourProvider>
+          </ToastProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </ThemeProvider>

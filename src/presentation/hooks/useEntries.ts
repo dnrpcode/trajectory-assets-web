@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAssetEntries, deleteEntry, createEntry, recomputeAssetProjection } from '../../infrastructure/di/container';
 import { useAuthStore } from './useAuth';
+import { useToast } from '../components/ui/Toast';
 import { CreateEntryInput } from '../../domain/use-cases/asset-entries/CreateEntry';
 import { AssetEntry } from '../../domain/entities/AssetEntry';
 
@@ -27,6 +28,7 @@ export function useEntries() {
 export function useDeleteEntry() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: (entry: AssetEntry) =>
@@ -35,7 +37,11 @@ export function useDeleteEntry() {
       queryClient.invalidateQueries({ queryKey: ['entries', user?.id, entry.assetId] });
       queryClient.invalidateQueries({ queryKey: ['entries', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['activeAssets', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user?.id] });
+    },
+    onError: () => {
+      toast('Gagal menghapus transaksi. Periksa koneksi dan coba lagi.', 'error');
     },
   });
 }
@@ -43,6 +49,7 @@ export function useDeleteEntry() {
 export function useCreateEntry() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (input: CreateEntryInput) => {
@@ -57,6 +64,9 @@ export function useCreateEntry() {
       queryClient.invalidateQueries({ queryKey: ['activeAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user?.id] });
+    },
+    onError: () => {
+      toast('Gagal menyimpan transaksi. Periksa koneksi dan coba lagi.', 'error');
     },
   });
 }

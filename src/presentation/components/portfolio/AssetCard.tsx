@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Asset } from '@/domain/entities/Asset';
 import { Card } from '@/presentation/components/ui/Card';
 import { Badge } from '@/presentation/components/ui/Badge';
@@ -19,6 +20,7 @@ interface Props {
 
 export function AssetCard({ asset }: Props) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [entryType, setEntryType] = useState<FormEntryType>('price_update');
@@ -40,6 +42,12 @@ export function AssetCard({ asset }: Props) {
 
   const isStale = computeIsStale(asset);
   const isPositive = asset.unrealizedGainIDR >= 0;
+
+  const getModalTitle = () => {
+    if (entryType === 'price_update') return t('portfolio.updatePrice');
+    if (entryType === 'top_up') return t('portfolio.topUp');
+    return t('portfolio.sell');
+  };
 
   return (
     <>
@@ -64,7 +72,7 @@ export function AssetCard({ asset }: Props) {
           >
             <AlertTriangle size={12} strokeWidth={2} style={{ color: 'var(--warn-400)', flexShrink: 0 }} />
             <span style={{ color: 'var(--warn-400)', fontSize: '11px', fontWeight: 500 }}>
-              Harga belum diperbarui bulan ini
+              {t('portfolio.staleWarning')}
             </span>
           </div>
         )}
@@ -97,10 +105,10 @@ export function AssetCard({ asset }: Props) {
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mb-3">
             {[
-              { label: 'Avg Cost', value: formatCurrency(asset.avgCostPerUnit) },
-              { label: 'Harga Saat Ini', value: formatCurrency(asset.currentPricePerUnit) },
-              { label: 'Unit', value: asset.totalUnits.toLocaleString('id-ID') },
-              { label: 'Gain/Loss', value: formatCurrency(asset.unrealizedGainIDR), colored: true },
+              { label: t('portfolio.avgCost'), value: formatCurrency(asset.avgCostPerUnit) },
+              { label: t('portfolio.currentPrice'), value: formatCurrency(asset.currentPricePerUnit) },
+              { label: t('portfolio.units'), value: asset.totalUnits.toLocaleString('id-ID') },
+              { label: t('portfolio.gainLoss'), value: formatCurrency(asset.unrealizedGainIDR), colored: true },
             ].map(({ label, value, colored }) => (
               <div key={label}>
                 <span className="block" style={{ color: 'var(--text-secondary)' }}>{label}</span>
@@ -121,13 +129,13 @@ export function AssetCard({ asset }: Props) {
 
           <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
             <Button variant="secondary" size="sm" onClick={() => openModal('price_update')} className="flex-1 text-xs">
-              Update Harga
+              {t('portfolio.updatePrice')}
             </Button>
             <Button variant="secondary" size="sm" onClick={() => openModal('top_up')} className="flex-1 text-xs">
-              Top Up
+              {t('portfolio.topUp')}
             </Button>
             <Button variant="danger" size="sm" onClick={() => openModal('partial_sell')} className="flex-1 text-xs">
-              Jual
+              {t('portfolio.sell')}
             </Button>
             <button
               onClick={() => setDeleteConfirmOpen(true)}
@@ -145,7 +153,7 @@ export function AssetCard({ asset }: Props) {
                 e.currentTarget.style.background = 'var(--bg-raised)';
                 e.currentTarget.style.borderColor = 'var(--border-default)';
               }}
-              title="Hapus aset ini"
+              title={t('portfolio.deleteAsset')}
             >
               <Trash2 size={12} strokeWidth={2} style={{ display: 'inline' }} />
             </button>
@@ -156,7 +164,7 @@ export function AssetCard({ asset }: Props) {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={`${asset.assetName} — ${entryType === 'price_update' ? 'Update Harga' : entryType === 'top_up' ? 'Top Up' : 'Jual'}`}
+        title={`${asset.assetName} — ${getModalTitle()}`}
       >
         <EntryForm
           onSuccess={() => setModalOpen(false)}
@@ -172,16 +180,16 @@ export function AssetCard({ asset }: Props) {
       <Modal
         open={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
-        title="Hapus Aset"
+        title={t('portfolio.deleteTitle')}
         size="sm"
       >
         <div className="space-y-4">
           <div>
             <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
-              Apakah Anda yakin ingin menghapus <strong>{asset.assetName}</strong>?
+              {t('portfolio.deleteAssetQuestion')} <strong>{asset.assetName}</strong>?
             </p>
             <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-              Aksi ini akan menghapus aset dan semua transaksi (entries) yang terkait dengan aset ini dari Journal.
+              {t('portfolio.deleteAssetDescLong')}
             </p>
           </div>
           <div className="flex gap-3 pt-2">
@@ -192,7 +200,7 @@ export function AssetCard({ asset }: Props) {
               size="md"
               style={{ flex: 1 }}
             >
-              Batal
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -202,7 +210,7 @@ export function AssetCard({ asset }: Props) {
               size="md"
               style={{ flex: 1 }}
             >
-              Hapus
+              {t('common.delete')}
             </Button>
           </div>
         </div>

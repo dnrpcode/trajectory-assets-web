@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -38,6 +39,7 @@ function LogoMark() {
 
 export function OnboardingPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { authUser, setUser } = useAuthStore();
   const [step, setStep] = useState(1);
   const [riskProfile, setRiskProfile] = useState<RiskProfile>('moderate');
@@ -97,18 +99,23 @@ export function OnboardingPage() {
   };
 
   const RISK_OPTIONS: { value: RiskProfile; label: string; desc: string; icon: string }[] = [
-    { value: 'conservative', label: 'Konservatif', desc: 'Prioritas keamanan modal, toleransi risiko rendah', icon: '🛡' },
-    { value: 'moderate',     label: 'Moderat',     desc: 'Seimbang antara pertumbuhan dan keamanan',         icon: '⚖' },
-    { value: 'aggressive',   label: 'Agresif',     desc: 'Mengejar pertumbuhan maksimal, risiko tinggi',     icon: '🚀' },
+    { value: 'conservative', label: t('onboarding.conservative'), desc: t('onboarding.conservativeDesc'), icon: '🛡' },
+    { value: 'moderate',     label: t('onboarding.moderate'),     desc: t('onboarding.moderateDesc'),     icon: '⚖' },
+    { value: 'aggressive',   label: t('onboarding.aggressive'),   desc: t('onboarding.aggressiveDesc'),   icon: '🚀' },
   ];
 
   const HORIZON_OPTIONS: { value: InvestmentHorizon; label: string; range: string; desc: string }[] = [
-    { value: 'short',  label: 'Jangka Pendek',    range: '≤ 3 tahun',   desc: 'Cocok untuk dana darurat dan tujuan jangka dekat' },
-    { value: 'medium', label: 'Jangka Menengah',  range: '3 – 10 tahun', desc: 'Ideal untuk pembelian rumah atau dana pensiun dini' },
-    { value: 'long',   label: 'Jangka Panjang',   range: '> 10 tahun',  desc: 'Memaksimalkan compounding untuk pensiun atau warisan' },
+    { value: 'short',  label: t('onboarding.short'),  range: t('onboarding.shortRange'),  desc: t('onboarding.shortDesc') },
+    { value: 'medium', label: t('onboarding.medium'), range: t('onboarding.mediumRange'), desc: t('onboarding.mediumDesc') },
+    { value: 'long',   label: t('onboarding.long'),   range: t('onboarding.longRange'),   desc: t('onboarding.longDesc') },
   ];
 
-  const stepLabels = ['Profil Risiko', 'Horizon', 'Target', 'Portofolio'];
+  const stepLabels = [
+    t('onboarding.stepRiskProfile'),
+    t('onboarding.stepHorizon'),
+    t('onboarding.stepTarget'),
+    t('onboarding.stepPortfolio'),
+  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-base)' }}>
@@ -170,10 +177,10 @@ export function OnboardingPage() {
           {step === 1 && (
             <div>
               <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-                Profil Risiko Anda
+                {t('onboarding.riskProfileTitle')}
               </h2>
               <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-                Pilih yang sesuai dengan toleransi risiko Anda
+                {t('onboarding.riskProfileSubtitle')}
               </p>
 
               <div className="space-y-3 mb-6">
@@ -214,7 +221,7 @@ export function OnboardingPage() {
                 style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)' }}
               >
                 <p className="text-xs font-semibold uppercase mb-3" style={{ color: 'var(--text-secondary)', letterSpacing: 'var(--tracking-caps)' }}>
-                  Alokasi yang Direkomendasikan
+                  {t('onboarding.recommendedAllocation')}
                 </p>
                 <div className="flex items-center gap-4">
                   <ResponsiveContainer width={120} height={120}>
@@ -237,7 +244,7 @@ export function OnboardingPage() {
               </div>
 
               <Button onClick={() => setStep(2)} fullWidth size="lg">
-                Lanjut
+                {t('onboarding.next')}
               </Button>
             </div>
           )}
@@ -246,10 +253,10 @@ export function OnboardingPage() {
           {step === 2 && (
             <div>
               <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-                Horizon Investasi
+                {t('onboarding.horizonTitle')}
               </h2>
               <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-                Berapa lama Anda berencana berinvestasi?
+                {t('onboarding.horizonSubtitle')}
               </p>
 
               <div className="space-y-3 mb-8">
@@ -294,10 +301,10 @@ export function OnboardingPage() {
 
               <div className="flex gap-3">
                 <Button variant="secondary" onClick={() => setStep(1)} size="lg" style={{ flex: 1 }}>
-                  Kembali
+                  {t('common.back')}
                 </Button>
                 <Button onClick={() => setStep(3)} size="lg" style={{ flex: 1 }}>
-                  Lanjut
+                  {t('onboarding.next')}
                 </Button>
               </div>
             </div>
@@ -307,10 +314,10 @@ export function OnboardingPage() {
           {step === 3 && (
             <div>
               <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-                Target Keuangan
+                {t('onboarding.goalTitle')}
               </h2>
               <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-                Tentukan target finansial Anda — bisa diubah kapan saja
+                {t('onboarding.goalSubtitle')}
               </p>
 
               <form
@@ -321,32 +328,32 @@ export function OnboardingPage() {
                 className="space-y-4"
               >
                 <Input
-                  label="Target Nilai Portofolio (IDR) *"
+                  label={t('onboarding.goalTargetLabel')}
                   type="number"
                   prefix="Rp"
-                  placeholder="cth: 1000000000"
+                  placeholder={t('onboarding.goalTargetPlaceholder')}
                   error={errors.targetAmountIDR?.message}
                   {...register('targetAmountIDR')}
                 />
                 <Input
-                  label="Target Tanggal (opsional)"
+                  label={t('onboarding.goalDateLabel')}
                   type="date"
                   {...register('targetDate')}
                 />
                 <Input
-                  label="Rencana Kontribusi Bulanan (IDR, opsional)"
+                  label={t('onboarding.goalMonthly')}
                   type="number"
                   prefix="Rp"
-                  placeholder="cth: 5000000"
+                  placeholder={t('onboarding.goalMonthlyPlaceholder')}
                   {...register('monthlyContributionIDR')}
                 />
 
                 <div className="flex gap-3 pt-2">
                   <Button type="button" variant="secondary" onClick={() => setStep(2)} size="lg" style={{ flex: 1 }}>
-                    Kembali
+                    {t('common.back')}
                   </Button>
                   <Button type="submit" loading={saving} size="lg" style={{ flex: 1 }}>
-                    Lanjut
+                    {t('onboarding.next')}
                   </Button>
                 </div>
                 <Button
@@ -359,7 +366,7 @@ export function OnboardingPage() {
                   size="sm"
                   fullWidth
                 >
-                  Lewati langkah ini
+                  {t('onboarding.skipStep')}
                 </Button>
               </form>
             </div>
@@ -369,10 +376,10 @@ export function OnboardingPage() {
           {step === 4 && (
             <div>
               <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-                Sudah punya portofolio?
+                {t('onboarding.portfolioTitle')}
               </h2>
               <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-                Kami bisa membantu Anda mencatat aset yang sudah dimiliki
+                {t('onboarding.portfolioSubtitle')}
               </p>
 
               {hasPortfolio === null && (
@@ -380,14 +387,14 @@ export function OnboardingPage() {
                   {[
                     {
                       icon: '💼',
-                      title: 'Ya, saya punya portofolio',
-                      desc: 'Tambahkan aset yang sudah dimiliki sekarang',
+                      title: t('onboarding.hasPortfolioTitle'),
+                      desc: t('onboarding.hasPortfolioDesc'),
                       onClick: () => setHasPortfolio(true),
                     },
                     {
                       icon: '🌱',
-                      title: 'Tidak, mulai dari nol',
-                      desc: 'Langsung ke dashboard dan tambahkan saat mulai berinvestasi',
+                      title: t('onboarding.noPortfolioTitle'),
+                      desc: t('onboarding.noPortfolioDesc'),
                       onClick: () => navigate('/dashboard'),
                     },
                   ].map((opt) => (
@@ -425,7 +432,7 @@ export function OnboardingPage() {
                     className="rounded-md px-4 py-3 text-sm mb-5"
                     style={{ background: 'var(--blue-tint)', border: '1px solid rgba(77,124,255,0.22)', color: 'var(--blue-300)' }}
                   >
-                    Tambahkan posisi pertama Anda. Lebih banyak aset bisa ditambahkan nanti dari halaman Portofolio.
+                    {t('onboarding.addFirstAsset')}
                   </div>
                   <EntryForm
                     onSuccess={() => navigate('/dashboard')}

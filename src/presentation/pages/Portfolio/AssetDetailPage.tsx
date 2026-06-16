@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, Trash2, ArrowLeft, Sparkles } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LineChart,
   Line,
@@ -21,6 +22,7 @@ import { formatCurrency, formatPercent, formatCurrencyCompact } from '@/shared/u
 import { CATEGORY_LABELS } from '@/shared/constants/categories';
 import { AssetEntry } from '@/domain/entities/AssetEntry';
 import { computeIsStale } from '@/shared/utils/calculations';
+import { InfoTooltip } from '@/presentation/components/ui/InfoTooltip';
 
 // ── Price chart helpers ──────────────────────────────────────────────────────
 
@@ -42,17 +44,6 @@ function buildPriceHistory(entries: AssetEntry[]) {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const ENTRY_LABELS: Record<string, string> = {
-  new_position: 'Posisi Baru',
-  price_update: 'Update Harga',
-  top_up: 'Top Up',
-  partial_sell: 'Jual Sebagian',
-  full_sell: 'Jual Semua',
-  income: 'Pendapatan',
-  fee: 'Biaya',
-  correction: 'Koreksi',
-};
-
 type EntryColor = { bg: string; border: string; text: string; dot: string };
 const ENTRY_STYLES: Record<string, EntryColor> = {
   new_position: { bg: 'rgba(77,124,255,0.06)', border: 'rgba(77,124,255,0.2)', text: 'var(--blue-300)', dot: 'var(--blue-400)' },
@@ -65,11 +56,6 @@ const ENTRY_STYLES: Record<string, EntryColor> = {
   correction: { bg: 'rgba(167,139,250,0.06)', border: 'rgba(167,139,250,0.2)', text: 'var(--ai-accent)', dot: 'var(--ai-accent)' },
 };
 const DEFAULT_STYLE: EntryColor = { bg: 'var(--bg-raised)', border: 'var(--border-subtle)', text: 'var(--text-secondary)', dot: 'var(--text-muted)' };
-
-const INCOME_FEE_LABELS: Record<string, string> = {
-  dividend: 'Dividen', coupon: 'Kupon', interest: 'Bunga',
-  platform_fee: 'Biaya Platform', tax: 'Pajak', other: 'Lainnya',
-};
 
 // ── AI Mock ──────────────────────────────────────────────────────────────────
 
@@ -128,53 +114,58 @@ function DetailField({ label, value, mono = false }: { label: string; value: str
   );
 }
 
-function entryHeaderValue(entry: AssetEntry): { label: string; value: string } | null {
-  // Return the most meaningful "total" for this entry type
-  if (entry.entryType === 'price_update') {
-    if (entry.pricePerUnit == null) return null;
-    return { label: 'Harga terbaru', value: formatCurrency(entry.pricePerUnit) };
-  }
-  if (entry.pricePerUnit != null && entry.units != null) {
-    const total = entry.pricePerUnit * entry.units;
-    return { label: 'Total nilai', value: formatCurrencyCompact(total) };
-  }
-  if (entry.amount != null) {
-    return { label: 'Jumlah', value: formatCurrencyCompact(entry.amount) };
-  }
-  if (entry.pricePerUnit != null) {
-    return { label: 'Harga', value: formatCurrency(entry.pricePerUnit) };
-  }
-  return null;
-}
-
 // ── Entry row ────────────────────────────────────────────────────────────────
 
 function EntryRow({ entry, onDelete }: { entry: AssetEntry; onDelete: (e: AssetEntry) => void }) {
+  const { t } = useTranslation();
   const style = ENTRY_STYLES[entry.entryType] ?? DEFAULT_STYLE;
-  const headerVal = entryHeaderValue(entry);
+
+  const INCOME_FEE_LABELS: Record<string, string> = {
+    dividend: t('entry.dividend'),
+    coupon: t('entry.coupon'),
+    interest: t('entry.interest'),
+    platform_fee: t('entry.platform_fee'),
+    tax: t('entry.tax'),
+    other: t('entry.other'),
+  };
+
+  // Build header value
+  let headerVal: { label: string; value: string } | null = null;
+  if (entry.entryType === 'price_update') {
+    if (entry.pricePerUnit != null) {
+      headerVal = { label: t('assetDetail.entryHeaderLatestPrice'), value: formatCurrency(entry.pricePerUnit) };
+    }
+  } else if (entry.pricePerUnit != null && entry.units != null) {
+    const total = entry.pricePerUnit * entry.units;
+    headerVal = { label: t('assetDetail.entryHeaderTotalValue'), value: formatCurrencyCompact(total) };
+  } else if (entry.amount != null) {
+    headerVal = { label: t('assetDetail.entryHeaderAmount'), value: formatCurrencyCompact(entry.amount) };
+  } else if (entry.pricePerUnit != null) {
+    headerVal = { label: t('assetDetail.entryHeaderPrice'), value: formatCurrency(entry.pricePerUnit) };
+  }
 
   // Build detail fields per entry type
   const details: { label: string; value: string; mono?: boolean }[] = [];
   if (entry.pricePerUnit != null) {
-    details.push({ label: 'Harga/Unit', value: formatCurrency(entry.pricePerUnit), mono: true });
+    details.push({ label: t('assetDetail.entryFieldPricePerUnit'), value: formatCurrency(entry.pricePerUnit), mono: true });
   }
   if (entry.units != null) {
-    details.push({ label: 'Unit', value: entry.units.toLocaleString('id-ID', { maximumFractionDigits: 6 }), mono: true });
+    details.push({ label: t('assetDetail.entryFieldUnit'), value: entry.units.toLocaleString('id-ID', { maximumFractionDigits: 6 }), mono: true });
   }
   if (entry.pricePerUnit != null && entry.units != null) {
-    details.push({ label: 'Total', value: formatCurrency(entry.pricePerUnit * entry.units), mono: true });
+    details.push({ label: t('assetDetail.entryFieldTotal'), value: formatCurrency(entry.pricePerUnit * entry.units), mono: true });
   }
   if (entry.amount != null) {
-    details.push({ label: 'Nominal', value: formatCurrency(entry.amount), mono: true });
+    details.push({ label: t('assetDetail.entryFieldNominal'), value: formatCurrency(entry.amount), mono: true });
   }
   if (entry.currency && entry.currency !== 'IDR') {
-    details.push({ label: 'Mata Uang', value: entry.currency });
+    details.push({ label: t('assetDetail.entryFieldCurrency'), value: entry.currency });
     if (entry.exchangeRateToIDR) {
-      details.push({ label: 'Kurs', value: `Rp ${entry.exchangeRateToIDR.toLocaleString('id-ID')}/${entry.currency}`, mono: true });
+      details.push({ label: t('assetDetail.entryFieldRate'), value: `Rp ${entry.exchangeRateToIDR.toLocaleString('id-ID')}/${entry.currency}`, mono: true });
     }
   }
   if (entry.platform) {
-    details.push({ label: 'Platform', value: entry.platform });
+    details.push({ label: t('assetDetail.entryFieldPlatform'), value: entry.platform });
   }
 
   return (
@@ -203,9 +194,9 @@ function EntryRow({ entry, onDelete }: { entry: AssetEntry; onDelete: (e: AssetE
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span style={{ color: entry.isCorrected ? 'var(--text-muted)' : style.text, fontSize: '13px', fontWeight: 600 }}>
-              {ENTRY_LABELS[entry.entryType] ?? entry.entryType}
+              {t(`entry.${entry.entryType}`)}
             </span>
-            {entry.isCorrected && <Badge variant="neutral" size="sm">Dihapus</Badge>}
+            {entry.isCorrected && <Badge variant="neutral" size="sm">{t('entry.deletedLabel')}</Badge>}
             {entry.incomeFeeCategory && (
               <Badge variant="neutral" size="sm">{INCOME_FEE_LABELS[entry.incomeFeeCategory] ?? entry.incomeFeeCategory}</Badge>
             )}
@@ -228,7 +219,7 @@ function EntryRow({ entry, onDelete }: { entry: AssetEntry; onDelete: (e: AssetE
           {!entry.isCorrected && (
             <button
               onClick={() => onDelete(entry)}
-              title="Hapus transaksi"
+              title={t('assetDetail.deleteTransaction')}
               style={{
                 background: 'transparent', border: '1px solid transparent', borderRadius: '6px',
                 color: 'var(--text-muted)', padding: '5px', cursor: 'pointer',
@@ -272,7 +263,7 @@ function EntryRow({ entry, onDelete }: { entry: AssetEntry; onDelete: (e: AssetE
           borderTop: `1px solid ${style.border}`,
           background: 'rgba(0,0,0,0.08)',
         }}>
-          <span style={{ color: 'var(--text-muted)', fontSize: '10px', display: 'block', marginBottom: 2 }}>Catatan</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '10px', display: 'block', marginBottom: 2 }}>{t('assetDetail.entryFieldNotes')}</span>
           <span style={{ color: 'var(--text-secondary)', fontSize: '12px', fontStyle: 'italic', lineHeight: 1.5 }}>
             {entry.notes}
           </span>
@@ -295,6 +286,7 @@ function DeleteEntryModal({
   onCancel: () => void;
   isDeleting: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -326,24 +318,25 @@ function DeleteEntryModal({
             <Trash2 size={16} strokeWidth={2} style={{ color: 'var(--loss-400)' }} />
           </div>
           <h3 style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: 600, margin: 0 }}>
-            Hapus Transaksi
+            {t('assetDetail.deleteEntryTitle')}
           </h3>
         </div>
 
         <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.6, margin: '0 0 8px 0' }}>
-          Hapus <strong style={{ color: 'var(--text-primary)' }}>{ENTRY_LABELS[entry.entryType]}</strong> pada{' '}
+          {t('assetDetail.deleteEntryDesc')} <strong style={{ color: 'var(--text-primary)' }}>{t(`entry.${entry.entryType}`)}</strong>{' '}
+          {t('assetDetail.deleteEntryOn')}{' '}
           {entry.date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}?
         </p>
         <p style={{ color: 'var(--text-muted)', fontSize: '12px', lineHeight: 1.5, margin: '0 0 20px 0' }}>
-          Proyeksi aset akan dihitung ulang secara otomatis setelah transaksi ini dihapus.
+          {t('assetDetail.deleteTransactionDesc')}
         </p>
 
         <div style={{ display: 'flex', gap: 10 }}>
           <Button type="button" variant="secondary" size="md" onClick={onCancel} style={{ flex: 1 }}>
-            Batal
+            {t('common.cancel')}
           </Button>
           <Button type="button" variant="danger" size="md" onClick={onConfirm} loading={isDeleting} style={{ flex: 1 }}>
-            Hapus
+            {t('common.delete')}
           </Button>
         </div>
       </div>
@@ -355,16 +348,10 @@ function DeleteEntryModal({
 
 type ActionEntryType = 'price_update' | 'top_up' | 'partial_sell' | 'full_sell';
 
-const ACTION_LABELS: Record<ActionEntryType, string> = {
-  price_update: 'Update Harga',
-  top_up: 'Top Up',
-  partial_sell: 'Jual Sebagian',
-  full_sell: 'Jual Semua',
-};
-
 export function AssetDetailPage() {
   const { assetId } = useParams<{ assetId: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [entryToDelete, setEntryToDelete] = useState<AssetEntry | null>(null);
   const [showCorrected, setShowCorrected] = useState(false);
   const [actionModal, setActionModal] = useState<ActionEntryType | null>(null);
@@ -381,7 +368,7 @@ export function AssetDetailPage() {
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Memuat...</div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{t('common.loading')}</div>
       </div>
     );
   }
@@ -389,8 +376,8 @@ export function AssetDetailPage() {
   if (!asset) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-        <p style={{ color: 'var(--text-secondary)' }}>Aset tidak ditemukan.</p>
-        <button onClick={() => navigate('/portfolio')} style={{ color: 'var(--blue-400)', fontSize: '14px' }}>← Kembali ke Portfolio</button>
+        <p style={{ color: 'var(--text-secondary)' }}>{t('assetDetail.notFound')}</p>
+        <button onClick={() => navigate('/portfolio')} style={{ color: 'var(--blue-400)', fontSize: '14px' }}>{t('assetDetail.backToPortfolioLink')}</button>
       </div>
     );
   }
@@ -433,9 +420,9 @@ export function AssetDetailPage() {
             }}
           >
             <ArrowLeft size={14} strokeWidth={2} />
-            Portfolio
+            {t('assetDetail.backToPortfolio')}
           </button>
-          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Detail Aset</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{t('assetDetail.detailAset')}</span>
         </div>
 
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -472,16 +459,18 @@ export function AssetDetailPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px 16px', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
               {[
-                { label: 'Avg Cost', value: formatCurrency(asset.avgCostPerUnit) },
-                { label: 'Harga Saat Ini', value: formatCurrency(asset.currentPricePerUnit) },
-                { label: 'Total Unit', value: asset.totalUnits.toLocaleString('id-ID', { maximumFractionDigits: 6 }) },
-                { label: 'Modal', value: formatCurrency(asset.totalCostBasisIDR) },
-                { label: 'Realized Gain', value: formatCurrency(asset.realizedGainIDR), colored: asset.realizedGainIDR !== 0, positive: asset.realizedGainIDR >= 0 },
-                { label: 'Pendapatan', value: formatCurrency(asset.totalIncomeIDR), colored: asset.totalIncomeIDR > 0, positive: true },
-                { label: 'Total Biaya', value: formatCurrency(asset.totalFeesIDR ?? 0), colored: (asset.totalFeesIDR ?? 0) > 0, positive: false },
-              ].map(({ label, value, colored, positive }) => (
+                { label: t('assetDetail.avgCost'), value: formatCurrency(asset.avgCostPerUnit), tooltip: t('tooltip.avgCost') },
+                { label: t('assetDetail.currentPriceLabel'), value: formatCurrency(asset.currentPricePerUnit) },
+                { label: t('assetDetail.totalUnits'), value: asset.totalUnits.toLocaleString('id-ID', { maximumFractionDigits: 6 }) },
+                { label: t('assetDetail.capital'), value: formatCurrency(asset.totalCostBasisIDR), tooltip: t('tooltip.capital') },
+                { label: t('assetDetail.realizedGain'), value: formatCurrency(asset.realizedGainIDR), colored: asset.realizedGainIDR !== 0, positive: asset.realizedGainIDR >= 0, tooltip: t('tooltip.realizedGain') },
+                { label: t('assetDetail.income'), value: formatCurrency(asset.totalIncomeIDR), colored: asset.totalIncomeIDR > 0, positive: true },
+                { label: t('assetDetail.totalFees'), value: formatCurrency(asset.totalFeesIDR ?? 0), colored: (asset.totalFeesIDR ?? 0) > 0, positive: false },
+              ].map(({ label, value, colored, positive, tooltip }) => (
                 <div key={label}>
-                  <span style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', marginBottom: 2 }}>{label}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', fontSize: '11px', marginBottom: 2 }}>
+                    {label}{tooltip && <InfoTooltip content={tooltip} size={11} />}
+                  </span>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 600, color: colored ? (positive ? 'var(--gain-400)' : 'var(--loss-400)') : 'var(--text-primary)' }}>
                     {value}
                   </span>
@@ -497,7 +486,7 @@ export function AssetDetailPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--blue-400)'; e.currentTarget.style.color = 'var(--blue-300)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
               >
-                Update Harga
+                {t('portfolio.updatePrice')}
               </button>
               <button
                 onClick={() => setActionModal('top_up')}
@@ -505,7 +494,7 @@ export function AssetDetailPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(15,186,130,0.12)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(15,186,130,0.06)'; }}
               >
-                Top Up
+                {t('portfolio.topUp')}
               </button>
               <button
                 onClick={() => setActionModal('partial_sell')}
@@ -513,7 +502,7 @@ export function AssetDetailPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.12)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.06)'; }}
               >
-                Jual Sebagian
+                {t('portfolio.sellPartial')}
               </button>
               <button
                 onClick={() => setActionModal('full_sell')}
@@ -521,7 +510,7 @@ export function AssetDetailPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(240,71,106,0.12)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(240,71,106,0.06)'; }}
               >
-                Jual Semua
+                {t('portfolio.sellAll')}
               </button>
               <button
                 onClick={() => setDeleteAssetConfirm(true)}
@@ -530,7 +519,7 @@ export function AssetDetailPage() {
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
               >
                 <Trash2 size={13} strokeWidth={2} />
-                Hapus Aset
+                {t('portfolio.deleteAsset')}
               </button>
             </div>
           </Card>
@@ -538,11 +527,11 @@ export function AssetDetailPage() {
           {/* ── Price history chart ── */}
           <Card variant="default" padding="md">
             <h2 style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, margin: '0 0 16px 0' }}>
-              Riwayat Harga
+              {t('assetDetail.priceHistory')}
             </h2>
             {priceHistory.length < 2 ? (
               <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
-                Belum cukup data harga. Tambah minimal 2 entri dengan harga per unit.
+                {t('assetDetail.noPriceHistory')}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={200}>
@@ -567,7 +556,7 @@ export function AssetDetailPage() {
             )}
             {priceHistory.length >= 2 && (
               <p style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: 8, textAlign: 'center' }}>
-                Garis putus-putus kuning = harga rata-rata beli
+                {t('assetDetail.avgCostLine')}
               </p>
             )}
           </Card>
@@ -583,8 +572,8 @@ export function AssetDetailPage() {
                 <Sparkles size={14} strokeWidth={2} style={{ color: 'var(--ai-accent)' }} />
               </div>
               <div>
-                <h2 style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, margin: 0 }}>Rekomendasi AI</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '10px', margin: 0 }}>Mock · Belum terhubung ke model</p>
+                <h2 style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, margin: 0 }}>{t('assetDetail.aiRecommendation')}</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '10px', margin: 0 }}>{t('assetDetail.aiMock')}</p>
               </div>
               <span style={{ marginLeft: 'auto' }}><Badge variant="ai">Beta</Badge></span>
             </div>
@@ -602,10 +591,10 @@ export function AssetDetailPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
               <div>
                 <h2 style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, margin: 0 }}>
-                  Log Transaksi
+                  {t('assetDetail.transactionLog')}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: '2px 0 0 0' }}>
-                  {activeEntries.length} aktif{correctedEntries.length > 0 ? ` · ${correctedEntries.length} dihapus` : ''}
+                  {activeEntries.length} {t('assetDetail.active')}{correctedEntries.length > 0 ? ` · ${correctedEntries.length} ${t('assetDetail.deleted')}` : ''}
                 </p>
               </div>
               {correctedEntries.length > 0 && (
@@ -621,14 +610,14 @@ export function AssetDetailPage() {
                     cursor: 'pointer',
                   }}
                 >
-                  {showCorrected ? 'Sembunyikan yang dihapus' : 'Tampilkan yang dihapus'}
+                  {showCorrected ? t('assetDetail.hideDeleted') : t('assetDetail.showDeleted')}
                 </button>
               )}
             </div>
 
             {sortedEntries.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '24px 0' }}>
-                Belum ada transaksi untuk aset ini.
+                {t('assetDetail.noTransactions')}
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -641,7 +630,6 @@ export function AssetDetailPage() {
         </div>
       </div>
 
-      {/* Delete confirmation modal */}
       {/* Entry delete modal */}
       {entryToDelete && (
         <DeleteEntryModal
@@ -657,7 +645,7 @@ export function AssetDetailPage() {
         <Modal
           open={true}
           onClose={() => setActionModal(null)}
-          title={`${asset.assetName} — ${ACTION_LABELS[actionModal]}`}
+          title={`${asset.assetName} — ${t(`entry.${actionModal}`)}`}
         >
           <EntryForm
             onSuccess={() => setActionModal(null)}
@@ -685,17 +673,17 @@ export function AssetDetailPage() {
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(240,71,106,0.1)', border: '1px solid rgba(240,71,106,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Trash2 size={16} stroke="var(--loss-400)" strokeWidth={2} />
               </div>
-              <h3 style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: 600, margin: 0 }}>Hapus Aset</h3>
+              <h3 style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: 600, margin: 0 }}>{t('portfolio.deleteTitle')}</h3>
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.6, margin: '0 0 6px 0' }}>
-              Hapus <strong style={{ color: 'var(--text-primary)' }}>{asset.assetName}</strong>?
+              {t('portfolio.deleteAssetQuestion')} <strong style={{ color: 'var(--text-primary)' }}>{asset.assetName}</strong>?
             </p>
             <p style={{ color: 'var(--text-muted)', fontSize: '12px', lineHeight: 1.5, margin: '0 0 20px 0' }}>
-              Semua transaksi terkait aset ini juga akan dihapus permanen.
+              {t('portfolio.deleteAssetDesc')}
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
-              <Button type="button" variant="secondary" size="md" onClick={() => setDeleteAssetConfirm(false)} style={{ flex: 1 }}>Batal</Button>
-              <Button type="button" variant="danger" size="md" onClick={handleDeleteAsset} loading={isDeletingAsset} style={{ flex: 1 }}>Hapus</Button>
+              <Button type="button" variant="secondary" size="md" onClick={() => setDeleteAssetConfirm(false)} style={{ flex: 1 }}>{t('common.cancel')}</Button>
+              <Button type="button" variant="danger" size="md" onClick={handleDeleteAsset} loading={isDeletingAsset} style={{ flex: 1 }}>{t('common.delete')}</Button>
             </div>
           </div>
         </div>

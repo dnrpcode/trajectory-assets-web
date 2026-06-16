@@ -1,7 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatCurrencyCompact } from '../../../shared/utils/formatCurrency';
 
-interface DataPoint { year: number; base: number; optimistic: number; pessimistic: number; }
+interface DataPoint { year: number; base: number; optimistic: number; pessimistic: number; capital: number; }
 interface Props { data: DataPoint[]; }
 
 export function CAGRProjectionChart({ data }: Props) {
@@ -19,6 +19,7 @@ export function CAGRProjectionChart({ data }: Props) {
         <Line type="monotone" name="Optimis" dataKey="optimistic" stroke="var(--ai-accent)" strokeWidth={2} strokeDasharray="3 3" dot={false} />
         <Line type="monotone" name="Base Rate" dataKey="base" stroke="var(--gain-500)" strokeWidth={3} dot={false} />
         <Line type="monotone" name="Pesimis" dataKey="pessimistic" stroke="var(--warn-400)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+        <Line type="monotone" name="Modal Disetor" dataKey="capital" stroke="#e879f9" strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );
