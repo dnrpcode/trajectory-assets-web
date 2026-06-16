@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { useAuthStore } from '@/presentation/hooks/useAuth';
-import { logout as logoutUseCase } from '@/domain/use-cases/auth/Logout';
+import { logout as logoutUseCase } from '@/infrastructure/di/container';
 
 const navItems = [
   {
@@ -68,7 +68,7 @@ export function Navbar() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logoutUseCase();
+    await logoutUseCase.execute();
     navigate('/login');
   };
 

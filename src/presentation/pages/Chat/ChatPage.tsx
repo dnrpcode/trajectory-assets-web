@@ -4,7 +4,7 @@ import { Layout } from '@/presentation/components/ui/Layout';
 import { RoboAdvisorChat } from '@/presentation/components/chat/RoboAdvisorChat';
 import { useActiveAssets } from '@/presentation/hooks/useAssets';
 import { useAuthStore } from '@/presentation/hooks/useAuth';
-import { userRepository } from '@/infrastructure/di/container';
+import { updateUserProfile } from '@/infrastructure/di/container';
 import { AllocationTarget, RiskProfile } from '@/shared/types';
 import { getAllocationTarget } from '@/shared/constants/allocationTargets';
 import { ShieldCheck, PieChart, TrendingUp, Bot } from 'lucide-react';
@@ -26,7 +26,7 @@ export function ChatPage() {
     async (riskProfile: RiskProfile) => {
       if (!user) return;
       const newAllocation = getAllocationTarget(riskProfile, user.investmentHorizon);
-      await userRepository.update(user.id, { riskProfile, targetAllocation: newAllocation });
+      await updateUserProfile.execute(user.id, { riskProfile, targetAllocation: newAllocation });
       const updated = { ...user, riskProfile, targetAllocation: newAllocation };
       setUser(updated);
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user.id] });
@@ -37,7 +37,7 @@ export function ChatPage() {
   const handleUpdateTargetAllocation = useCallback(
     async (targetAllocation: AllocationTarget) => {
       if (!user) return;
-      await userRepository.update(user.id, { targetAllocation });
+      await updateUserProfile.execute(user.id, { targetAllocation });
       setUser({ ...user, targetAllocation });
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user.id] });
     },

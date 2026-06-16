@@ -1,27 +1,31 @@
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '../../../data/firebase/config';
-import { userRepository } from '../../../infrastructure/di/container';
+import { IAuthService, AuthUser } from '../../repositories/IAuthService';
+import { IUserRepository } from '../../repositories/IUserRepository';
 import { getAllocationTarget } from '../../../shared/constants/allocationTargets';
 
-export async function registerWithEmail(email: string, password: string, displayName: string) {
-  const credential = await createUserWithEmailAndPassword(auth, email, password);
-  await updateProfile(credential.user, { displayName });
+export class RegisterWithEmail {
+  constructor(
+    private authService: IAuthService,
+    private userRepo: IUserRepository,
+  ) {}
 
-  // Create Firestore user document with defaults — onboarding will update risk/horizon/goal
-  const now = new Date();
-  await userRepository.create({
-    id: credential.user.uid,
-    email,
-    displayName,
-    riskProfile: 'moderate',
-    investmentHorizon: 'medium',
-    baseCurrency: 'IDR',
-    targetAllocation: getAllocationTarget('moderate', 'medium'),
-    aiHistoryEnabled: false,
-    onboardingComplete: false,
-    createdAt: now,
-    updatedAt: now,
-  });
+  async execute(email: string, password: string, displayName: string): Promise<AuthUser> {
+    const user = await this.authService.registerWithEmail(email, password, displayName);
 
-  return credential;
+    const now = new Date();
+    await this.userRepo.create({
+      id: user.uid,
+      email,
+      displayName,
+      riskProfile: 'moderate',
+      investmentHorizon: 'medium',
+      baseCurrency: 'IDR',
+      targetAllocation: getAllocationTarget('moderate', 'medium'),
+      aiHistoryEnabled: false,
+      onboardingComplete: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return user;
+  }
 }

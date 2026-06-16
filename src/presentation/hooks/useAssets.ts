@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getActiveAssets, projectionRepository, deleteAsset } from '../../infrastructure/di/container';
+import { getActiveAssets, getAllAssets, deleteAsset } from '../../infrastructure/di/container';
 import { useAuthStore } from './useAuth';
 
 export function useActiveAssets() {
@@ -16,7 +16,7 @@ export function useAllAssets() {
   const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ['allAssets', user?.id],
-    queryFn: () => projectionRepository.getByUserId(user!.id),
+    queryFn: () => getAllAssets.execute(user!.id),
     enabled: !!user,
     staleTime: 30_000,
   });
@@ -27,9 +27,7 @@ export function useDeleteAsset() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (assetId: string) => {
-      await deleteAsset.execute(user!.id, assetId);
-    },
+    mutationFn: (assetId: string) => deleteAsset.execute(user!.id, assetId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activeAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });

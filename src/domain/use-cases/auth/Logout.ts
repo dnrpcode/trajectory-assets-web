@@ -1,6 +1,9 @@
-import { signOut } from 'firebase/auth';
-import { auth } from '../../../data/firebase/config';
+import { IAuthService } from '../../repositories/IAuthService';
 
-export async function logout() {
-  return signOut(auth);
+export class Logout {
+  constructor(private authService: IAuthService) {}
+
+  async execute(): Promise<void> {
+    return this.authService.signOut();
+  }
 }

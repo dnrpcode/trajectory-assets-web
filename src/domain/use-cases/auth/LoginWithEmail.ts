@@ -1,6 +1,9 @@
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../../data/firebase/config';
+import { IAuthService, AuthUser } from '../../repositories/IAuthService';
 
-export async function loginWithEmail(email: string, password: string) {
-  return signInWithEmailAndPassword(auth, email, password);
+export class LoginWithEmail {
+  constructor(private authService: IAuthService) {}
+
+  async execute(email: string, password: string): Promise<AuthUser> {
+    return this.authService.signInWithEmail(email, password);
+  }
 }

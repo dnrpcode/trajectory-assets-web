@@ -1,39 +1,36 @@
 import { useEffect } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { create } from 'zustand';
-import { auth } from '../../data/firebase/config';
-import { userRepository } from '../../infrastructure/di/container';
+import { authService, getUserById, logout as logoutUseCase } from '../../infrastructure/di/container';
 import { User } from '../../domain/entities/User';
+import { AuthUser } from '../../domain/repositories/IAuthService';
 
 interface AuthState {
   user: User | null;
-  firebaseUser: import('firebase/auth').User | null;
-  /** True while Firebase auth state AND Firestore user doc are both resolving */
+  authUser: AuthUser | null;
   loading: boolean;
   setUser: (user: User | null) => void;
-  setFirebaseUser: (u: import('firebase/auth').User | null) => void;
+  setAuthUser: (u: AuthUser | null) => void;
   setLoading: (v: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  firebaseUser: null,
+  authUser: null,
   loading: true,
   setUser: (user) => set({ user }),
-  setFirebaseUser: (firebaseUser) => set({ firebaseUser }),
+  setAuthUser: (authUser) => set({ authUser }),
   setLoading: (loading) => set({ loading }),
 }));
 
 export function useAuth() {
-  const { user, firebaseUser, loading, setUser, setFirebaseUser, setLoading } = useAuthStore();
+  const { user, authUser, loading, setUser, setAuthUser, setLoading } = useAuthStore();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      // Keep loading=true until both auth + Firestore resolve
-      setFirebaseUser(fbUser);
-      if (fbUser) {
+    const unsubscribe = authService.onAuthStateChanged(async (au) => {
+      setAuthUser(au);
+      if (au) {
         try {
-          const domainUser = await userRepository.getById(fbUser.uid);
+          const domainUser = await getUserById.execute(au.uid);
           setUser(domainUser);
         } catch {
           setUser(null);
@@ -44,14 +41,13 @@ export function useAuth() {
       setLoading(false);
     });
     return unsubscribe;
-  }, [setUser, setFirebaseUser, setLoading]);
+  }, [setUser, setAuthUser, setLoading]);
 
-  const logout = async () => {
-    await signOut(auth);
-    // Reset local state immediately
+  const doLogout = async () => {
+    await logoutUseCase.execute();
     setUser(null);
-    setFirebaseUser(null);
+    setAuthUser(null);
   };
 
-  return { user, firebaseUser, loading, logout };
+  return { user, authUser, loading, logout: doLogout };
 }

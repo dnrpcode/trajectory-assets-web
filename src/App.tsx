@@ -26,28 +26,28 @@ const queryClient = new QueryClient({
 });
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { firebaseUser, loading } = useAuth();
+  const { authUser, loading } = useAuth();
   if (loading) return <FullPageSpinner />;
-  if (!firebaseUser) return <Navigate to="/login" replace />;
+  if (!authUser) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function OnboardingGuard({ children }: { children: React.ReactNode }) {
-  const { user, firebaseUser, loading } = useAuth();
+  const { user, authUser, loading } = useAuth();
   if (loading) return <FullPageSpinner />;
-  if (!firebaseUser) return <Navigate to="/login" replace />;
-  if (firebaseUser && !user?.onboardingComplete) return <Navigate to="/onboarding" replace />;
+  if (!authUser) return <Navigate to="/login" replace />;
+  if (authUser && !user?.onboardingComplete) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
 }
 
 function AppRoutes() {
-  const { firebaseUser, loading } = useAuth();
+  const { authUser, loading } = useAuth();
   if (loading) return <FullPageSpinner />;
 
   return (
     <Routes>
-      <Route path="/login" element={firebaseUser ? <Navigate to="/dashboard" /> : <LoginPage />} />
-      <Route path="/register" element={firebaseUser ? <Navigate to="/dashboard" /> : <RegisterPage />} />
+      <Route path="/login" element={authUser ? <Navigate to="/dashboard" /> : <LoginPage />} />
+      <Route path="/register" element={authUser ? <Navigate to="/dashboard" /> : <RegisterPage />} />
       <Route
         path="/onboarding"
         element={

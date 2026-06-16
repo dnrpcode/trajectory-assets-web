@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
-import { doc, setDoc, collection, Timestamp } from 'firebase/firestore';
-import { db } from '../../../data/firebase/config';
 import { useNavigate } from 'react-router-dom';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +10,7 @@ import { Input } from '../../components/ui/Input';
 import { getAllocationTarget } from '../../../shared/constants/allocationTargets';
 import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '../../../shared/constants/categories';
 import { EntryForm } from '../../components/forms/EntryForm';
-import { userRepository } from '../../../infrastructure/di/container';
+import { completeOnboarding } from '../../../infrastructure/di/container';
 import { useAuthStore } from '../../hooks/useAuth';
 import { RiskProfile, InvestmentHorizon, AssetCategory } from '../../../shared/types';
 
@@ -40,7 +38,7 @@ function LogoMark() {
 
 export function OnboardingPage() {
   const navigate = useNavigate();
-  const { firebaseUser, setUser } = useAuthStore();
+  const { authUser, setUser } = useAuthStore();
   const [step, setStep] = useState(1);
   const [riskProfile, setRiskProfile] = useState<RiskProfile>('moderate');
   const [horizon, setHorizon] = useState<InvestmentHorizon>('medium');
@@ -61,45 +59,36 @@ export function OnboardingPage() {
     }));
 
   const saveUserAndProceed = async (goalData?: GoalValues): Promise<void> => {
-    if (!firebaseUser) return;
+    if (!authUser) return;
     setSaving(true);
     try {
       const now = new Date();
-      const user = {
-        id: firebaseUser.uid,
-        email: firebaseUser.email ?? '',
-        displayName: firebaseUser.displayName ?? firebaseUser.email ?? '',
+      await completeOnboarding.execute({
+        userId: authUser.uid,
+        email: authUser.email ?? '',
+        displayName: authUser.displayName ?? authUser.email ?? '',
         riskProfile,
         investmentHorizon: horizon,
-        baseCurrency: 'IDR' as const,
+        goal: goalData?.targetAmountIDR ? {
+          targetAmountIDR: goalData.targetAmountIDR,
+          targetDate: goalData.targetDate,
+          monthlyContributionIDR: goalData.monthlyContributionIDR,
+        } : undefined,
+      });
+
+      setUser({
+        id: authUser.uid,
+        email: authUser.email ?? '',
+        displayName: authUser.displayName ?? authUser.email ?? '',
+        riskProfile,
+        investmentHorizon: horizon,
+        baseCurrency: 'IDR',
         targetAllocation: getAllocationTarget(riskProfile, horizon),
         aiHistoryEnabled: false,
         onboardingComplete: true,
         createdAt: now,
         updatedAt: now,
-      };
-
-      // Use update instead of create to avoid overwriting createdAt
-      await userRepository.update(firebaseUser.uid, {
-        riskProfile,
-        investmentHorizon: horizon,
-        targetAllocation: getAllocationTarget(riskProfile, horizon),
-        onboardingComplete: true,
-        updatedAt: now,
       });
-      setUser(user);
-
-      if (goalData?.targetAmountIDR) {
-        const goalRef = doc(collection(db, 'users', firebaseUser.uid, 'goals'));
-        await setDoc(goalRef, {
-          userId: firebaseUser.uid,
-          targetAmountIDR: goalData.targetAmountIDR,
-          ...(goalData.targetDate ? { targetDate: goalData.targetDate } : {}),
-          ...(goalData.monthlyContributionIDR ? { monthlyContributionIDR: goalData.monthlyContributionIDR } : {}),
-          createdAt: Timestamp.fromDate(now),
-          updatedAt: Timestamp.fromDate(now),
-        });
-      }
     } catch (e) {
       console.error('Onboarding save error:', e);
     } finally {

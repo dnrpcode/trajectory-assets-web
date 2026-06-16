@@ -3,9 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { registerWithEmail } from '@/domain/use-cases/auth/RegisterWithEmail';
-import { loginWithGoogle } from '@/domain/use-cases/auth/LoginWithGoogle';
-import { userRepository } from '@/infrastructure/di/container';
+import { registerWithEmail, loginWithGoogle, getUserById } from '@/infrastructure/di/container';
 import { Button } from '@/presentation/components/ui/Button';
 import { Input } from '@/presentation/components/ui/Input';
 
@@ -45,7 +43,7 @@ export function RegisterPage() {
   const onSubmit = async ({ email, password, displayName }: FormValues) => {
     try {
       setError('');
-      await registerWithEmail(email, password, displayName);
+      await registerWithEmail.execute(email, password, displayName);
       navigate('/onboarding');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Registrasi gagal');
@@ -55,8 +53,8 @@ export function RegisterPage() {
   const handleGoogle = async () => {
     try {
       setError('');
-      const cred = await loginWithGoogle();
-      const user = await userRepository.getById(cred.user.uid);
+      const authUser = await loginWithGoogle.execute();
+      const user = await getUserById.execute(authUser.uid);
       navigate(user?.onboardingComplete ? '/dashboard' : '/onboarding');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Login gagal');

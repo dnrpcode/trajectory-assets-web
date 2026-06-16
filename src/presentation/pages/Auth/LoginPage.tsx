@@ -3,9 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { loginWithEmail } from '@/domain/use-cases/auth/LoginWithEmail';
-import { loginWithGoogle } from '@/domain/use-cases/auth/LoginWithGoogle';
-import { userRepository } from '@/infrastructure/di/container';
+import { loginWithEmail, loginWithGoogle, getUserById } from '@/infrastructure/di/container';
 import { Button } from '@/presentation/components/ui/Button';
 import { Input } from '@/presentation/components/ui/Input';
 
@@ -40,8 +38,8 @@ export function LoginPage() {
   const onSubmit = async ({ email, password }: FormValues) => {
     try {
       setError('');
-      const cred = await loginWithEmail(email, password);
-      const user = await userRepository.getById(cred.user.uid);
+      const authUser = await loginWithEmail.execute(email, password);
+      const user = await getUserById.execute(authUser.uid);
       navigate(user?.onboardingComplete ? '/dashboard' : '/onboarding');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Login gagal');
@@ -51,8 +49,8 @@ export function LoginPage() {
   const handleGoogle = async () => {
     try {
       setError('');
-      const cred = await loginWithGoogle();
-      const user = await userRepository.getById(cred.user.uid);
+      const authUser = await loginWithGoogle.execute();
+      const user = await getUserById.execute(authUser.uid);
       navigate(user?.onboardingComplete ? '/dashboard' : '/onboarding');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Login gagal');

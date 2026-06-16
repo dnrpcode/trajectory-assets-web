@@ -9,10 +9,9 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuthStore } from '../../hooks/useAuth';
 import { useThemeContext } from '../../contexts/ThemeContext';
-import { userRepository } from '../../../infrastructure/di/container';
+import { updateUserProfile, logout } from '../../../infrastructure/di/container';
 import { getAllocationTarget } from '../../../shared/constants/allocationTargets';
 import { RiskProfile, InvestmentHorizon } from '../../../shared/types';
-import { logout } from '../../../domain/use-cases/auth/Logout';
 
 const schema = z.object({
   displayName: z.string().min(2, 'Minimal 2 karakter'),
@@ -93,14 +92,14 @@ export function SettingsPage() {
       data.riskProfile as RiskProfile,
       data.investmentHorizon as InvestmentHorizon,
     );
-    await userRepository.update(user.id, { ...data, targetAllocation });
+    await updateUserProfile.execute(user.id, { ...data, targetAllocation });
     setUser({ ...user, ...data, targetAllocation, updatedAt: new Date() });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
 
   const handleLogout = async () => {
-    await logout();
+    await logout.execute();
     navigate('/login');
   };
 
