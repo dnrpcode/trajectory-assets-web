@@ -21,11 +21,13 @@ import { DeleteEntry } from '../../domain/use-cases/asset-entries/DeleteEntry';
 
 import { GetActiveAssets } from '../../domain/use-cases/assets/GetActiveAssets';
 import { GetAllAssets } from '../../domain/use-cases/assets/GetAllAssets';
-import { GetAssetHistory } from '../../domain/use-cases/assets/GetAssetHistory';
 import { DeleteAsset } from '../../domain/use-cases/assets/DeleteAsset';
 
 import { GetPortfolioSummary } from '../../domain/use-cases/portfolio/GetPortfolioSummary';
 import { GetPortfolioHistory } from '../../domain/use-cases/portfolio/GetPortfolioHistory';
+
+import { AIAdvisorRepository } from '../../data/ai/AIAdvisorRepository';
+import { SendAdvisorMessage } from '../../domain/use-cases/advisor/SendAdvisorMessage';
 
 // ── Infrastructure ────────────────────────────────────────────────────────────
 export const authService      = new FirebaseAuthService();
@@ -55,9 +57,12 @@ export const deleteEntry             = new DeleteEntry(entryRepository, recomput
 // ── Asset use-cases ───────────────────────────────────────────────────────────
 export const getActiveAssets = new GetActiveAssets(projectionRepository);
 export const getAllAssets     = new GetAllAssets(projectionRepository);
-export const getAssetHistory = new GetAssetHistory(entryRepository);
 export const deleteAsset     = new DeleteAsset(projectionRepository, entryRepository);
 
 // ── Portfolio use-cases ───────────────────────────────────────────────────────
 export const getPortfolioSummary = new GetPortfolioSummary(projectionRepository);
 export const getPortfolioHistory = new GetPortfolioHistory(portfolioRepository);
+
+// ── AI Advisor ────────────────────────────────────────────────────────────────
+export const aiAdvisorRepository = new AIAdvisorRepository();
+export const sendAdvisorMessage  = new SendAdvisorMessage(aiAdvisorRepository);

@@ -2,7 +2,7 @@ import { AllocationTarget, RiskProfile, InvestmentHorizon } from '../types';
 
 type AllocationMap = Record<RiskProfile, Record<InvestmentHorizon, AllocationTarget>>;
 
-export const ALLOCATION_TARGETS: AllocationMap = {
+const ALLOCATION_TARGETS: AllocationMap = {
   conservative: {
     short:  { saham: 10, reksa_dana: 35, obligasi_sbn: 35, emas: 15, kripto: 0, cash: 0, lainnya: 5 },
     medium: { saham: 20, reksa_dana: 30, obligasi_sbn: 30, emas: 15, kripto: 0, cash: 0, lainnya: 5 },

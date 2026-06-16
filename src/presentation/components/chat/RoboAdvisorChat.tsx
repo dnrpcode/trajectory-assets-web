@@ -27,12 +27,62 @@ const RISK_LABEL: Record<RiskProfile, string> = {
 };
 
 function renderMarkdown(text: string) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) =>
-    part.startsWith('**') && part.endsWith('**')
-      ? <strong key={i}>{part.slice(2, -2)}</strong>
-      : <span key={i}>{part}</span>,
-  );
+  const lines = text.split('\n');
+  const result: React.ReactNode[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('## ')) {
+      result.push(
+        <h3
+          key={`h3-${i}`}
+          className="text-sm font-bold mt-3 mb-2"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {line.slice(3)}
+        </h3>,
+      );
+    } else if (line.startsWith('### ')) {
+      result.push(
+        <h4
+          key={`h4-${i}`}
+          className="text-xs font-semibold mt-2 mb-1"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {line.slice(4)}
+        </h4>,
+      );
+    } else if (line.startsWith('- ')) {
+      result.push(
+        <div key={`li-${i}`} className="flex gap-2 ml-2 my-1">
+          <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>•</span>
+          <span style={{ color: 'var(--text-primary)' }}>{renderInline(line.slice(2))}</span>
+        </div>,
+      );
+    } else if (line.trim()) {
+      result.push(
+        <p key={`p-${i}`} className="my-2 leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+          {renderInline(line)}
+        </p>,
+      );
+    }
+  }
+
+  return result;
+}
+
+function renderInline(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={i}>{part.slice(1, -1)}</em>;
+    }
+    return <span key={i}>{part}</span>;
+  });
 }
 
 function ActionCard({
@@ -126,7 +176,7 @@ function NoApiKeyBanner() {
       <div>
         <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>API Key Belum Dikonfigurasi</p>
         <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: 'var(--leading-relaxed)' }}>
-          Tambahkan <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>VITE_ANTHROPIC_API_KEY</code> ke file <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>.env</code> lalu restart dev server.
+          Tambahkan <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>VITE_AI_API_KEY</code>, <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>VITE_AI_API_URL</code>, dan <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>VITE_AI_MODEL</code> ke <code style={{ background: 'var(--bg-raised)', padding: '1px 4px', borderRadius: 4, fontFamily: 'var(--font-mono)' }}>.env</code> lalu restart dev server.
         </p>
       </div>
     </div>
