@@ -61,7 +61,8 @@ const schema = baseSchema
   .refine(
     (d) => {
       const needs = ['new_position', 'top_up', 'partial_sell'].includes(d.entryType);
-      return !needs || (d.units != null && d.units > 0);
+      const isCash = d.category === 'cash';
+      return !needs || isCash || (d.units != null && d.units > 0);
     },
     { message: 'Jumlah unit wajib diisi', path: ['units'] },
   )
@@ -171,11 +172,15 @@ export function EntryForm({
 
   const entryType = watch('entryType');
   const currency = watch('currency');
+  const watchedCategory = watch('category');
   const watchedPrice = watch('pricePerUnit');
   const watchedUnits = watch('units');
 
+  // Cash has no concept of "units" — amount is stored as pricePerUnit with units=1
+  const isCash = watchedCategory === 'cash';
+
   const needsPrice   = ['new_position', 'price_update', 'top_up', 'partial_sell', 'full_sell'].includes(entryType);
-  const needsUnits   = ['new_position', 'top_up', 'partial_sell'].includes(entryType);
+  const needsUnits   = ['new_position', 'top_up', 'partial_sell'].includes(entryType) && !isCash;
   const needsAmount  = ['income', 'fee'].includes(entryType);
   const needsIncomeCategory = needsAmount;
   const showAssetFields = !isExistingAsset;
@@ -202,7 +207,7 @@ export function EntryForm({
       currency: data.currency,
       exchangeRateToIDR: data.currency === 'IDR' ? 1 : data.exchangeRateToIDR!,
       pricePerUnit: data.pricePerUnit || undefined,
-      units: data.units || undefined,
+      units: isCash ? 1 : (data.units || undefined),
       amount: data.amount || undefined,
       incomeFeeCategory: (data.incomeFeeCategory && needsIncomeCategory) ? data.incomeFeeCategory : undefined,
       notes: data.notes || undefined,
@@ -349,14 +354,16 @@ export function EntryForm({
         )}
       </div>
 
-      {/* Price per unit */}
+      {/* Price per unit (or saldo for cash) */}
       {needsPrice && (
         <Controller
           name="pricePerUnit"
           control={control}
           render={({ field }) => (
             <NumericInput
-              label={`${t('entry.pricePerUnit')} (${currency}) *`}
+              label={isCash
+                ? `Jumlah Saldo (${currency}) *`
+                : `${t('entry.pricePerUnit')} (${currency}) *`}
               placeholder="0"
               prefix={currency === 'IDR' ? 'Rp' : currency}
               allowDecimal
@@ -388,8 +395,8 @@ export function EntryForm({
         />
       )}
 
-      {/* Total estimate: price × units */}
-      {needsPrice && needsUnits && watchedPrice && watchedUnits && watchedPrice > 0 && watchedUnits > 0 && (
+      {/* Total estimate: price × units (hidden for cash since units is always 1) */}
+      {needsPrice && needsUnits && !isCash && watchedPrice && watchedUnits && watchedPrice > 0 && watchedUnits > 0 && (
         <div
           style={{
             display: 'flex',
