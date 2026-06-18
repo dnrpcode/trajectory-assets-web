@@ -1,9 +1,14 @@
 import { IAssetProjectionRepository } from '../../repositories/IAssetProjectionRepository';
+import { IPortfolioRepository } from '../../repositories/IPortfolioRepository';
 import { PortfolioSummary } from '../../entities/Portfolio';
 import { computeActualAllocation, computeIsStale } from '../../../shared/utils/calculations';
+import { getCurrentMonth } from '../../../shared/utils/formatDate';
 
 export class GetPortfolioSummary {
-  constructor(private projectionRepo: IAssetProjectionRepository) {}
+  constructor(
+    private projectionRepo: IAssetProjectionRepository,
+    private portfolioRepo: IPortfolioRepository,
+  ) {}
 
   async execute(userId: string): Promise<PortfolioSummary> {
     const assets = await this.projectionRepo.getByUserId(userId);
@@ -19,7 +24,7 @@ export class GetPortfolioSummary {
     const staleAssetCount = active.filter((a) => computeIsStale(a)).length;
     const allocationActual = computeActualAllocation(active);
 
-    return {
+    const summary: PortfolioSummary = {
       totalValueIDR,
       totalCostBasisIDR,
       unrealizedGainIDR,
@@ -30,5 +35,16 @@ export class GetPortfolioSummary {
       staleAssetCount,
       lastUpdated: new Date(),
     };
+
+    // Persist current month snapshot so WealthGrowthChart has data to display
+    if (totalValueIDR > 0 || totalCostBasisIDR > 0) {
+      this.portfolioRepo.saveHistoryPoint(userId, {
+        month: getCurrentMonth(),
+        totalValueIDR,
+        totalCostBasisIDR,
+      }).catch(() => { /* non-critical */ });
+    }
+
+    return summary;
   }
 }

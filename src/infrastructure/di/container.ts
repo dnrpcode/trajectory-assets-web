@@ -25,6 +25,7 @@ import { DeleteAsset } from '../../domain/use-cases/assets/DeleteAsset';
 
 import { GetPortfolioSummary } from '../../domain/use-cases/portfolio/GetPortfolioSummary';
 import { GetPortfolioHistory } from '../../domain/use-cases/portfolio/GetPortfolioHistory';
+import { BackfillPortfolioHistory } from '../../domain/use-cases/portfolio/BackfillPortfolioHistory';
 
 import { AIAdvisorRepository } from '../../data/ai/AIAdvisorRepository';
 import { SendAdvisorMessage } from '../../domain/use-cases/advisor/SendAdvisorMessage';
@@ -60,8 +61,9 @@ export const getAllAssets     = new GetAllAssets(projectionRepository);
 export const deleteAsset     = new DeleteAsset(projectionRepository, entryRepository);
 
 // ── Portfolio use-cases ───────────────────────────────────────────────────────
-export const getPortfolioSummary = new GetPortfolioSummary(projectionRepository);
+export const getPortfolioSummary = new GetPortfolioSummary(projectionRepository, portfolioRepository);
 export const getPortfolioHistory = new GetPortfolioHistory(portfolioRepository);
+export const backfillPortfolioHistory = new BackfillPortfolioHistory(entryRepository, projectionRepository, portfolioRepository);
 
 // ── AI Advisor ────────────────────────────────────────────────────────────────
 export const aiAdvisorRepository = new AIAdvisorRepository();

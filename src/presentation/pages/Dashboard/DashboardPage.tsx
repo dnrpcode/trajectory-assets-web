@@ -10,6 +10,8 @@ import { Modal } from '@/presentation/components/ui/Modal';
 import { Spinner } from '@/presentation/components/ui/Spinner';
 import { AllocationPieChart } from '@/presentation/components/charts/AllocationPieChart';
 import { WealthGrowthChart } from '@/presentation/components/charts/WealthGrowthChart';
+import { PlatformAllocationChart } from '@/presentation/components/charts/PlatformAllocationChart';
+import { PnLByCategoryChart } from '@/presentation/components/charts/PnLByCategoryChart';
 import { StaleAssetBanner } from '@/presentation/components/portfolio/StaleAssetBanner';
 import { EntryForm } from '@/presentation/components/forms/EntryForm';
 import { usePortfolioSummary, usePortfolioHistory } from '@/presentation/hooks/usePortfolio';
@@ -153,6 +155,31 @@ export function DashboardPage() {
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('dashboard.openAdvisory')}</p>
               </div>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card variant="default" padding="none">
+              <div className="px-6 py-4 border-b border-[var(--border-subtle)]">
+                <h3 className="font-semibold text-[var(--text-primary)] text-sm" style={{ letterSpacing: 'var(--tracking-snug)' }}>
+                  Alokasi per Platform
+                </h3>
+              </div>
+              <div className="px-4 pt-4 pb-5">
+                <PlatformAllocationChart assets={assets} />
+              </div>
+            </Card>
+
+            <Card variant="default" padding="none">
+              <div className="px-6 py-4 border-b border-[var(--border-subtle)]">
+                <h3 className="font-semibold text-[var(--text-primary)] text-sm" style={{ letterSpacing: 'var(--tracking-snug)' }}>
+                  P&amp;L per Tipe Aset
+                </h3>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Unrealized + Realized + Income − Fee</p>
+              </div>
+              <div className="px-2 pt-4 pb-5">
+                <PnLByCategoryChart assets={assets} />
+              </div>
+            </Card>
           </div>
 
           {topAssets.length > 0 && (

@@ -19,6 +19,7 @@ import { AdvisoryPage } from './presentation/pages/Advisory/AdvisoryPage';
 import { ProjectionsPage } from './presentation/pages/Projections/ProjectionsPage';
 import { ChatPage } from './presentation/pages/Chat/ChatPage';
 import { HelpPage } from './presentation/pages/Help/HelpPage';
+import { NotFoundPage } from './presentation/pages/NotFoundPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -132,7 +133,7 @@ function AppRoutes() {
           </OnboardingGuard>
         }
       />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  User, Mail, Shield, Clock, Bot, Moon, Sun, Globe, LogOut, Check, Save, TrendingUp,
+  User, Mail, Clock, Bot, Moon, Sun, Globe, LogOut, Check, Save, Target,
 } from 'lucide-react';
 import { Layout } from '../../components/ui/Layout';
 import { Button } from '../../components/ui/Button';
@@ -15,7 +15,7 @@ import { useThemeContext } from '../../contexts/ThemeContext';
 import { updateUserProfile, logout } from '../../../infrastructure/di/container';
 import { getAllocationTarget } from '../../../shared/constants/allocationTargets';
 import { RiskProfile, InvestmentHorizon, AllocationTarget, AssetCategory } from '../../../shared/types';
-import { CATEGORY_LABELS, CATEGORY_COLORS } from '../../../shared/constants/categories';
+import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '../../../shared/constants/categories';
 
 const schema = z.object({
   displayName: z.string().min(2, 'Minimal 2 karakter'),
@@ -86,95 +86,125 @@ function OptionCard({
   );
 }
 
-const CATEGORIES: AssetCategory[] = ['saham', 'reksa_dana', 'obligasi_sbn', 'emas', 'kripto', 'cash', 'lainnya'];
+const PRESETS: { value: RiskProfile; label: string; desc: string }[] = [
+  { value: 'conservative', label: 'Konservatif', desc: 'Risiko rendah' },
+  { value: 'moderate', label: 'Moderat', desc: 'Seimbang' },
+  { value: 'aggressive', label: 'Agresif', desc: 'Return tinggi' },
+];
 
-function AllocationSimulation({
-  current,
-  preview,
-  changed,
+function detectPreset(allocation: AllocationTarget, horizon: InvestmentHorizon): RiskProfile | null {
+  for (const preset of PRESETS) {
+    const target = getAllocationTarget(preset.value, horizon);
+    if ((Object.keys(target) as AssetCategory[]).every((k) => target[k] === allocation[k])) {
+      return preset.value;
+    }
+  }
+  return null;
+}
+
+function AllocationEditor({
+  allocation,
+  onChange,
+  horizon,
 }: {
-  current: AllocationTarget;
-  preview: AllocationTarget;
-  changed: boolean;
+  allocation: AllocationTarget;
+  onChange: (a: AllocationTarget) => void;
+  horizon: InvestmentHorizon;
 }) {
+  const total = (Object.keys(allocation) as AssetCategory[]).reduce((s, k) => s + (allocation[k] ?? 0), 0);
+  const matchedPreset = detectPreset(allocation, horizon);
+  const totalOk = total === 100;
+
+  const handleSlider = (cat: AssetCategory, val: number) => {
+    onChange({ ...allocation, [cat]: val });
+  };
+
+  const applyPreset = (risk: RiskProfile) => {
+    onChange(getAllocationTarget(risk, horizon));
+  };
+
   return (
-    <div style={{ background: 'var(--bg-surface)', border: `1.5px solid ${changed ? 'var(--blue-400)' : 'var(--border-subtle)'}`, borderRadius: 16, overflow: 'hidden', transition: 'border-color 300ms' }}>
+    <div style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden' }}>
+      {/* Header */}
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--bg-raised)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--blue-400)' }}>
-            <TrendingUp size={14} strokeWidth={2} />
+            <Target size={14} strokeWidth={2} />
           </div>
-          <h2 style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, margin: 0 }}>Simulasi Alokasi</h2>
+          <h2 style={{ color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, margin: 0 }}>Target Alokasi</h2>
         </div>
-        {changed && (
-          <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--blue-tint)', color: 'var(--blue-300)', border: '1px solid rgba(77,124,255,0.25)', letterSpacing: '0.04em' }}>
-            BERUBAH
-          </span>
-        )}
+        <span style={{
+          fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+          background: matchedPreset ? 'var(--blue-tint)' : 'var(--bg-overlay)',
+          color: matchedPreset ? 'var(--blue-300)' : 'var(--text-muted)',
+          border: `1px solid ${matchedPreset ? 'rgba(77,124,255,0.25)' : 'var(--border-dim)'}`,
+          letterSpacing: '0.04em',
+        }}>
+          {matchedPreset ? PRESETS.find((p) => p.value === matchedPreset)?.label.toUpperCase() : 'CUSTOM'}
+        </span>
       </div>
 
-      {/* Stacked bar */}
-      <div style={{ padding: '16px 18px 12px' }}>
-        <p style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: 8 }}>
-          {changed ? 'Preview alokasi baru' : 'Alokasi saat ini'}
-        </p>
-        <div style={{ display: 'flex', height: 10, borderRadius: 6, overflow: 'hidden', gap: 1 }}>
-          {CATEGORIES.filter((c) => preview[c] > 0).map((cat) => (
-            <div
-              key={cat}
-              title={`${CATEGORY_LABELS[cat]}: ${preview[cat]}%`}
+      <div style={{ padding: '16px 18px' }}>
+        {/* Preset quick-fill buttons */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+          {PRESETS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => applyPreset(p.value)}
               style={{
-                flex: preview[cat],
-                background: CATEGORY_COLORS[cat],
-                transition: 'flex 400ms cubic-bezier(0.4,0,0.2,1)',
-                minWidth: preview[cat] > 0 ? 2 : 0,
+                flex: 1, padding: '7px 6px', borderRadius: 8, cursor: 'pointer',
+                border: matchedPreset === p.value ? '1.5px solid var(--blue-400)' : '1.5px solid var(--border-default)',
+                background: matchedPreset === p.value ? 'var(--blue-tint)' : 'var(--bg-raised)',
+                transition: 'all 150ms',
               }}
-            />
+            >
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, color: matchedPreset === p.value ? 'var(--blue-300)' : 'var(--text-primary)' }}>{p.label}</p>
+              <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', marginTop: 1 }}>{p.desc}</p>
+            </button>
           ))}
         </div>
-      </div>
 
-      {/* Per-category rows */}
-      <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {CATEGORIES.map((cat) => {
-          const cur = current[cat];
-          const nxt = preview[cat];
-          const diff = nxt - cur;
-          if (cur === 0 && nxt === 0) return null;
-          return (
-            <div key={cat} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center' }}>
-              {/* Label + bar */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: CATEGORY_COLORS[cat], flexShrink: 0 }} />
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>{CATEGORY_LABELS[cat]}</span>
+        {/* Stacked bar preview */}
+        <div style={{ display: 'flex', height: 8, borderRadius: 6, overflow: 'hidden', gap: 1, marginBottom: 16 }}>
+          {ALL_CATEGORIES.filter((c) => allocation[c] > 0).map((cat) => (
+            <div key={cat} title={`${CATEGORY_LABELS[cat]}: ${allocation[cat]}%`} style={{ flex: allocation[cat], background: CATEGORY_COLORS[cat], transition: 'flex 300ms ease', minWidth: 2 }} />
+          ))}
+        </div>
+
+        {/* Sliders */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {ALL_CATEGORIES.map((cat) => (
+            <div key={cat}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: CATEGORY_COLORS[cat], flexShrink: 0 }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>{CATEGORY_LABELS[cat]}</span>
                 </div>
-                <div style={{ height: 3, borderRadius: 2, background: 'var(--bg-overlay)', overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%',
-                    width: `${nxt}%`,
-                    background: CATEGORY_COLORS[cat],
-                    transition: 'width 400ms cubic-bezier(0.4,0,0.2,1)',
-                    borderRadius: 2,
-                  }} />
-                </div>
+                <span style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: allocation[cat] > 0 ? 'var(--text-primary)' : 'var(--text-muted)', minWidth: 32, textAlign: 'right' }}>
+                  {allocation[cat]}%
+                </span>
               </div>
-              {/* New pct */}
-              <span style={{ fontSize: '12px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', minWidth: 32, textAlign: 'right' }}>
-                {nxt}%
-              </span>
-              {/* Diff badge */}
-              <span style={{
-                fontSize: '10px', fontWeight: 600, minWidth: 36, textAlign: 'right',
-                color: diff > 0 ? 'var(--gain-400)' : diff < 0 ? 'var(--loss-400)' : 'var(--text-muted)',
-                opacity: changed && diff !== 0 ? 1 : 0,
-                transition: 'opacity 250ms',
-              }}>
-                {diff > 0 ? `+${diff}%` : `${diff}%`}
-              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={allocation[cat]}
+                onChange={(e) => handleSlider(cat, Number(e.target.value))}
+                style={{ width: '100%', accentColor: CATEGORY_COLORS[cat], cursor: 'pointer', height: 4 }}
+              />
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* Total indicator */}
+        <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: totalOk ? 'var(--gain-tint)' : 'var(--loss-tint)', border: `1px solid ${totalOk ? 'var(--gain-500)' : 'var(--loss-500)'}33` }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Total alokasi</span>
+          <span style={{ fontSize: '14px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: totalOk ? 'var(--gain-500)' : 'var(--loss-500)' }}>
+            {total}% {totalOk ? '✓' : `(kurang ${100 - total}%)`}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -215,6 +245,9 @@ export function SettingsPage() {
     localStorage.setItem('lang', lang);
   };
 
+  const defaultAllocation = user?.targetAllocation ?? getAllocationTarget(user?.riskProfile ?? 'moderate', user?.investmentHorizon ?? 'medium');
+  const [allocation, setAllocation] = useState<AllocationTarget>(defaultAllocation);
+
   const { register, handleSubmit, setValue, control, formState: { isSubmitting, errors } } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: {
@@ -225,22 +258,17 @@ export function SettingsPage() {
     },
   });
 
-  const riskProfile = useWatch({ control, name: 'riskProfile' });
   const investmentHorizon = useWatch({ control, name: 'investmentHorizon' });
   const aiHistoryEnabled = useWatch({ control, name: 'aiHistoryEnabled' });
 
-  const currentAllocation = user?.targetAllocation ?? getAllocationTarget(user?.riskProfile ?? 'moderate', user?.investmentHorizon ?? 'medium');
-  const previewAllocation = getAllocationTarget(riskProfile as RiskProfile, investmentHorizon as InvestmentHorizon);
-  const allocationChanged = riskProfile !== user?.riskProfile || investmentHorizon !== user?.investmentHorizon;
+  const allocationTotal = (Object.keys(allocation) as AssetCategory[]).reduce((s, k) => s + allocation[k], 0);
 
   const onSubmit = async (data: FormValues) => {
     if (!user) return;
-    const targetAllocation = getAllocationTarget(
-      data.riskProfile as RiskProfile,
-      data.investmentHorizon as InvestmentHorizon,
-    );
-    await updateUserProfile.execute(user.id, { ...data, targetAllocation });
-    setUser({ ...user, ...data, targetAllocation, updatedAt: new Date() });
+    const detectedPreset = detectPreset(allocation, data.investmentHorizon as InvestmentHorizon);
+    const riskProfile = detectedPreset ?? (data.riskProfile as RiskProfile);
+    await updateUserProfile.execute(user.id, { ...data, riskProfile, targetAllocation: allocation });
+    setUser({ ...user, ...data, riskProfile, targetAllocation: allocation, updatedAt: new Date() });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -314,26 +342,6 @@ export function SettingsPage() {
               </div>
             </SectionCard>
 
-            {/* Risk Profile */}
-            <SectionCard icon={<Shield size={14} strokeWidth={2} />} title={t('settings.riskProfile')}>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {([
-                  { value: 'conservative', label: t('onboarding.conservative'), desc: 'Risiko rendah, return stabil' },
-                  { value: 'moderate', label: t('onboarding.moderate'), desc: 'Keseimbangan risiko & return', badge: 'Populer' },
-                  { value: 'aggressive', label: t('onboarding.aggressive'), desc: 'Risiko tinggi, return maksimal' },
-                ] as const).map((opt) => (
-                  <OptionCard
-                    key={opt.value}
-                    selected={riskProfile === opt.value}
-                    onClick={() => setValue('riskProfile', opt.value)}
-                    label={opt.label}
-                    description={opt.desc}
-                    badge={'badge' in opt ? opt.badge : undefined}
-                  />
-                ))}
-              </div>
-            </SectionCard>
-
             {/* Investment Horizon */}
             <SectionCard icon={<Clock size={14} strokeWidth={2} />} title={t('settings.horizon')}>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -353,12 +361,22 @@ export function SettingsPage() {
               </div>
             </SectionCard>
 
+            {/* Allocation editor */}
+            <AllocationEditor
+              allocation={allocation}
+              onChange={setAllocation}
+              horizon={investmentHorizon as InvestmentHorizon}
+            />
+
             {/* Save button */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Button type="submit" loading={isSubmitting}>
+              <Button type="submit" loading={isSubmitting} disabled={allocationTotal !== 100}>
                 <Save size={14} strokeWidth={2} style={{ marginRight: 6, display: 'inline' }} />
                 {t('settings.saveChanges')}
               </Button>
+              {allocationTotal !== 100 && (
+                <span style={{ fontSize: '12px', color: 'var(--loss-400)' }}>Total alokasi harus 100%</span>
+              )}
               {saved && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--gain-400)', fontSize: '13px', fontWeight: 500 }}>
                   <Check size={14} strokeWidth={2.5} />
@@ -370,13 +388,6 @@ export function SettingsPage() {
 
           {/* ── Right column ── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* Allocation simulation */}
-            <AllocationSimulation
-              current={currentAllocation}
-              preview={previewAllocation}
-              changed={allocationChanged}
-            />
 
             {/* AI & Appearance */}
             <SectionCard icon={<Bot size={14} strokeWidth={2} />} title="AI & Tampilan">
