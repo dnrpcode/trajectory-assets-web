@@ -2,18 +2,27 @@
 
 **Personal portfolio intelligence platform untuk investor retail Indonesia.**
 
-Analisis portofolio, rebalancing otomatis, dan konsultasi AI — semuanya berbasis data investasi Anda secara real-time.
+Analisis portofolio, rebalancing otomatis, sinyal trading crypto, kalender dividen IDX, dan konsultasi AI — semuanya berbasis data investasi Anda secara real-time.
+
+**Live:** [trajectory-assets.vercel.app](https://trajectory-assets.vercel.app)
 
 ---
 
 ## Fitur
 
-- **Dashboard** — ringkasan nilai portofolio, unrealized gain/loss, skor rebalancing
-- **Portfolio** — daftar aset aktif dengan tracking harga & notifikasi stale
-- **Asset Detail** — riwayat harga, jurnal entry, dan analisis per-aset
-- **Robo Advisor** — chat AI berbasis data portofolio real-time, bisa rekomendasikan dan langsung update profil risiko & target alokasi
-- **Journal** — log semua transaksi investasi (beli, jual, top up, income, fee, koreksi)
-- **Settings** — profil risiko, horizon investasi, tema, dan bahasa (ID/EN)
+| Halaman | Deskripsi |
+|---|---|
+| **Dashboard** | Nilai total portofolio, unrealized gain/loss, grafik historis, skor rebalancing |
+| **Portfolio** | Daftar aset aktif dengan harga terkini, notifikasi stale, dan detail per-aset |
+| **Asset Detail** | Riwayat harga, jurnal transaksi, dan analisis per-aset |
+| **Trading** | Watchlist crypto dengan sinyal RSI + MA, setup entry/SL/TP, paper trading |
+| **Dividen & Kupon** | Kalender dividen emiten IDX — yield, konsistensi, riwayat historis (data Yahoo Finance) |
+| **Rebalancing** | Analisis deviasi alokasi aktual vs target berdasarkan profil risiko |
+| **Simulasi CAGR** | Proyeksi nilai portofolio dengan asumsi return dan kontribusi bulanan |
+| **Robo Advisor** | Chat AI berbasis data portofolio real-time, bisa update profil & target alokasi |
+| **Jurnal** | Log semua transaksi (beli, jual, top up, income, fee, koreksi) |
+| **Pengaturan** | Profil risiko, horizon investasi, bahasa (ID/EN), tema gelap/terang |
+| **Panduan** | Guided tour interaktif seluruh fitur |
 
 ---
 
@@ -23,46 +32,67 @@ Analisis portofolio, rebalancing otomatis, dan konsultasi AI — semuanya berbas
 |---|---|
 | Frontend | React 18 + TypeScript (strict) + Vite |
 | Styling | Tailwind CSS v3 + CSS Custom Properties |
-| State | TanStack Query v5 (server) + Zustand (auth) |
+| State | TanStack Query v5 (server state) + Zustand (auth) |
 | Forms | React Hook Form + Zod |
 | Backend | Firebase Auth + Firestore |
 | AI | OpenAI-compatible API (OpenRouter, Groq, dll) |
-| i18n | i18next (Bahasa Indonesia + English) |
+| Market Data | CoinGecko API (crypto) · Yahoo Finance via Vercel proxy (dividen IDX) |
+| i18n | i18next — Bahasa Indonesia + English |
 | Routing | React Router v6 |
 | Charts | Recharts |
+| Deployment | Vercel (Edge Functions untuk proxy Yahoo Finance) |
 
 ---
 
 ## Arsitektur
 
-Project menggunakan **Clean Architecture** dengan event-sourced lite pattern:
+Project menggunakan **Clean Architecture** dengan struktur modular per-fitur (vertical slice):
 
 ```
 src/
-├── domain/            Pure business logic — tidak ada framework dependency
-│   ├── entities/      TypeScript interfaces (Asset, User, dll)
-│   ├── repositories/  Interface contracts (IUserRepository, IAIAdvisorRepository, dll)
-│   └── use-cases/     Business operations (CreateEntry, SendAdvisorMessage, dll)
+├── modules/
+│   ├── auth/          Login, Register, Firebase auth listener
+│   ├── user/          Onboarding wizard, Settings, user profile
+│   ├── portfolio/     Portfolio, AssetDetail, entry ledger, projection engine
+│   ├── dashboard/     Dashboard, Journal, Advisory, Simulasi CAGR
+│   ├── trading/       Crypto watchlist, sinyal RSI+MA, paper trading
+│   ├── advisor/       Robo Advisor (AI chat dengan konteks portofolio)
+│   ├── income/        Kalender dividen IDX (Yahoo Finance)
+│   ├── goals/         Financial goals
+│   └── help/          HelpPage + guided tour
+├── shared/
+│   ├── ui/            Layout, Navbar, Button, Input, Modal, Spinner, dll
+│   ├── utils/         cn, formatCurrency, calculations, formatDate, dll
+│   ├── constants/     categories, platforms, allocationTargets
+│   └── types/         AssetCategory, EntryType, RiskProfile, dll
 ├── data/
-│   ├── firebase/      Firebase repository implementations
-│   └── ai/            AI advisor repository (OpenAI-compatible)
-├── presentation/
-│   ├── pages/         Route pages
-│   ├── components/    UI, charts, forms, chat
-│   └── hooks/         React Query + Zustand wrappers
+│   └── firebase/      Firebase config (db, auth)
+├── i18n/              i18next config + locales (id.json, en.json)
 ├── infrastructure/
-│   └── di/container.ts  Singleton instances + dependency injection
-├── i18n/              i18next config + locale files (id.json, en.json)
-└── shared/
-    ├── utils/         formatCurrency, calculations, cn, dll
-    ├── constants/     categories, platforms, allocationTargets
-    └── types/         shared TypeScript types
+│   └── di/container.ts  Semua singleton + dependency injection
+└── api/               Vercel Edge Functions (proxy Yahoo Finance)
+    └── dividend/      /api/dividend/search · /api/dividend/chart
+```
+
+Setiap module mengikuti struktur yang sama:
+
+```
+modules/[name]/
+├── domain/
+│   ├── entities/      TypeScript interfaces (pure, no framework)
+│   ├── repositories/  Interface contracts (I*Repository)
+│   └── use-cases/     Business logic classes
+├── data/              Firebase / API implementations
+└── presentation/
+    ├── hooks/         React Query + Zustand wrappers
+    ├── pages/         Route components
+    └── components/    Komponen khusus module ini
 ```
 
 **Prinsip utama:**
-- Domain layer tidak tahu tentang Firebase, React, atau provider AI apapun
-- Ganti AI provider cukup dengan swap implementasi di `container.ts` — tidak ada file lain yang berubah
-- Semua entry Firestore immutable; Asset adalah projection yang di-compute ulang dari entry
+- Domain layer tidak tahu tentang Firebase, React, atau provider apapun
+- Semua entry Firestore **immutable** — Asset adalah *projection* yang di-recompute dari seluruh entry
+- Ganti AI provider atau data source cukup swap implementasi di `container.ts`
 
 ---
 
@@ -82,7 +112,7 @@ npm install
 cp .env.example .env
 ```
 
-Isi file `.env`:
+Isi `.env`:
 
 ```env
 # Firebase
@@ -93,7 +123,7 @@ VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
 
-# AI Provider (OpenRouter, Groq, OpenAI, dll — format OpenAI-compatible)
+# AI Provider (format OpenAI-compatible: OpenRouter, Groq, OpenAI, dll)
 VITE_AI_API_KEY=
 VITE_AI_API_URL=https://openrouter.ai/api/v1/chat/completions
 VITE_AI_MODEL=meta-llama/llama-3.1-8b-instruct:free
@@ -102,22 +132,20 @@ VITE_AI_MODEL=meta-llama/llama-3.1-8b-instruct:free
 ### 3. Firebase setup
 
 1. Buat project di [Firebase Console](https://console.firebase.google.com)
-2. Aktifkan **Authentication** (Email/Password + Google)
+2. Aktifkan **Authentication** — Email/Password + Google
 3. Aktifkan **Firestore Database**
 4. Copy credentials ke `.env`
 
 ### 4. AI setup (opsional — untuk Robo Advisor)
 
-Pilih salah satu provider gratis:
-
-**OpenRouter** (openrouter.ai):
+**OpenRouter** (gratis, banyak model):
 ```env
 VITE_AI_API_KEY=sk-or-v1-...
 VITE_AI_API_URL=https://openrouter.ai/api/v1/chat/completions
 VITE_AI_MODEL=meta-llama/llama-3.1-8b-instruct:free
 ```
 
-**Groq** (console.groq.com) — lebih stabil & cepat:
+**Groq** (lebih stabil & cepat):
 ```env
 VITE_AI_API_KEY=gsk_...
 VITE_AI_API_URL=https://api.groq.com/openai/v1/chat/completions
@@ -127,9 +155,25 @@ VITE_AI_MODEL=mixtral-8x7b-32768
 ### 5. Jalankan
 
 ```bash
-npm run dev      # development
+npm run dev      # development (localhost:5173)
 npm run build    # production build
 ```
+
+### 6. Deploy ke Vercel
+
+```bash
+vercel --prod
+```
+
+Pastikan semua env vars sudah di-set di Vercel dashboard. Vercel Edge Functions di `api/` otomatis ter-deploy dan berfungsi sebagai proxy Yahoo Finance (bypass CORS).
+
+---
+
+## Deployment Notes
+
+- **Vercel proxy** (`api/dividend/`) diperlukan agar request ke Yahoo Finance tidak diblokir CORS dari browser
+- Proxy di-cache 5 menit di edge Vercel
+- CoinGecko API diakses langsung dari browser (gratis, tanpa API key) — ada rate limit 429 yang sudah di-handle dengan retry logic
 
 ---
 
@@ -151,21 +195,6 @@ npm run build    # production build
 ## Asset Categories
 
 `saham` · `reksa_dana` · `obligasi_sbn` · `emas` · `kripto` · `cash` · `lainnya`
-
----
-
-## Ganti AI Provider
-
-Karena menggunakan Clean Architecture, ganti provider AI tidak perlu ubah kode — cukup update `.env`:
-
-```env
-# Contoh: ganti ke Groq
-VITE_AI_API_KEY=gsk_xxxxx
-VITE_AI_API_URL=https://api.groq.com/openai/v1/chat/completions
-VITE_AI_MODEL=mixtral-8x7b-32768
-```
-
-Implementasi ada di `src/data/ai/AIAdvisorRepository.ts` — menggunakan format OpenAI chat completions yang kompatibel dengan mayoritas provider modern.
 
 ---
 
