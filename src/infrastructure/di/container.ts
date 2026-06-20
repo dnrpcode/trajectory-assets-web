@@ -37,6 +37,12 @@ import { RemoveFromWatchlist } from '@/modules/trading/domain/use-cases/RemoveFr
 import { ExecutePaperTrade } from '@/modules/trading/domain/use-cases/ExecutePaperTrade';
 import { GetPaperTrades } from '@/modules/trading/domain/use-cases/GetPaperTrades';
 
+import { yahooDividendRepository } from '@/modules/income/data/YahooDividendRepository';
+import { FirebaseDividendWatchlistRepository } from '@/modules/income/data/FirebaseDividendWatchlistRepository';
+import { GetDividendInfo } from '@/modules/income/domain/use-cases/GetDividendInfo';
+import { SearchTicker } from '@/modules/income/domain/use-cases/SearchTicker';
+import { GetDividendWatchlist, AddToDividendWatchlist, RemoveFromDividendWatchlist } from '@/modules/income/domain/use-cases/ManageDividendWatchlist';
+
 
 // ── Infrastructure ────────────────────────────────────────────────────────────
 export const authService      = new FirebaseAuthService();
@@ -76,6 +82,15 @@ export const backfillPortfolioHistory = new BackfillPortfolioHistory(entryReposi
 // ── AI Advisor ────────────────────────────────────────────────────────────────
 export const aiAdvisorRepository = new AIAdvisorRepository();
 export const sendAdvisorMessage  = new SendAdvisorMessage(aiAdvisorRepository);
+
+// ── Trading ───────────────────────────────────────────────────────────────────
+// ── Dividend calendar ─────────────────────────────────────────────────────────
+export const dividendWatchlistRepository  = new FirebaseDividendWatchlistRepository();
+export const getDividendInfo              = new GetDividendInfo(yahooDividendRepository);
+export const searchDividendTicker         = new SearchTicker(yahooDividendRepository);
+export const getDividendWatchlist         = new GetDividendWatchlist(dividendWatchlistRepository);
+export const addToDividendWatchlist       = new AddToDividendWatchlist(dividendWatchlistRepository);
+export const removeFromDividendWatchlist  = new RemoveFromDividendWatchlist(dividendWatchlistRepository);
 
 // ── Trading ───────────────────────────────────────────────────────────────────
 export const watchlistRepository   = new FirebaseWatchlistRepository();
