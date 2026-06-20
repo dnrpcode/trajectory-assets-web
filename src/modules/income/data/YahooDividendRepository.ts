@@ -95,7 +95,7 @@ class YahooDividendRepositoryImpl implements IDividendRepository {
   }
 
   async searchTicker(query: string): Promise<TickerSuggestion[]> {
-    const url = `${SEARCH}?q=${encodeURIComponent(query + ' JK')}`;
+    const url = `${SEARCH}?q=${encodeURIComponent(query.toUpperCase() + '.JK')}`;
     let res: Response;
     try {
       res = await fetch(url, { headers: { Accept: 'application/json' } });
