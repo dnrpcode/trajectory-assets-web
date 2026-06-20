@@ -1,27 +1,27 @@
 import React from 'react';
-import { ThemeProvider } from './presentation/contexts/ThemeContext';
+import { ThemeProvider } from '@/shared/ui/ThemeContext';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TourProvider } from './presentation/contexts/TourContext';
-import { TourOverlay } from './presentation/components/tour/TourOverlay';
-import { ToastProvider } from './presentation/components/ui/Toast';
-import { useAuth } from './presentation/hooks/useAuth';
-import { FullPageSpinner } from './presentation/components/ui/Spinner';
-import { LoginPage } from './presentation/pages/Auth/LoginPage';
-import { RegisterPage } from './presentation/pages/Auth/RegisterPage';
-import { OnboardingPage } from './presentation/pages/Onboarding/OnboardingPage';
-import { DashboardPage } from './presentation/pages/Dashboard/DashboardPage';
-import { PortfolioPage } from './presentation/pages/Portfolio/PortfolioPage';
-import { AssetDetailPage } from './presentation/pages/Portfolio/AssetDetailPage';
-import { JournalPage } from './presentation/pages/Journal/JournalPage';
-import { SettingsPage } from './presentation/pages/Settings/SettingsPage';
-import { AdvisoryPage } from './presentation/pages/Advisory/AdvisoryPage';
-import { ProjectionsPage } from './presentation/pages/Projections/ProjectionsPage';
-import { ChatPage } from './presentation/pages/Chat/ChatPage';
-import { HelpPage } from './presentation/pages/Help/HelpPage';
-import { NotFoundPage } from './presentation/pages/NotFoundPage';
-import { TradingPage } from './presentation/pages/Trading/TradingPage';
-import { CoinDetailPage } from './presentation/pages/Trading/CoinDetailPage';
+import { TourProvider } from '@/shared/ui/TourContext';
+import { TourOverlay } from '@/shared/ui/TourOverlay';
+import { ToastProvider } from '@/shared/ui/Toast';
+import { useAuth } from '@/modules/auth/presentation/hooks/useAuth';
+import { FullPageSpinner } from '@/shared/ui/Spinner';
+import { LoginPage } from '@/modules/auth/presentation/pages/LoginPage';
+import { RegisterPage } from '@/modules/auth/presentation/pages/RegisterPage';
+import { OnboardingPage } from '@/modules/user/presentation/pages/OnboardingPage';
+import { DashboardPage } from '@/modules/dashboard/presentation/pages/DashboardPage';
+import { PortfolioPage } from '@/modules/portfolio/presentation/pages/PortfolioPage';
+import { AssetDetailPage } from '@/modules/portfolio/presentation/pages/AssetDetailPage';
+import { JournalPage } from '@/modules/dashboard/presentation/pages/JournalPage';
+import { SettingsPage } from '@/modules/user/presentation/pages/SettingsPage';
+import { AdvisoryPage } from '@/modules/dashboard/presentation/pages/AdvisoryPage';
+import { ProjectionsPage } from '@/modules/dashboard/presentation/pages/ProjectionsPage';
+import { ChatPage } from '@/modules/advisor/presentation/pages/ChatPage';
+import { HelpPage } from '@/shared/ui/HelpPage';
+import { NotFoundPage } from '@/shared/ui/NotFoundPage';
+import { TradingPage } from '@/modules/trading/presentation/pages/TradingPage';
+import { CoinDetailPage } from '@/modules/trading/presentation/pages/CoinDetailPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {

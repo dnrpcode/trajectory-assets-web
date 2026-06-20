@@ -1,0 +1,48 @@
+import { IUserRepository } from '../repositories/IUserRepository';
+import { IGoalRepository } from '@/modules/goals/domain/repositories/IGoalRepository';
+import { RiskProfile, InvestmentHorizon } from '@/shared/types';
+import { getAllocationTarget } from '@/shared/constants/allocationTargets';
+
+export interface OnboardingInput {
+  userId: string;
+  email: string;
+  displayName: string;
+  riskProfile: RiskProfile;
+  investmentHorizon: InvestmentHorizon;
+  goal?: {
+    targetAmountIDR: number;
+    targetDate?: string;
+    monthlyContributionIDR?: number;
+  };
+}
+
+export class CompleteOnboarding {
+  constructor(
+    private userRepo: IUserRepository,
+    private goalRepo: IGoalRepository,
+  ) {}
+
+  async execute(input: OnboardingInput): Promise<void> {
+    const targetAllocation = getAllocationTarget(input.riskProfile, input.investmentHorizon);
+    const now = new Date();
+
+    await this.userRepo.update(input.userId, {
+      riskProfile: input.riskProfile,
+      investmentHorizon: input.investmentHorizon,
+      targetAllocation,
+      onboardingComplete: true,
+      updatedAt: now,
+    });
+
+    if (input.goal?.targetAmountIDR) {
+      await this.goalRepo.create({
+        userId: input.userId,
+        targetAmountIDR: input.goal.targetAmountIDR,
+        targetDate: input.goal.targetDate,
+        monthlyContributionIDR: input.goal.monthlyContributionIDR,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  }
+}

@@ -1,42 +1,41 @@
-import { FirebaseAuthService } from '../../data/firebase/FirebaseAuthService';
-import { FirebaseUserRepository } from '../../data/firebase/FirebaseUserRepository';
-import { FirebaseAssetEntryRepository } from '../../data/firebase/FirebaseAssetEntryRepository';
-import { FirebaseAssetProjectionRepository } from '../../data/firebase/FirebaseAssetProjectionRepository';
-import { FirebasePortfolioRepository } from '../../data/firebase/FirebasePortfolioRepository';
-import { FirebaseGoalRepository } from '../../data/firebase/FirebaseGoalRepository';
+import { FirebaseAuthService } from '@/modules/auth/data/FirebaseAuthService';
+import { FirebaseUserRepository } from '@/modules/user/data/FirebaseUserRepository';
+import { FirebaseGoalRepository } from '@/modules/goals/data/FirebaseGoalRepository';
+import { FirebaseAssetEntryRepository } from '@/modules/portfolio/data/FirebaseAssetEntryRepository';
+import { FirebaseAssetProjectionRepository } from '@/modules/portfolio/data/FirebaseAssetProjectionRepository';
+import { FirebasePortfolioRepository } from '@/modules/dashboard/data/FirebasePortfolioRepository';
+import { FirebaseWatchlistRepository } from '@/modules/trading/data/FirebaseWatchlistRepository';
+import { FirebasePaperTradeRepository } from '@/modules/trading/data/FirebasePaperTradeRepository';
+import { AIAdvisorRepository } from '@/modules/advisor/data/AIAdvisorRepository';
 
-import { LoginWithEmail } from '../../domain/use-cases/auth/LoginWithEmail';
-import { LoginWithGoogle } from '../../domain/use-cases/auth/LoginWithGoogle';
-import { RegisterWithEmail } from '../../domain/use-cases/auth/RegisterWithEmail';
-import { Logout } from '../../domain/use-cases/auth/Logout';
+import { LoginWithEmail } from '@/modules/auth/domain/use-cases/LoginWithEmail';
+import { LoginWithGoogle } from '@/modules/auth/domain/use-cases/LoginWithGoogle';
+import { RegisterWithEmail } from '@/modules/auth/domain/use-cases/RegisterWithEmail';
+import { Logout } from '@/modules/auth/domain/use-cases/Logout';
 
-import { GetUserById } from '../../domain/use-cases/user/GetUserById';
-import { CompleteOnboarding } from '../../domain/use-cases/user/CompleteOnboarding';
-import { UpdateUserProfile } from '../../domain/use-cases/user/UpdateUserProfile';
+import { GetUserById } from '@/modules/user/domain/use-cases/GetUserById';
+import { CompleteOnboarding } from '@/modules/user/domain/use-cases/CompleteOnboarding';
+import { UpdateUserProfile } from '@/modules/user/domain/use-cases/UpdateUserProfile';
 
-import { CreateEntry } from '../../domain/use-cases/asset-entries/CreateEntry';
-import { RecomputeAssetProjection } from '../../domain/use-cases/asset-entries/RecomputeAssetProjection';
-import { GetAssetEntries } from '../../domain/use-cases/asset-entries/GetAssetEntries';
-import { DeleteEntry } from '../../domain/use-cases/asset-entries/DeleteEntry';
+import { CreateEntry } from '@/modules/portfolio/domain/use-cases/CreateEntry';
+import { RecomputeAssetProjection } from '@/modules/portfolio/domain/use-cases/RecomputeAssetProjection';
+import { GetAssetEntries } from '@/modules/portfolio/domain/use-cases/GetAssetEntries';
+import { DeleteEntry } from '@/modules/portfolio/domain/use-cases/DeleteEntry';
+import { GetActiveAssets } from '@/modules/portfolio/domain/use-cases/GetActiveAssets';
+import { GetAllAssets } from '@/modules/portfolio/domain/use-cases/GetAllAssets';
+import { DeleteAsset } from '@/modules/portfolio/domain/use-cases/DeleteAsset';
 
-import { GetActiveAssets } from '../../domain/use-cases/assets/GetActiveAssets';
-import { GetAllAssets } from '../../domain/use-cases/assets/GetAllAssets';
-import { DeleteAsset } from '../../domain/use-cases/assets/DeleteAsset';
+import { GetPortfolioSummary } from '@/modules/dashboard/domain/use-cases/GetPortfolioSummary';
+import { GetPortfolioHistory } from '@/modules/dashboard/domain/use-cases/GetPortfolioHistory';
+import { BackfillPortfolioHistory } from '@/modules/dashboard/domain/use-cases/BackfillPortfolioHistory';
 
-import { GetPortfolioSummary } from '../../domain/use-cases/portfolio/GetPortfolioSummary';
-import { GetPortfolioHistory } from '../../domain/use-cases/portfolio/GetPortfolioHistory';
-import { BackfillPortfolioHistory } from '../../domain/use-cases/portfolio/BackfillPortfolioHistory';
+import { SendAdvisorMessage } from '@/modules/advisor/domain/use-cases/SendAdvisorMessage';
 
-import { AIAdvisorRepository } from '../../data/ai/AIAdvisorRepository';
-import { SendAdvisorMessage } from '../../domain/use-cases/advisor/SendAdvisorMessage';
-
-import { FirebaseWatchlistRepository } from '../../data/firebase/FirebaseWatchlistRepository';
-import { FirebasePaperTradeRepository } from '../../data/firebase/FirebasePaperTradeRepository';
-import { GetWatchlist } from '../../domain/use-cases/trading/GetWatchlist';
-import { AddToWatchlist } from '../../domain/use-cases/trading/AddToWatchlist';
-import { RemoveFromWatchlist } from '../../domain/use-cases/trading/RemoveFromWatchlist';
-import { ExecutePaperTrade } from '../../domain/use-cases/trading/ExecutePaperTrade';
-import { GetPaperTrades } from '../../domain/use-cases/trading/GetPaperTrades';
+import { GetWatchlist } from '@/modules/trading/domain/use-cases/GetWatchlist';
+import { AddToWatchlist } from '@/modules/trading/domain/use-cases/AddToWatchlist';
+import { RemoveFromWatchlist } from '@/modules/trading/domain/use-cases/RemoveFromWatchlist';
+import { ExecutePaperTrade } from '@/modules/trading/domain/use-cases/ExecutePaperTrade';
+import { GetPaperTrades } from '@/modules/trading/domain/use-cases/GetPaperTrades';
 
 // ── Infrastructure ────────────────────────────────────────────────────────────
 export const authService      = new FirebaseAuthService();
