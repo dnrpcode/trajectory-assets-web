@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, TrendingUp, Scan } from 'lucide-react';
+import { Plus, TrendingUp, Scan, AlertTriangle } from 'lucide-react';
 import { Layout } from '@/shared/ui/Layout';
 import { Button } from '@/shared/ui/Button';
 import { Spinner } from '@/shared/ui/Spinner';
@@ -7,6 +7,7 @@ import { CoinCard } from '../components/CoinCard';
 import { CoinSearchModal } from '../components/CoinSearchModal';
 import { SignalScannerModal } from '../components/SignalScannerModal';
 import { useWatchlist, useCoinMarkets } from '../hooks/useTrading';
+import { getCoinGeckoErrorMessage, CoinMarket } from '../../data/CoinGeckoRepository';
 
 export function TradingPage() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -14,8 +15,8 @@ export function TradingPage() {
   const { data: watchlist = [], isLoading: watchlistLoading } = useWatchlist();
 
   const coinIds = watchlist.map((w) => w.coinId);
-  const { data: markets = [] } = useCoinMarkets(coinIds);
-  const marketMap = Object.fromEntries(markets.map((m) => [m.id, m]));
+  const { data: markets = [], error: marketsError } = useCoinMarkets(coinIds);
+  const marketMap = Object.fromEntries(markets.map((m: CoinMarket) => [m.id, m]));
 
   return (
     <Layout>
@@ -38,6 +39,20 @@ export function TradingPage() {
           </Button>
         </div>
       </div>
+
+      {/* API error banner */}
+      {!!marketsError && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+          borderRadius: 10, marginBottom: 16,
+          background: 'var(--warn-tint)', border: '1px solid rgba(245,158,11,0.25)',
+        }}>
+          <AlertTriangle size={14} style={{ color: 'var(--warn-400)', flexShrink: 0 }} />
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--warn-400)' }}>
+            {getCoinGeckoErrorMessage(marketsError)} Harga mungkin tidak terupdate.
+          </p>
+        </div>
+      )}
 
       {/* Watchlist */}
       {watchlistLoading ? (

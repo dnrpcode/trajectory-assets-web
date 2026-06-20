@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, Plus, Loader } from 'lucide-react';
-import { CoinGeckoService, CoinSearchResult } from '../../data/CoinGeckoRepository';
+import { CoinGeckoService, CoinSearchResult, getCoinGeckoErrorMessage } from '../../data/CoinGeckoRepository';
 import { useAddToWatchlist, useWatchlist } from '../hooks/useTrading';
 
 interface Props {
@@ -12,6 +12,7 @@ export function CoinSearchModal({ open, onClose }: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CoinSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { data: watchlist = [] } = useWatchlist();
   const addMutation = useAddToWatchlist();
@@ -20,19 +21,23 @@ export function CoinSearchModal({ open, onClose }: Props) {
     if (open) {
       setQuery('');
       setResults([]);
+      setSearchError(null);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [open]);
 
   useEffect(() => {
-    if (!query.trim()) { setResults([]); return; }
+    if (!query.trim()) { setResults([]); setSearchError(null); return; }
     const timer = setTimeout(async () => {
       setLoading(true);
+      setSearchError(null);
       try {
         const res = await CoinGeckoService.search(query);
         setResults(res);
-      } catch { setResults([]); }
-      finally { setLoading(false); }
+      } catch (e) {
+        setResults([]);
+        setSearchError(getCoinGeckoErrorMessage(e));
+      } finally { setLoading(false); }
     }, 400);
     return () => clearTimeout(timer);
   }, [query]);
@@ -78,12 +83,17 @@ export function CoinSearchModal({ open, onClose }: Props) {
 
         {/* Results */}
         <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-          {results.length === 0 && query && !loading && (
+          {searchError && (
+            <p style={{ padding: '24px', textAlign: 'center', color: 'var(--warn-400)', fontSize: '13px' }}>
+              {searchError}
+            </p>
+          )}
+          {!searchError && results.length === 0 && query && !loading && (
             <p style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
               Tidak ada hasil untuk "{query}"
             </p>
           )}
-          {results.length === 0 && !query && (
+          {!searchError && results.length === 0 && !query && (
             <p style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
               Ketik nama atau simbol coin untuk mencari
             </p>

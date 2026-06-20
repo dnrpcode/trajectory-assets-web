@@ -4,10 +4,32 @@ import {
   getWatchlist, addToWatchlist, removeFromWatchlist,
   executePaperTrade, getPaperTrades,
 } from '@/infrastructure/di/container';
-import { CoinGeckoService, OHLCPoint } from '../../data/CoinGeckoRepository';
+import { CoinGeckoService, CoinGeckoError, OHLCPoint, sleep } from '../../data/CoinGeckoRepository';
+import { CoinMarket } from '../../domain/entities/Market';
 import { computeSignal, SignalResult } from '@/shared/utils/indicators';
 import { WatchlistCoin } from '../../domain/entities/Watchlist';
 import { PaperTrade } from '../../domain/entities/PaperTrade';
+
+// Never retry 401 (auth) or 4xx client errors other than 429.
+// Retry 429 and 5xx with appropriate delay.
+function cgRetry(failureCount: number, error: unknown): boolean {
+  if (error instanceof CoinGeckoError) {
+    if (error.isUnauthorized) return false;
+    if (error.isRateLimit) return failureCount < 2;
+    if (error.isServerError) return failureCount < 1;
+    return false;
+  }
+  // Network errors: retry once
+  return failureCount < 1;
+}
+
+// For 429: wait for Retry-After (default 60s). Other errors: 5s backoff.
+function cgRetryDelay(_failureCount: number, error: unknown): number {
+  if (error instanceof CoinGeckoError && error.isRateLimit) {
+    return (error.retryAfter ?? 60) * 1000;
+  }
+  return 5_000;
+}
 
 // ── Watchlist ─────────────────────────────────────────────────────────────────
 
@@ -47,7 +69,8 @@ export function useCoinMarkets(coinIds: string[]) {
     queryFn: () => CoinGeckoService.getMarkets(coinIds),
     enabled: coinIds.length > 0,
     staleTime: 60_000,
-    retry: 2,
+    retry: cgRetry,
+    retryDelay: cgRetryDelay,
   });
 }
 
@@ -68,13 +91,14 @@ export function useCoinDetail(coinId: string) {
         CoinGeckoService.getOHLC(coinId, 30),
         CoinGeckoService.getUsdToIdr(),
       ]);
-      const closes = ohlc.map((p) => p.close);
+      const closes = ohlc.map((p: OHLCPoint) => p.close);
       const signal = computeSignal(closes);
       return { ohlc, closes, signal, usdToIdr };
     },
     enabled: !!coinId,
     staleTime: 5 * 60_000,
-    retry: 2,
+    retry: cgRetry,
+    retryDelay: cgRetryDelay,
   });
 }
 
@@ -140,19 +164,29 @@ export interface ScanResult {
   image?: string;
 }
 
+async function fetchWithRateLimitRetry(coinId: string): Promise<number[]> {
+  try {
+    return await CoinGeckoService.getMarketChart(coinId, 30);
+  } catch (e) {
+    if (e instanceof CoinGeckoError && e.isRateLimit) {
+      const waitMs = (e.retryAfter ?? 60) * 1000;
+      await sleep(waitMs);
+      return CoinGeckoService.getMarketChart(coinId, 30);
+    }
+    throw e;
+  }
+}
+
 async function scanCoins(): Promise<ScanResult[]> {
   const ids = TOP_SCAN_COINS.map((c) => c.id);
-
-  // Fetch market prices in one call
   const markets = await CoinGeckoService.getMarkets(ids);
-  const marketMap = Object.fromEntries(markets.map((m) => [m.id, m]));
+  const marketMap = Object.fromEntries(markets.map((m: CoinMarket) => [m.id, m]));
 
   const results: ScanResult[] = [];
 
-  // Sequential to respect rate limits (free tier ~30 req/min)
   for (const coin of TOP_SCAN_COINS) {
     try {
-      const closes = await CoinGeckoService.getMarketChart(coin.id, 30);
+      const closes = await fetchWithRateLimitRetry(coin.id);
       const signal = computeSignal(closes);
       const m = marketMap[coin.id];
       results.push({
@@ -164,10 +198,9 @@ async function scanCoins(): Promise<ScanResult[]> {
         priceChange24h: m?.price_change_percentage_24h,
         image: m?.image,
       });
-      // Small delay to avoid rate limit
-      await new Promise((r) => setTimeout(r, 300));
+      await sleep(400);
     } catch {
-      // Skip failed coins
+      // Skip coin if it fails after retry
     }
   }
 
@@ -179,8 +212,8 @@ export function useSignalScanner() {
     queryKey: ['signalScanner'],
     queryFn: scanCoins,
     staleTime: 10 * 60_000,
-    retry: 1,
-    enabled: false, // only run when manually triggered
+    retry: false, // scanCoins handles its own retries internally
+    enabled: false,
   });
 }
 
@@ -191,5 +224,7 @@ export function useUsdToIdr() {
     queryKey: ['usdToIdr'],
     queryFn: () => CoinGeckoService.getUsdToIdr(),
     staleTime: 10 * 60_000,
+    retry: cgRetry,
+    retryDelay: cgRetryDelay,
   });
 }

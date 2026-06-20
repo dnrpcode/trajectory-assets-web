@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, WifiOff, Clock, ServerCrash } from 'lucide-react';
+import { CoinGeckoError, getCoinGeckoErrorMessage } from '../../data/CoinGeckoRepository';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ComposedChart, Line } from 'recharts';
 import { Layout } from '@/shared/ui/Layout';
 import { Card } from '@/shared/ui/Card';
@@ -40,7 +41,7 @@ export function CoinDetailPage() {
   const { data: watchlist = [] } = useWatchlist();
   const coin = watchlist.find((w) => w.coinId === coinId);
 
-  const { data: detail, isLoading, refetch, isFetching } = useCoinDetail(coinId!);
+  const { data: detail, isLoading, error, refetch, isFetching } = useCoinDetail(coinId!);
   const { data: markets = [] } = useCoinMarkets(coinId ? [coinId] : []);
   const market = markets[0];
 
@@ -48,9 +49,48 @@ export function CoinDetailPage() {
     <Layout><div className="flex justify-center py-24"><Spinner size="lg" /></div></Layout>
   );
 
-  if (!detail) return (
-    <Layout><div className="text-center py-24" style={{ color: 'var(--text-muted)' }}>Gagal memuat data coin.</div></Layout>
-  );
+  if (error || !detail) {
+    const isRateLimit = error instanceof CoinGeckoError && error.isRateLimit;
+    const isOffline = error instanceof TypeError;
+    const Icon = isRateLimit ? Clock : isOffline ? WifiOff : ServerCrash;
+    const title = isRateLimit
+      ? 'Batas permintaan API tercapai'
+      : isOffline
+      ? 'Tidak dapat terhubung'
+      : 'Gagal memuat data';
+
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center py-24 gap-4 text-center px-4">
+          <div style={{
+            width: 52, height: 52, borderRadius: 14,
+            background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon size={22} style={{ color: isRateLimit ? 'var(--warn-400)' : 'var(--loss-400)' }} />
+          </div>
+          <div>
+            <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', margin: '0 0 6px' }}>{title}</p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 320, margin: 0 }}>
+              {getCoinGeckoErrorMessage(error)}
+            </p>
+          </div>
+          <button
+            onClick={() => refetch()}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+              background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+              color: 'var(--text-primary)', cursor: 'pointer',
+            }}
+          >
+            <RefreshCw size={13} />
+            Coba Lagi
+          </button>
+        </div>
+      </Layout>
+    );
+  }
 
   const { ohlc, closes, signal, usdToIdr } = detail;
 
