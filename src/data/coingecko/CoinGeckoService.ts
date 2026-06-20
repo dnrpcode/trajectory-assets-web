@@ -47,11 +47,18 @@ export const CoinGeckoService = {
   },
 
   async getOHLC(coinId: string, days: 30 | 14 | 7 = 30): Promise<OHLCPoint[]> {
-    const raw = await get<[number, number, number, number, number][]>(
-      `/coins/${coinId}/ohlc`,
+    // Use market_chart (prices only) — more reliable on free tier, hourly granularity
+    const raw = await get<{ prices: [number, number][] }>(
+      `/coins/${coinId}/market_chart`,
       { vs_currency: 'usd', days: String(days) },
     );
-    return raw.map(([time, open, high, low, close]) => ({ time, open, high, low, close }));
+    return raw.prices.map(([time, price]) => ({
+      time,
+      open: price,
+      high: price,
+      low: price,
+      close: price,
+    }));
   },
 
   async search(query: string): Promise<CoinSearchResult[]> {
@@ -65,6 +72,15 @@ export const CoinGeckoService = {
       vs_currencies: 'idr',
     });
     return data.bitcoin.idr / (await get<{ bitcoin: { usd: number } }>('/simple/price', { ids: 'bitcoin', vs_currencies: 'usd' })).bitcoin.usd;
+  },
+
+  // Scan a list of coin IDs for signals (sequential to avoid rate-limit)
+  async getMarketChart(coinId: string, days = 30): Promise<number[]> {
+    const raw = await get<{ prices: [number, number][] }>(
+      `/coins/${coinId}/market_chart`,
+      { vs_currency: 'usd', days: String(days) },
+    );
+    return raw.prices.map(([, price]) => price);
   },
 
   async getUsdToIdr(): Promise<number> {

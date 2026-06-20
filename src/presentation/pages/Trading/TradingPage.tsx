@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Plus, TrendingUp } from 'lucide-react';
+import { Plus, TrendingUp, Scan } from 'lucide-react';
 import { Layout } from '@/presentation/components/ui/Layout';
 import { Button } from '@/presentation/components/ui/Button';
 import { Spinner } from '@/presentation/components/ui/Spinner';
 import { CoinCard } from '@/presentation/components/trading/CoinCard';
 import { CoinSearchModal } from '@/presentation/components/trading/CoinSearchModal';
+import { SignalScannerModal } from '@/presentation/components/trading/SignalScannerModal';
 import { useWatchlist, useCoinMarkets } from '@/presentation/hooks/useTrading';
 
 export function TradingPage() {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const { data: watchlist = [], isLoading: watchlistLoading } = useWatchlist();
 
   const coinIds = watchlist.map((w) => w.coinId);
@@ -27,9 +29,14 @@ export function TradingPage() {
             Sinyal RSI + MA · Setup entry, stop loss & take profit
           </p>
         </div>
-        <Button onClick={() => setSearchOpen(true)} icon={<Plus size={14} strokeWidth={2.5} />}>
-          Tambah Coin
-        </Button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="secondary" onClick={() => setScannerOpen(true)} icon={<Scan size={14} />}>
+            Cari Sinyal
+          </Button>
+          <Button onClick={() => setSearchOpen(true)} icon={<Plus size={14} strokeWidth={2.5} />}>
+            Tambah Coin
+          </Button>
+        </div>
       </div>
 
       {/* Watchlist */}
@@ -61,6 +68,7 @@ export function TradingPage() {
       )}
 
       <CoinSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SignalScannerModal open={scannerOpen} onClose={() => setScannerOpen(false)} />
     </Layout>
   );
 }

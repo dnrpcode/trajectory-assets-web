@@ -113,6 +113,77 @@ export function useExecutePaperTrade() {
   });
 }
 
+// ── Signal Scanner ────────────────────────────────────────────────────────────
+
+export const TOP_SCAN_COINS = [
+  { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+  { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+  { id: 'solana', symbol: 'SOL', name: 'Solana' },
+  { id: 'binancecoin', symbol: 'BNB', name: 'BNB' },
+  { id: 'ripple', symbol: 'XRP', name: 'XRP' },
+  { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin' },
+  { id: 'cardano', symbol: 'ADA', name: 'Cardano' },
+  { id: 'avalanche-2', symbol: 'AVAX', name: 'Avalanche' },
+  { id: 'polkadot', symbol: 'DOT', name: 'Polkadot' },
+  { id: 'chainlink', symbol: 'LINK', name: 'Chainlink' },
+  { id: 'sui', symbol: 'SUI', name: 'Sui' },
+  { id: 'pepe', symbol: 'PEPE', name: 'PEPE' },
+];
+
+export interface ScanResult {
+  id: string;
+  symbol: string;
+  name: string;
+  signal: SignalResult;
+  currentPrice?: number;
+  priceChange24h?: number;
+  image?: string;
+}
+
+async function scanCoins(): Promise<ScanResult[]> {
+  const ids = TOP_SCAN_COINS.map((c) => c.id);
+
+  // Fetch market prices in one call
+  const markets = await CoinGeckoService.getMarkets(ids);
+  const marketMap = Object.fromEntries(markets.map((m) => [m.id, m]));
+
+  const results: ScanResult[] = [];
+
+  // Sequential to respect rate limits (free tier ~30 req/min)
+  for (const coin of TOP_SCAN_COINS) {
+    try {
+      const closes = await CoinGeckoService.getMarketChart(coin.id, 30);
+      const signal = computeSignal(closes);
+      const m = marketMap[coin.id];
+      results.push({
+        id: coin.id,
+        symbol: coin.symbol,
+        name: coin.name,
+        signal,
+        currentPrice: m?.current_price,
+        priceChange24h: m?.price_change_percentage_24h,
+        image: m?.image,
+      });
+      // Small delay to avoid rate limit
+      await new Promise((r) => setTimeout(r, 300));
+    } catch {
+      // Skip failed coins
+    }
+  }
+
+  return results;
+}
+
+export function useSignalScanner() {
+  return useQuery({
+    queryKey: ['signalScanner'],
+    queryFn: scanCoins,
+    staleTime: 10 * 60_000,
+    retry: 1,
+    enabled: false, // only run when manually triggered
+  });
+}
+
 // ── USD/IDR rate ──────────────────────────────────────────────────────────────
 
 export function useUsdToIdr() {
