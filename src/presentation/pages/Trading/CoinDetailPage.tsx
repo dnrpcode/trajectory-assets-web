@@ -222,7 +222,7 @@ export function CoinDetailPage() {
             signal={signal}
             currentPriceUSD={currentPrice}
             usdToIdr={usdToIdr}
-            symbol={coin?.symbol ?? coinId ?? ''}
+            closes={closes}
           />
         </div>
       </div>

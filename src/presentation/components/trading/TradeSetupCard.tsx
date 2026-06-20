@@ -1,70 +1,80 @@
 import { useState } from 'react';
-import { Copy, Check, Info, AlertTriangle } from 'lucide-react';
+import { Copy, Check, Info, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { SignalResult, TradingSignal } from '../../../shared/utils/indicators';
 
 interface Props {
   signal: SignalResult;
   currentPriceUSD: number;
   usdToIdr: number;
-  symbol: string;
+  closes: number[];
 }
 
 const LEVERAGE_OPTIONS = [1, 2, 3, 5, 10, 20, 50];
 
-function suggestLeverage(signal: TradingSignal, rsi: number): number {
-  if (signal === 'HOLD') return 1;
-  const strength = signal === 'BUY' ? (30 - rsi) : (rsi - 70);
-  if (strength > 15) return 5;
-  if (strength > 5) return 3;
-  return 2;
+function suggestLeverage(signal: TradingSignal, rsi: number): { value: number; reason: string } {
+  if (signal === 'HOLD') return { value: 1, reason: 'Sinyal belum jelas — hindari leverage' };
+  const strength = signal === 'BUY' ? Math.max(0, 30 - rsi) : Math.max(0, rsi - 70);
+  if (strength > 15) return { value: 5, reason: `RSI sangat ekstrem (${rsi.toFixed(0)}) — sinyal kuat` };
+  if (strength > 8)  return { value: 3, reason: `RSI cukup ekstrem — sinyal moderat` };
+  if (strength > 0)  return { value: 2, reason: `RSI mendekati zona ekstrem — sinyal lemah` };
+  return { value: 2, reason: 'MA crossover — tanpa konfirmasi RSI' };
 }
 
-function suggestSlPct(leverage: number): number {
-  // Tighter SL for higher leverage to control risk
-  if (leverage >= 20) return 1.5;
-  if (leverage >= 10) return 2.5;
-  if (leverage >= 5) return 3.5;
-  if (leverage >= 3) return 5;
-  return 7;
+// Swing SL: pakai low/high 20 candle terakhir
+function computeSwingSL(closes: number[], isBuy: boolean, entry: number): number {
+  const recent = closes.slice(-20);
+  if (isBuy) {
+    const swingLow = Math.min(...recent);
+    const sl = swingLow * 0.995; // buffer 0.5% di bawah swing low
+    // Jangan terlalu jauh dari entry (max 15%)
+    return Math.max(sl, entry * 0.85);
+  } else {
+    const swingHigh = Math.max(...recent);
+    const sl = swingHigh * 1.005;
+    return Math.min(sl, entry * 1.15);
+  }
 }
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
   return (
     <button
-      onClick={handleCopy}
-      style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? 'var(--gain-500)' : 'var(--text-muted)', padding: 4, display: 'flex', alignItems: 'center' }}
+      onClick={() => {
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? 'var(--gain-500)' : 'var(--text-muted)', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
     >
-      {copied ? <Check size={12} strokeWidth={2.5} /> : <Copy size={12} />}
+      {copied ? <Check size={11} strokeWidth={2.5} /> : <Copy size={11} />}
     </button>
   );
 }
 
-function PriceRow({ label, value, valueColor, subValue, copyValue, highlight }: {
-  label: string;
-  value: string;
-  valueColor?: string;
-  subValue?: string;
-  copyValue?: string;
-  highlight?: boolean;
+function PriceRow({ label, badge, value, subValue, copyValue, color, highlight, dimmed }: {
+  label: string; badge?: string; value: string; subValue?: string;
+  copyValue?: string; color?: string; highlight?: boolean; dimmed?: boolean;
 }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '10px 14px',
-      background: highlight ? 'var(--blue-tint)' : 'var(--bg-raised)',
+      padding: '9px 12px',
+      background: highlight ? 'rgba(77,124,255,0.06)' : 'var(--bg-raised)',
       borderRadius: 8,
-      border: highlight ? '1px solid rgba(77,124,255,0.2)' : '1px solid var(--border-subtle)',
+      border: highlight ? '1px solid rgba(77,124,255,0.25)' : '1px solid var(--border-subtle)',
+      opacity: dimmed ? 0.55 : 1,
     }}>
-      <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</span>
+        {badge && (
+          <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: color ? color + '22' : 'var(--bg-overlay)', color: color ?? 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {badge}
+          </span>
+        )}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <div style={{ textAlign: 'right' }}>
-          <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: valueColor ?? 'var(--text-primary)' }}>
+          <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: color ?? 'var(--text-primary)' }}>
             {value}
           </span>
           {subValue && <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)' }}>{subValue}</p>}
@@ -75,166 +85,222 @@ function PriceRow({ label, value, valueColor, subValue, copyValue, highlight }: 
   );
 }
 
-export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr }: Props) {
-  const defaultLev = suggestLeverage(signal.signal, signal.rsi);
-  const [leverage, setLeverage] = useState(defaultLev);
+function SummaryChip({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{ flex: 1, padding: '8px 6px', background: 'var(--bg-raised)', borderRadius: 8, textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
+      <p style={{ margin: 0, fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+      <p style={{ margin: '3px 0 0', fontSize: '13px', fontWeight: 800, fontFamily: 'var(--font-mono)', color }}>{value}</p>
+    </div>
+  );
+}
 
-  const isBuy = signal.signal === 'BUY';
+export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Props) {
+  const suggested = suggestLeverage(signal.signal, signal.rsi);
+  const [leverage, setLeverage] = useState(suggested.value);
+  const [showLimit, setShowLimit] = useState(false);
+
+  const isBuy  = signal.signal === 'BUY';
   const isSell = signal.signal === 'SELL';
   const isHold = signal.signal === 'HOLD';
 
-  const entry = currentPriceUSD;
-  const slPct = suggestSlPct(leverage);
-  const tpPct = slPct * 2; // 2:1 risk/reward
+  const fmtUSD = (v: number) => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: v < 1 ? 6 : 2 })}`;
+  const fmtIDR = (v: number) => `≈ Rp ${(v * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 })}`;
+  const fmtPct = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
 
-  const stopLoss = isBuy
-    ? entry * (1 - slPct / 100)
-    : isSell
-      ? entry * (1 + slPct / 100)
-      : null;
+  // Entry prices
+  const marketEntry = currentPriceUSD;
+  const limitEntry  = isBuy
+    ? currentPriceUSD * 0.992   // 0.8% di bawah untuk limit buy
+    : currentPriceUSD * 1.008;  // 0.8% di atas untuk limit sell
 
-  const takeProfit = isBuy
-    ? entry * (1 + tpPct / 100)
-    : isSell
-      ? entry * (1 - tpPct / 100)
-      : null;
+  const entry = showLimit ? limitEntry : marketEntry;
 
-  // Liquidation price (simplified: for isolated margin)
-  const liquidation = leverage > 1
-    ? isBuy
-      ? entry * (1 - 1 / leverage * 0.9)
-      : isSell
-        ? entry * (1 + 1 / leverage * 0.9)
-        : null
+  // Swing-based SL
+  const swingSL = closes.length >= 20 ? computeSwingSL(closes, isBuy, entry) : null;
+  const slPct   = swingSL ? Math.abs((entry - swingSL) / entry) * 100 : (leverage >= 20 ? 1.5 : leverage >= 10 ? 2.5 : leverage >= 5 ? 3.5 : leverage >= 3 ? 5 : 7);
+  const stopLoss = swingSL ?? (isBuy ? entry * (1 - slPct / 100) : entry * (1 + slPct / 100));
+
+  // 3 TP levels (1:1, 1:2, 1:3)
+  const slDist = Math.abs(entry - stopLoss);
+  const tp1 = isBuy ? entry + slDist * 1 : entry - slDist * 1;
+  const tp2 = isBuy ? entry + slDist * 2 : entry - slDist * 2;
+  const tp3 = isBuy ? entry + slDist * 3 : entry - slDist * 3;
+
+  // Liquidation
+  const liq = leverage > 1
+    ? isBuy  ? entry * (1 - (1 / leverage) * 0.9)
+    : isSell ? entry * (1 + (1 / leverage) * 0.9)
+    : null
     : null;
 
-  const fmtUSD = (v: number) => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: v < 1 ? 6 : 2 })}`;
-  const fmtIDR = (v: number) => {
-    const idr = v * usdToIdr;
-    return `≈ Rp ${idr.toLocaleString('id-ID', { maximumFractionDigits: 0 })}`;
-  };
+  const maxLossPct  = (slPct * leverage).toFixed(0);
+  const maxGain1Pct = (slPct * 1 * leverage).toFixed(0);
+  const maxGain2Pct = (slPct * 2 * leverage).toFixed(0);
 
   return (
     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden' }}>
+
       {/* Header */}
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
-        <p style={{ margin: '0 0 4px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
-          Rekomendasi Setup Trade
-        </p>
-        <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>
-          Berdasarkan sinyal RSI + MA · R:R 1:2
-        </p>
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <p style={{ margin: '0 0 2px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
+            Setup Trade
+          </p>
+          <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>
+            Swing SL · R:R 1:1 / 1:2 / 1:3
+          </p>
+        </div>
+        {/* Market / Limit toggle */}
+        {!isHold && (
+          <div style={{ display: 'flex', background: 'var(--bg-raised)', border: '1px solid var(--border-default)', borderRadius: 8, padding: 2, gap: 2 }}>
+            {(['Market', 'Limit'] as const).map((mode) => {
+              const active = (mode === 'Market') === !showLimit;
+              return (
+                <button key={mode} onClick={() => setShowLimit(mode === 'Limit')} style={{
+                  padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-sans)',
+                  background: active ? 'var(--blue-500)' : 'transparent',
+                  color: active ? '#fff' : 'var(--text-muted)',
+                  transition: 'all 120ms',
+                }}>
+                  {mode}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-        {/* Leverage selector */}
-        <div style={{ marginBottom: 4 }}>
-          <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Leverage
-          </p>
-          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-            {LEVERAGE_OPTIONS.map((lev) => (
-              <button
-                key={lev}
-                onClick={() => setLeverage(lev)}
-                style={{
-                  padding: '5px 10px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                  fontWeight: 700, fontSize: '12px', fontFamily: 'var(--font-mono)',
-                  transition: 'all 150ms',
-                  background: leverage === lev ? 'var(--blue-500)' : 'var(--bg-raised)',
-                  color: leverage === lev ? '#fff' : 'var(--text-secondary)',
-                  outline: leverage === lev ? '2px solid var(--blue-400)' : 'none',
-                }}
-              >
-                {lev}×
-              </button>
-            ))}
-          </div>
-          {leverage === defaultLev && (
-            <p style={{ margin: '5px 0 0', fontSize: '10px', color: 'var(--blue-400)' }}>
-              ✦ Disarankan berdasarkan kekuatan sinyal
-            </p>
-          )}
-        </div>
-
-        {/* Entry */}
-        <PriceRow
-          label="Entry"
-          value={fmtUSD(entry)}
-          subValue={fmtIDR(entry)}
-          copyValue={entry.toFixed(6)}
-          highlight
-        />
-
-        {/* Stop Loss */}
-        {stopLoss && (
-          <PriceRow
-            label={`Stop Loss (−${slPct}%)`}
-            value={fmtUSD(stopLoss)}
-            valueColor="var(--loss-500)"
-            subValue={fmtIDR(stopLoss)}
-            copyValue={stopLoss.toFixed(6)}
-          />
-        )}
-
-        {/* Take Profit */}
-        {takeProfit && (
-          <PriceRow
-            label={`Take Profit (+${tpPct}%)`}
-            value={fmtUSD(takeProfit)}
-            valueColor="var(--gain-500)"
-            subValue={fmtIDR(takeProfit)}
-            copyValue={takeProfit.toFixed(6)}
-          />
-        )}
-
-        {/* Liquidation */}
-        {liquidation && leverage > 1 && (
-          <PriceRow
-            label={`Likuidasi (${leverage}×)`}
-            value={fmtUSD(liquidation)}
-            valueColor="var(--warn-400)"
-            subValue="⚠ Hindari menyentuh harga ini"
-            copyValue={liquidation.toFixed(6)}
-          />
-        )}
-
-        {/* R:R summary */}
-        {!isHold && stopLoss && takeProfit && (
-          <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-            <div style={{ flex: 1, padding: '8px 10px', background: 'var(--loss-tint)', borderRadius: 8, textAlign: 'center', border: '1px solid var(--loss-500)22' }}>
-              <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>MAX LOSS</p>
-              <p style={{ margin: '2px 0 0', fontSize: '12px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--loss-500)' }}>−{(slPct * leverage).toFixed(0)}%</p>
-              <p style={{ margin: '1px 0 0', fontSize: '9px', color: 'var(--text-muted)' }}>dari modal</p>
-            </div>
-            <div style={{ flex: 1, padding: '8px 10px', background: 'var(--gain-tint)', borderRadius: 8, textAlign: 'center', border: '1px solid var(--gain-500)22' }}>
-              <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>MAX GAIN</p>
-              <p style={{ margin: '2px 0 0', fontSize: '12px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--gain-500)' }}>+{(tpPct * leverage).toFixed(0)}%</p>
-              <p style={{ margin: '1px 0 0', fontSize: '9px', color: 'var(--text-muted)' }}>dari modal</p>
-            </div>
-            <div style={{ flex: 1, padding: '8px 10px', background: 'var(--bg-raised)', borderRadius: 8, textAlign: 'center', border: '1px solid var(--border-subtle)' }}>
-              <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>R:R</p>
-              <p style={{ margin: '2px 0 0', fontSize: '12px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--blue-400)' }}>1:2</p>
-              <p style={{ margin: '1px 0 0', fontSize: '9px', color: 'var(--text-muted)' }}>risk/reward</p>
+        {isHold ? (
+          <div style={{ padding: '14px', background: 'var(--bg-overlay)', borderRadius: 10, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <AlertTriangle size={15} style={{ color: 'var(--warn-400)', flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <p style={{ margin: '0 0 4px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Tunggu sinyal lebih kuat</p>
+              <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                RSI {signal.rsi.toFixed(0)} — belum oversold (&lt;30) atau overbought (&gt;70). Tunggu konfirmasi sebelum entry.
+              </p>
             </div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Leverage */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+                <p style={{ margin: 0, fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leverage</p>
+                <span style={{ fontSize: '10px', color: 'var(--blue-400)', fontWeight: 600 }}>
+                  {leverage === suggested.value ? '✦ Disarankan' : `Disarankan: ${suggested.value}×`}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 5 }}>
+                {LEVERAGE_OPTIONS.map((lev) => (
+                  <button key={lev} onClick={() => setLeverage(lev)} style={{
+                    padding: '5px 9px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                    fontWeight: 700, fontSize: '12px', fontFamily: 'var(--font-mono)',
+                    transition: 'all 120ms',
+                    background: leverage === lev ? 'var(--blue-500)' : 'var(--bg-raised)',
+                    color: leverage === lev ? '#fff' : lev === suggested.value ? 'var(--blue-400)' : 'var(--text-secondary)',
+                    outline: lev === suggested.value ? '1.5px solid var(--blue-400)' : 'none',
+                    outlineOffset: '1px',
+                  }}>{lev}×</button>
+                ))}
+              </div>
+              <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.4 }}>{suggested.reason}</p>
+            </div>
 
-        {isHold && (
-          <div style={{ padding: '12px', background: 'var(--bg-overlay)', borderRadius: 8, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <AlertTriangle size={14} style={{ color: 'var(--warn-400)', flexShrink: 0, marginTop: 1 }} />
-            <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Sinyal belum cukup kuat. Tunggu konfirmasi RSI atau MA crossover sebelum entry.
-            </p>
-          </div>
+            <div style={{ height: 1, background: 'var(--border-subtle)' }} />
+
+            {/* Entry */}
+            <PriceRow
+              label={showLimit ? 'Entry (Limit)' : 'Entry (Market)'}
+              badge={showLimit ? 'limit' : 'market'}
+              color="var(--blue-400)"
+              value={fmtUSD(entry)}
+              subValue={fmtIDR(entry)}
+              copyValue={entry.toFixed(entry < 1 ? 6 : 2)}
+              highlight
+            />
+
+            {showLimit && (
+              <p style={{ margin: '-4px 0 0', fontSize: '10px', color: 'var(--text-muted)', paddingLeft: 2 }}>
+                {fmtPct(((entry - marketEntry) / marketEntry) * 100)} dari harga pasar saat ini
+              </p>
+            )}
+
+            {/* Stop Loss */}
+            <PriceRow
+              label={`Stop Loss`}
+              badge={`−${slPct.toFixed(1)}%`}
+              color="var(--loss-500)"
+              value={fmtUSD(stopLoss)}
+              subValue={closes.length >= 20 ? 'Berdasarkan swing low 20 candle' : fmtIDR(stopLoss)}
+              copyValue={stopLoss.toFixed(stopLoss < 1 ? 6 : 2)}
+            />
+
+            {/* TP levels */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <PriceRow
+                label="Take Profit 1"
+                badge="R:R 1:1"
+                color="var(--gain-400)"
+                value={fmtUSD(tp1)}
+                subValue={fmtPct(((tp1 - entry) / entry) * 100 * (isBuy ? 1 : -1))}
+                copyValue={tp1.toFixed(tp1 < 1 ? 6 : 2)}
+              />
+              <PriceRow
+                label="Take Profit 2"
+                badge="R:R 1:2"
+                color="var(--gain-500)"
+                value={fmtUSD(tp2)}
+                subValue={fmtPct(((tp2 - entry) / entry) * 100 * (isBuy ? 1 : -1))}
+                copyValue={tp2.toFixed(tp2 < 1 ? 6 : 2)}
+              />
+              <PriceRow
+                label="Take Profit 3"
+                badge="R:R 1:3"
+                color="#4ade80"
+                value={fmtUSD(tp3)}
+                subValue={fmtPct(((tp3 - entry) / entry) * 100 * (isBuy ? 1 : -1))}
+                copyValue={tp3.toFixed(tp3 < 1 ? 6 : 2)}
+              />
+            </div>
+
+            {/* Liquidation */}
+            {liq && leverage > 1 && (
+              <PriceRow
+                label={`Likuidasi (${leverage}×)`}
+                badge="danger"
+                color="var(--warn-400)"
+                value={fmtUSD(liq)}
+                subValue="⚠ Hindari menyentuh harga ini"
+                copyValue={liq.toFixed(liq < 1 ? 6 : 2)}
+              />
+            )}
+
+            {/* Summary chips */}
+            <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
+              <SummaryChip label="Max Loss" value={`−${maxLossPct}%`} color="var(--loss-500)" />
+              <SummaryChip label="TP1 Gain" value={`+${maxGain1Pct}%`} color="var(--gain-400)" />
+              <SummaryChip label="TP2 Gain" value={`+${maxGain2Pct}%`} color="var(--gain-500)" />
+            </div>
+
+            {/* Expand/collapse price ladder hint */}
+            <button
+              onClick={() => setShowLimit((p) => !p)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', fontSize: '11px', padding: '2px 0', fontFamily: 'var(--font-sans)' }}
+            >
+              {showLimit ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              {showLimit ? 'Pakai harga market' : 'Lihat harga limit (lebih murah)'}
+            </button>
+          </>
         )}
 
         {/* Disclaimer */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', marginTop: 4, paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
-          <Info size={11} style={{ color: 'var(--text-muted)', marginTop: 1, flexShrink: 0 }} />
+        <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
+          <Info size={10} style={{ color: 'var(--text-muted)', marginTop: 1, flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-            Ini bukan saran keuangan. Eksekusi di exchange masing-masing. Gunakan leverage dengan bijak — semakin tinggi leverage, semakin besar risiko likuidasi.
+            Bukan saran keuangan. Eksekusi di exchange masing-masing. SL berbasis swing 20 candle terakhir — sesuaikan dengan risk appetite kamu.
           </p>
         </div>
       </div>
