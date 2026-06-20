@@ -1,7 +1,8 @@
-import { collection, getDocs, setDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, setDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from './config';
 import { IWatchlistRepository } from '../../domain/repositories/IWatchlistRepository';
 import { WatchlistCoin } from '../../domain/entities/Watchlist';
+import { stripUndefined } from '../../shared/utils/firestore';
 
 export class FirebaseWatchlistRepository implements IWatchlistRepository {
   private col(userId: string) {
@@ -21,7 +22,10 @@ export class FirebaseWatchlistRepository implements IWatchlistRepository {
 
   async add(userId: string, coin: WatchlistCoin): Promise<void> {
     const ref = doc(db, 'users', userId, 'watchlist', coin.coinId);
-    await setDoc(ref, { ...coin, addedAt: coin.addedAt });
+    await setDoc(ref, stripUndefined({
+      ...coin,
+      addedAt: Timestamp.fromDate(coin.addedAt),
+    }));
   }
 
   async remove(userId: string, coinId: string): Promise<void> {

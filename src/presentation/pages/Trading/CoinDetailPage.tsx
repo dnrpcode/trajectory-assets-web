@@ -110,7 +110,7 @@ export function CoinDetailPage() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-5 items-start">
 
         {/* Left: charts */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -203,7 +203,7 @@ export function CoinDetailPage() {
               <SignalBadge signal={signal.signal} size="lg" />
               <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{signal.reason}</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            <div className="grid grid-cols-3 gap-2">
               {[
                 { label: 'RSI', value: isNaN(signal.rsi) ? '—' : signal.rsi.toFixed(1), color: signal.rsi > 70 ? 'var(--loss-500)' : signal.rsi < 30 ? 'var(--gain-500)' : 'var(--text-primary)' },
                 { label: 'MA7', value: isNaN(signal.ma7) ? '—' : `$${signal.ma7.toFixed(2)}`, color: 'var(--blue-400)' },

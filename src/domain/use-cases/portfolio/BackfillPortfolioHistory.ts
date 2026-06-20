@@ -51,6 +51,8 @@ export class BackfillPortfolioHistory {
     );
     const active = sorted.filter((e) => !correctedIds.has(e.id) && !targetedIds.has(e.id as string));
 
+    if (active.length === 0) return;
+
     const firstMonth = getMonthFromDate(active[0].date);
     const currentMonth = getCurrentMonth();
     const allMonths = monthsBetween(firstMonth, currentMonth);

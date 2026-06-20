@@ -1,7 +1,7 @@
-
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut, BookOpen, BarChart2 } from 'lucide-react';
+import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut, BookOpen, BarChart2, X } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { useAuthStore } from '@/presentation/hooks/useAuth';
 import { logout as logoutUseCase } from '@/infrastructure/di/container';
@@ -36,30 +36,48 @@ function getInitials(name: string) {
   return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
 }
 
-export function Navbar() {
+interface NavbarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export function Navbar({ mobileOpen = false, onMobileClose }: NavbarProps) {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
+  const location = useLocation();
+  const prevPath = useRef(location.pathname);
+
+  // Close drawer on navigation (skip on initial mount)
+  useEffect(() => {
+    if (location.pathname !== prevPath.current) {
+      prevPath.current = location.pathname;
+      onMobileClose?.();
+    }
+  }, [location.pathname, onMobileClose]);
 
   const handleLogout = async () => {
     await logoutUseCase.execute();
     navigate('/login');
   };
 
-  return (
-    <aside
-      className="fixed left-0 top-0 h-full flex flex-col z-30"
-      style={{ width: 'var(--sidebar-width)', background: 'var(--bg-surface)', borderRight: '1px solid var(--border-subtle)' }}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border-subtle)]" style={{ height: 'var(--topbar-height)' }}>
+  const sidebarContent = (
+    <>
+      {/* Logo + close button */}
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border-subtle)]" style={{ height: 'var(--topbar-height)', flexShrink: 0 }}>
         <LogoMark size={28} />
-        <span className="text-[1.05rem] font-bold text-[var(--text-primary)]" style={{ letterSpacing: 'var(--tracking-snug)', fontFamily: 'var(--font-sans)' }}>
+        <span className="flex-1 text-[1.05rem] font-bold text-[var(--text-primary)]" style={{ letterSpacing: 'var(--tracking-snug)', fontFamily: 'var(--font-sans)' }}>
           Trajectory
         </span>
+        <button
+          onClick={onMobileClose}
+          className="md:hidden p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors"
+        >
+          <X size={18} />
+        </button>
       </div>
 
-      {/* Nav */}
+      {/* Nav items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map(({ to, labelKey, icon, dataTour }) => (
           <NavLink
@@ -87,9 +105,9 @@ export function Navbar() {
         ))}
       </nav>
 
-      {/* User */}
+      {/* User info */}
       {user && (
-        <div className="px-3 py-3 border-t border-[var(--border-subtle)]">
+        <div className="px-3 py-3 border-t border-[var(--border-subtle)]" style={{ flexShrink: 0 }}>
           <div className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-[var(--bg-raised)] transition-colors duration-150 cursor-default">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
@@ -111,6 +129,46 @@ export function Navbar() {
           </div>
         </div>
       )}
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible, fixed */}
+      <aside
+        className="hidden md:flex fixed left-0 top-0 h-full flex-col z-30"
+        style={{ width: 'var(--sidebar-width)', background: 'var(--bg-surface)', borderRight: '1px solid var(--border-subtle)' }}
+      >
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile drawer */}
+      <div className="md:hidden">
+        {/* Backdrop */}
+        {mobileOpen && (
+          <div
+            onClick={onMobileClose}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 39,
+              background: 'rgba(0,0,0,0.55)',
+            }}
+          />
+        )}
+
+        {/* Drawer panel */}
+        <aside
+          className="fixed left-0 top-0 h-full flex flex-col z-40"
+          style={{
+            width: 'var(--sidebar-width)',
+            background: 'var(--bg-surface)',
+            borderRight: '1px solid var(--border-subtle)',
+            transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
+            transition: 'transform 240ms cubic-bezier(0.4,0,0.2,1)',
+          }}
+        >
+          {sidebarContent}
+        </aside>
+      </div>
+    </>
   );
 }

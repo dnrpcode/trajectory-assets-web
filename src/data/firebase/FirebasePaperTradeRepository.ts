@@ -1,7 +1,8 @@
-import { collection, getDocs, setDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { collection, getDocs, setDoc, deleteDoc, doc, query, where, Timestamp } from 'firebase/firestore';
 import { db } from './config';
 import { IPaperTradeRepository } from '../../domain/repositories/IPaperTradeRepository';
 import { PaperTrade } from '../../domain/entities/PaperTrade';
+import { stripUndefined } from '../../shared/utils/firestore';
 
 function toTrade(data: Record<string, unknown>): PaperTrade {
   return {
@@ -31,7 +32,11 @@ export class FirebasePaperTradeRepository implements IPaperTradeRepository {
 
   async save(trade: PaperTrade): Promise<void> {
     const ref = doc(db, 'users', trade.userId, 'paperTrades', trade.id);
-    await setDoc(ref, trade);
+    await setDoc(ref, stripUndefined({
+      ...trade,
+      date: Timestamp.fromDate(trade.date),
+      createdAt: Timestamp.fromDate(trade.createdAt),
+    }));
   }
 
   async delete(userId: string, tradeId: string): Promise<void> {

@@ -305,7 +305,7 @@ export function SettingsPage() {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* 2-column grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_340px] gap-4 items-start">
 
           {/* ── Left column ── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

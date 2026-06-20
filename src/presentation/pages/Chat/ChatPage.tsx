@@ -57,7 +57,7 @@ export function ChatPage() {
         </p>
       </div>
 
-      <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 300px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-6">
         <RoboAdvisorChat
           assets={assets}
           user={user}

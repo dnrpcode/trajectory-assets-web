@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, Trash2, ArrowLeft, Sparkles } from 'lucide-react';
+import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, Trash2, ArrowLeft, Sparkles, Menu } from 'lucide-react';
+import { Navbar } from '@/presentation/components/ui/Navbar';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -356,6 +357,7 @@ export function AssetDetailPage() {
   const [showCorrected, setShowCorrected] = useState(false);
   const [actionModal, setActionModal] = useState<ActionEntryType | null>(null);
   const [deleteAssetConfirm, setDeleteAssetConfirm] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { data: assets = [], isLoading: assetsLoading } = useActiveAssets();
   const { data: entries = [], isLoading: entriesLoading } = useAssetEntries(assetId ?? '');
@@ -404,13 +406,21 @@ export function AssetDetailPage() {
 
   return (
     <>
-      <div style={{ minHeight: '100vh', background: 'var(--bg-base)', paddingBottom: 48 }}>
+      <Navbar mobileOpen={drawerOpen} onMobileClose={() => setDrawerOpen(false)} />
+      <div className="md:ml-[var(--sidebar-width)]" style={{ minHeight: '100vh', background: 'var(--bg-base)', paddingBottom: 48 }}>
         {/* Top bar */}
         <div style={{
-          position: 'sticky', top: 0, zIndex: 40,
+          position: 'sticky', top: 0, zIndex: 35,
           background: 'var(--bg-base)', borderBottom: '1px solid var(--border-subtle)',
-          padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
+          padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10,
         }}>
+          {/* Hamburger — mobile only */}
+          <button
+            className="md:hidden flex-shrink-0 p-1.5 rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-raised)] transition-colors"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <Menu size={18} />
+          </button>
           <button
             onClick={() => navigate('/portfolio')}
             style={{
@@ -457,7 +467,7 @@ export function AssetDetailPage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px 16px', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3" style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
               {[
                 { label: t('assetDetail.avgCost'), value: formatCurrency(asset.avgCostPerUnit), tooltip: t('tooltip.avgCost') },
                 { label: t('assetDetail.currentPriceLabel'), value: formatCurrency(asset.currentPricePerUnit) },

@@ -59,7 +59,10 @@ export function useCreateEntry() {
       }
       return entry;
     },
-    onSuccess: () => {
+    onSuccess: (_data, input) => {
+      if (input.assetId) {
+        queryClient.invalidateQueries({ queryKey: ['entries', user?.id, input.assetId] });
+      }
       queryClient.invalidateQueries({ queryKey: ['entries', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['activeAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });
