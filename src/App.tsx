@@ -22,6 +22,7 @@ import { HelpPage } from '@/modules/help';
 import { NotFoundPage } from '@/shared/ui/NotFoundPage';
 import { TradingPage } from '@/modules/trading/presentation/pages/TradingPage';
 import { CoinDetailPage } from '@/modules/trading/presentation/pages/CoinDetailPage';
+import { IncomePage } from '@/modules/income';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -148,6 +149,14 @@ function AppRoutes() {
         element={
           <OnboardingGuard>
             <CoinDetailPage />
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/income"
+        element={
+          <OnboardingGuard>
+            <IncomePage />
           </OnboardingGuard>
         }
       />
