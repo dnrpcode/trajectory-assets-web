@@ -1,64 +1,45 @@
 import { useState, useMemo } from 'react';
-import { CalendarDays, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import type { Resolver } from 'react-hook-form';
+import { CalendarDays, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/shared/ui/Layout';
 import { Button } from '@/shared/ui/Button';
-import { Modal } from '@/shared/ui/Modal';
-import { Input } from '@/shared/ui/Input';
-import { NumericInput } from '@/shared/ui/NumericInput';
 import { Spinner } from '@/shared/ui/Spinner';
 import { cn } from '@/shared/utils/cn';
 import { formatCurrency, formatCurrencyCompact } from '@/shared/utils/formatCurrency';
 import { formatDate } from '@/shared/utils/formatDate';
 import { CATEGORY_LABELS } from '@/shared/constants/categories';
-import { useIncomeEvents, useCreateIncomeEvent, useDeleteIncomeEvent, useMarkEventReceived } from '../hooks/useIncome';
-import { useActiveAssets } from '@/modules/portfolio/presentation/hooks/useAssets';
-import type { IncomeEvent, IncomeEventType } from '../../domain/entities/IncomeEvent';
-import type { Asset } from '@/modules/portfolio/domain/entities/Asset';
-import type { AssetCategory } from '@/shared/types';
+import { useEntries } from '@/modules/portfolio/presentation/hooks/useEntries';
+import type { AssetEntry } from '@/modules/portfolio/domain/entities/AssetEntry';
 
-// ─── EventType config ──────────────────────────────────────────────────────────
+// ─── Type config ───────────────────────────────────────────────────────────────
 
-const EVENT_TYPE_LABELS: Record<IncomeEventType, string> = {
+type IncomeCategory = 'dividend' | 'coupon' | 'interest' | 'other';
+
+const TYPE_LABELS: Record<IncomeCategory, string> = {
   dividend: 'Dividen',
   coupon: 'Kupon',
   interest: 'Bunga',
   other: 'Lainnya',
 };
 
-const EVENT_TYPE_COLORS: Record<IncomeEventType, string> = {
+const TYPE_COLORS: Record<IncomeCategory, string> = {
   dividend: 'var(--gain-500)',
   coupon: 'var(--blue-400)',
   interest: '#a855f7',
   other: 'var(--text-muted)',
 };
 
-const EVENT_TYPE_DOT_BG: Record<IncomeEventType, string> = {
-  dividend: 'var(--gain-500)',
-  coupon: 'var(--blue-400)',
-  interest: '#a855f7',
-  other: 'var(--text-muted)',
-};
+function incomeCategory(entry: AssetEntry): IncomeCategory {
+  const c = entry.incomeFeeCategory;
+  if (c === 'dividend') return 'dividend';
+  if (c === 'coupon') return 'coupon';
+  if (c === 'interest') return 'interest';
+  return 'other';
+}
 
-// ─── Zod Schema ───────────────────────────────────────────────────────────────
-
-const schema = z.object({
-  assetId: z.string().min(1, 'Pilih aset'),
-  assetName: z.string().min(1),
-  ticker: z.string().optional(),
-  category: z.enum(['saham', 'reksa_dana', 'obligasi_sbn', 'emas', 'kripto', 'cash', 'lainnya']),
-  eventType: z.enum(['dividend', 'coupon', 'interest', 'other']),
-  paymentDate: z.string().min(1, 'Tanggal pembayaran wajib diisi'),
-  exDate: z.string().optional(),
-  estimatedAmountIDR: z.number().optional(),
-  currency: z.string().default('IDR'),
-  notes: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
+function amountIDR(entry: AssetEntry): number {
+  return (entry.amount ?? 0) * (entry.exchangeRateToIDR ?? 1);
+}
 
 // ─── Calendar helpers ─────────────────────────────────────────────────────────
 
@@ -71,7 +52,6 @@ const DAY_HEADERS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
 function getCalendarDays(year: number, month: number): (number | null)[] {
   const firstDay = new Date(year, month, 1).getDay();
-  // Shift so Monday=0: Sun(0) → 6, Mon(1) → 0, …, Sat(6) → 5
   const startOffset = (firstDay + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cells: (number | null)[] = [];
@@ -80,213 +60,12 @@ function getCalendarDays(year: number, month: number): (number | null)[] {
   return cells;
 }
 
-// ─── Add Event Form ───────────────────────────────────────────────────────────
+// ─── Entry Row ────────────────────────────────────────────────────────────────
 
-interface AddEventFormProps {
-  assets: Asset[];
-  onSuccess: () => void;
-}
-
-function AddEventForm({ assets, onSuccess }: AddEventFormProps) {
-  const { mutate: create, isPending } = useCreateIncomeEvent();
-  const [assetSearch, setAssetSearch] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    control,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
-    defaultValues: {
-      currency: 'IDR',
-      eventType: 'dividend',
-      category: 'saham',
-    },
-  });
-
-  const selectedAssetId = watch('assetId');
-
-  const filteredAssets = useMemo(
-    () =>
-      assets.filter(
-        (a) =>
-          a.assetName.toLowerCase().includes(assetSearch.toLowerCase()) ||
-          (a.ticker && a.ticker.toLowerCase().includes(assetSearch.toLowerCase())),
-      ),
-    [assets, assetSearch],
-  );
-
-  const handleSelectAsset = (asset: Asset) => {
-    setValue('assetId', asset.id);
-    setValue('assetName', asset.assetName);
-    setValue('ticker', asset.ticker ?? '');
-    setValue('category', asset.category);
-    setAssetSearch(asset.assetName + (asset.ticker ? ` (${asset.ticker})` : ''));
-    setShowDropdown(false);
-  };
-
-  const onSubmit = (data: FormValues) => {
-    create(
-      {
-        assetId: data.assetId,
-        assetName: data.assetName,
-        ticker: data.ticker || undefined,
-        category: data.category as AssetCategory,
-        eventType: data.eventType as IncomeEventType,
-        paymentDate: new Date(data.paymentDate + 'T12:00:00'),
-        exDate: data.exDate ? new Date(data.exDate + 'T12:00:00') : undefined,
-        estimatedAmountIDR: data.estimatedAmountIDR,
-        currency: data.currency,
-        notes: data.notes || undefined,
-      },
-      { onSuccess },
-    );
-  };
-
-  const labelStyle = {
-    fontSize: 'var(--text-xs)',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 'var(--tracking-caps)',
-    color: 'var(--text-secondary)',
-    display: 'block',
-    marginBottom: 6,
-  };
-
-  const selectStyle = {
-    width: '100%',
-    height: 40,
-    background: 'var(--bg-raised)',
-    border: '1px solid var(--border-default)',
-    borderRadius: 'var(--radius-md)',
-    color: 'var(--text-primary)',
-    fontSize: 'var(--text-sm)',
-    fontFamily: 'var(--font-sans)',
-    padding: '0 14px',
-    outline: 'none',
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      {/* Asset picker */}
-      <div className="relative">
-        <label style={labelStyle}>Pilih Aset</label>
-        <input
-          type="text"
-          value={assetSearch}
-          onChange={(e) => { setAssetSearch(e.target.value); setShowDropdown(true); }}
-          onFocus={() => setShowDropdown(true)}
-          placeholder="Cari nama atau ticker..."
-          style={{ ...selectStyle, padding: '0 14px' }}
-          className="w-full"
-        />
-        {showDropdown && filteredAssets.length > 0 && (
-          <div
-            className="absolute z-50 w-full mt-1 rounded-md overflow-y-auto max-h-44"
-            style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-default)', boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}
-          >
-            {filteredAssets.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                className="w-full text-left px-4 py-2.5 text-sm hover:bg-[var(--bg-hover)] transition-colors"
-                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}
-                onMouseDown={() => handleSelectAsset(a)}
-              >
-                <span className="font-medium">{a.assetName}</span>
-                {a.ticker && <span className="ml-2 text-xs" style={{ color: 'var(--text-muted)' }}>{a.ticker}</span>}
-                <span className="ml-2 text-xs" style={{ color: 'var(--text-muted)' }}>{CATEGORY_LABELS[a.category]}</span>
-              </button>
-            ))}
-          </div>
-        )}
-        {errors.assetId && (
-          <p className="mt-1 text-xs" style={{ color: 'var(--loss-400)' }}>{errors.assetId.message}</p>
-        )}
-        {/* Hidden fields */}
-        <input type="hidden" {...register('assetId')} />
-        <input type="hidden" {...register('assetName')} />
-        <input type="hidden" {...register('ticker')} />
-        <input type="hidden" {...register('category')} />
-      </div>
-
-      {/* Event type */}
-      <div>
-        <label style={labelStyle}>Jenis</label>
-        <select {...register('eventType')} style={selectStyle}>
-          <option value="dividend">Dividen Saham</option>
-          <option value="coupon">Kupon Obligasi</option>
-          <option value="interest">Bunga</option>
-          <option value="other">Lainnya</option>
-        </select>
-      </div>
-
-      {/* Payment date */}
-      <Input
-        label="Tanggal Pembayaran"
-        type="date"
-        error={errors.paymentDate?.message}
-        {...register('paymentDate')}
-      />
-
-      {/* Ex-date */}
-      <Input
-        label="Tanggal Ex-Date (opsional)"
-        type="date"
-        {...register('exDate')}
-      />
-
-      {/* Estimated amount */}
-      <div>
-        <label style={labelStyle}>Estimasi Penerimaan IDR (opsional)</label>
-        <Controller
-          name="estimatedAmountIDR"
-          control={control}
-          render={({ field }) => (
-            <NumericInput
-              allowDecimal={false}
-              value={field.value}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              prefix="Rp"
-              placeholder="0"
-            />
-          )}
-        />
-      </div>
-
-      {/* Notes */}
-      <Input
-        label="Catatan (opsional)"
-        placeholder="Opsional..."
-        {...register('notes')}
-      />
-
-      {!selectedAssetId && (
-        <input type="hidden" value="" {...register('assetId')} />
-      )}
-
-      <Button type="submit" loading={isPending} fullWidth>
-        Simpan Jadwal
-      </Button>
-    </form>
-  );
-}
-
-// ─── Event Row ────────────────────────────────────────────────────────────────
-
-interface EventRowProps {
-  event: IncomeEvent;
-  onDelete: (id: string) => void;
-  onMarkReceived: (id: string) => void;
-}
-
-function EventRow({ event, onDelete, onMarkReceived }: EventRowProps) {
-  const color = EVENT_TYPE_COLORS[event.eventType];
+function EntryRow({ entry }: { entry: AssetEntry }) {
+  const cat = incomeCategory(entry);
+  const color = TYPE_COLORS[cat];
+  const idr = amountIDR(entry);
 
   return (
     <div
@@ -300,90 +79,51 @@ function EventRow({ event, onDelete, onMarkReceived }: EventRowProps) {
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2 mb-1">
           <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-            {event.assetName}
+            {entry.assetName ?? '—'}
           </span>
-          {event.ticker && (
+          {entry.ticker && (
             <span
               className="text-xs font-mono px-1.5 py-0.5 rounded"
               style={{ background: 'var(--bg-hover)', color: 'var(--text-secondary)', border: '1px solid var(--border-dim)' }}
             >
-              {event.ticker}
+              {entry.ticker}
             </span>
           )}
-          <span
-            className="text-xs px-2 py-0.5 rounded-full font-medium"
-            style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)', border: '1px solid var(--border-dim)' }}
-          >
-            {CATEGORY_LABELS[event.category]}
-          </span>
+          {entry.category && (
+            <span
+              className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)', border: '1px solid var(--border-dim)' }}
+            >
+              {CATEGORY_LABELS[entry.category]}
+            </span>
+          )}
           <span
             className="text-xs font-semibold px-2 py-0.5 rounded-full"
             style={{ color, background: `${color}18`, border: `1px solid ${color}44` }}
           >
-            {EVENT_TYPE_LABELS[event.eventType]}
+            {TYPE_LABELS[cat]}
           </span>
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5">
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Bayar: <span style={{ color: 'var(--text-secondary)' }}>{formatDate(event.paymentDate)}</span>
+            Tanggal: <span style={{ color: 'var(--text-secondary)' }}>{formatDate(entry.date)}</span>
           </span>
-          {event.exDate && (
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Ex-date: <span style={{ color: 'var(--text-secondary)' }}>{formatDate(event.exDate)}</span>
+          {idr > 0 && (
+            <span className="text-xs font-mono" style={{ color: 'var(--gain-400)' }}>
+              {formatCurrency(idr)}
             </span>
           )}
-          {event.estimatedAmountIDR != null && (
-            <span className="text-xs font-mono" style={{ color: 'var(--gain-400)' }}>
-              {formatCurrency(event.estimatedAmountIDR)}
+          {entry.currency !== 'IDR' && entry.amount != null && (
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              ({entry.amount.toLocaleString('id-ID')} {entry.currency})
             </span>
           )}
         </div>
 
-        {event.notes && (
-          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{event.notes}</p>
+        {entry.notes && (
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{entry.notes}</p>
         )}
-      </div>
-
-      <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
-        {event.status === 'upcoming' ? (
-          <span
-            className="text-xs font-semibold px-2 py-0.5 rounded-full"
-            style={{ color: 'var(--warn-400)', background: 'var(--warn-tint)', border: '1px solid rgba(245,158,11,0.25)' }}
-          >
-            Mendatang
-          </span>
-        ) : (
-          <span
-            className="text-xs font-semibold px-2 py-0.5 rounded-full"
-            style={{ color: 'var(--gain-400)', background: 'var(--gain-tint)', border: '1px solid rgba(15,186,130,0.25)' }}
-          >
-            Diterima
-          </span>
-        )}
-
-        {event.status === 'upcoming' && (
-          <button
-            onClick={() => onMarkReceived(event.id)}
-            className="text-xs font-medium px-2 py-1 rounded-md transition-colors"
-            style={{
-              background: 'var(--bg-hover)',
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--border-dim)',
-            }}
-          >
-            Tandai Diterima
-          </button>
-        )}
-
-        <button
-          onClick={() => onDelete(event.id)}
-          className="w-7 h-7 flex items-center justify-center rounded-md transition-colors hover:bg-[var(--loss-tint)]"
-          style={{ color: 'var(--text-muted)' }}
-          title="Hapus"
-        >
-          <Trash2 size={13} />
-        </button>
       </div>
     </div>
   );
@@ -392,12 +132,13 @@ function EventRow({ event, onDelete, onMarkReceived }: EventRowProps) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function IncomePage() {
-  const { data: events = [], isLoading } = useIncomeEvents();
-  const { data: assets = [] } = useActiveAssets();
-  const { mutate: deleteEvent } = useDeleteIncomeEvent();
-  const { mutate: markReceived } = useMarkEventReceived();
+  const { data: allEntries = [], isLoading } = useEntries();
+  const navigate = useNavigate();
 
-  const [addModalOpen, setAddModalOpen] = useState(false);
+  const incomeEntries = useMemo(
+    () => allEntries.filter((e) => e.entryType === 'income' && !e.isCorrected),
+    [allEntries],
+  );
 
   const today = new Date();
   const [calYear, setCalYear] = useState(today.getFullYear());
@@ -405,48 +146,48 @@ export function IncomePage() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   // ── Stats ──────────────────────────────────────────────────────────────────
-  const thisMonth = useMemo(() => {
+  const thisMonthTotal = useMemo(() => {
     const y = today.getFullYear();
     const m = today.getMonth();
-    return events
-      .filter((e) => e.status === 'upcoming' && e.paymentDate.getFullYear() === y && e.paymentDate.getMonth() === m)
-      .reduce((sum, e) => sum + (e.estimatedAmountIDR ?? 0), 0);
-  }, [events]); // eslint-disable-line react-hooks/exhaustive-deps
+    return incomeEntries
+      .filter((e) => e.date.getFullYear() === y && e.date.getMonth() === m)
+      .reduce((sum, e) => sum + amountIDR(e), 0);
+  }, [incomeEntries]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const thisYear = useMemo(() => {
+  const thisYearTotal = useMemo(() => {
     const y = today.getFullYear();
-    return events
-      .filter((e) => e.status === 'upcoming' && e.paymentDate.getFullYear() === y)
-      .reduce((sum, e) => sum + (e.estimatedAmountIDR ?? 0), 0);
-  }, [events]); // eslint-disable-line react-hooks/exhaustive-deps
+    return incomeEntries
+      .filter((e) => e.date.getFullYear() === y)
+      .reduce((sum, e) => sum + amountIDR(e), 0);
+  }, [incomeEntries]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const upcomingCount = useMemo(() => events.filter((e) => e.status === 'upcoming').length, [events]);
+  const totalCount = incomeEntries.length;
 
   // ── Calendar ───────────────────────────────────────────────────────────────
   const calendarDays = useMemo(() => getCalendarDays(calYear, calMonth), [calYear, calMonth]);
 
-  const eventsByDay = useMemo(() => {
-    const map: Record<number, IncomeEvent[]> = {};
-    for (const e of events) {
-      if (e.paymentDate.getFullYear() === calYear && e.paymentDate.getMonth() === calMonth) {
-        const d = e.paymentDate.getDate();
+  const entriesByDay = useMemo(() => {
+    const map: Record<number, AssetEntry[]> = {};
+    for (const e of incomeEntries) {
+      if (e.date.getFullYear() === calYear && e.date.getMonth() === calMonth) {
+        const d = e.date.getDate();
         if (!map[d]) map[d] = [];
         map[d].push(e);
       }
     }
     return map;
-  }, [events, calYear, calMonth]);
+  }, [incomeEntries, calYear, calMonth]);
 
-  const displayedEvents = useMemo(() => {
+  const displayedEntries = useMemo(() => {
     if (selectedDay !== null) {
-      return eventsByDay[selectedDay] ?? [];
+      return entriesByDay[selectedDay] ?? [];
     }
-    const monthEvents: IncomeEvent[] = [];
-    for (const d of Object.keys(eventsByDay)) {
-      monthEvents.push(...eventsByDay[Number(d)]);
+    const month: AssetEntry[] = [];
+    for (const d of Object.keys(entriesByDay)) {
+      month.push(...entriesByDay[Number(d)]);
     }
-    return monthEvents.sort((a, b) => a.paymentDate.getTime() - b.paymentDate.getTime());
-  }, [eventsByDay, selectedDay]);
+    return month.sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [entriesByDay, selectedDay]);
 
   const prevMonth = () => {
     if (calMonth === 0) { setCalYear((y) => y - 1); setCalMonth(11); }
@@ -476,23 +217,24 @@ export function IncomePage() {
             </h1>
           </div>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Jadwal penerimaan dividen, kupon, dan bunga investasi kamu
+            Riwayat penerimaan dividen, kupon, dan bunga dari jurnal transaksi
           </p>
         </div>
         <Button
-          onClick={() => setAddModalOpen(true)}
-          icon={<Plus size={14} strokeWidth={2.5} />}
+          variant="secondary"
+          onClick={() => navigate('/journal')}
+          icon={<BookOpen size={14} />}
         >
-          + Tambah Jadwal
+          Buka Jurnal
         </Button>
       </div>
 
       {/* Summary stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Bulan Ini', value: formatCurrencyCompact(thisMonth), mono: true },
-          { label: 'Tahun Ini', value: formatCurrencyCompact(thisYear), mono: true },
-          { label: 'Belum Diterima', value: upcomingCount.toString(), mono: false },
+          { label: 'Diterima Bulan Ini', value: formatCurrencyCompact(thisMonthTotal), mono: true },
+          { label: 'Diterima Tahun Ini', value: formatCurrencyCompact(thisYearTotal), mono: true },
+          { label: 'Total Transaksi', value: totalCount.toString(), mono: false },
         ].map(({ label, value, mono }) => (
           <div
             key={label}
@@ -520,7 +262,7 @@ export function IncomePage() {
         ))}
       </div>
 
-      {/* Calendar + events grid */}
+      {/* Calendar + list grid */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
         {/* Calendar */}
         <div
@@ -564,13 +306,11 @@ export function IncomePage() {
           {/* Day cells */}
           <div className="grid grid-cols-7 gap-1">
             {calendarDays.map((day, idx) => {
-              if (day === null) {
-                return <div key={`empty-${idx}`} />;
-              }
+              if (day === null) return <div key={`empty-${idx}`} />;
               const isToday = calYear === todayYear && calMonth === todayMonth && day === todayDay;
               const isSelected = day === selectedDay;
-              const dayEvents = eventsByDay[day] ?? [];
-              const hasEvents = dayEvents.length > 0;
+              const dayEntries = entriesByDay[day] ?? [];
+              const hasEntries = dayEntries.length > 0;
 
               return (
                 <button
@@ -588,23 +328,19 @@ export function IncomePage() {
                   <span
                     className="text-sm font-medium leading-none"
                     style={{
-                      color: isSelected
-                        ? 'var(--blue-300)'
-                        : isToday
-                        ? 'var(--blue-400)'
-                        : 'var(--text-primary)',
+                      color: isSelected ? 'var(--blue-300)' : isToday ? 'var(--blue-400)' : 'var(--text-primary)',
                       fontFamily: 'var(--font-mono)',
                     }}
                   >
                     {day}
                   </span>
-                  {hasEvents && (
+                  {hasEntries && (
                     <div className="flex gap-0.5 mt-1 flex-wrap justify-center max-w-full px-0.5">
-                      {dayEvents.slice(0, 3).map((e, i) => (
+                      {dayEntries.slice(0, 3).map((e, i) => (
                         <span
                           key={i}
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                          style={{ background: EVENT_TYPE_DOT_BG[e.eventType] }}
+                          style={{ background: TYPE_COLORS[incomeCategory(e)] }}
                         />
                       ))}
                     </div>
@@ -616,16 +352,16 @@ export function IncomePage() {
 
           {/* Legend */}
           <div className="flex flex-wrap gap-4 mt-5 pt-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-            {(Object.keys(EVENT_TYPE_LABELS) as IncomeEventType[]).map((t) => (
+            {(Object.keys(TYPE_LABELS) as IncomeCategory[]).map((t) => (
               <div key={t} className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ background: EVENT_TYPE_DOT_BG[t] }} />
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{EVENT_TYPE_LABELS[t]}</span>
+                <span className="w-2 h-2 rounded-full" style={{ background: TYPE_COLORS[t] }} />
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{TYPE_LABELS[t]}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Events list */}
+        {/* Entries list */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2
@@ -649,41 +385,27 @@ export function IncomePage() {
 
           {isLoading ? (
             <div className="flex justify-center py-8"><Spinner /></div>
-          ) : displayedEvents.length === 0 ? (
+          ) : displayedEntries.length === 0 ? (
             <div
               className="flex flex-col items-center justify-center py-10 rounded-[var(--card-radius)]"
               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}
             >
               <CalendarDays size={28} className="mb-2 opacity-40" />
-              <p className="text-sm">Belum ada jadwal bulan ini</p>
+              <p className="text-sm">
+                {incomeEntries.length === 0
+                  ? 'Belum ada transaksi pendapatan di jurnal'
+                  : 'Tidak ada pendapatan di bulan ini'}
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {displayedEvents.map((event) => (
-                <EventRow
-                  key={event.id}
-                  event={event}
-                  onDelete={(id) => deleteEvent(id)}
-                  onMarkReceived={(id) => markReceived(id)}
-                />
+              {displayedEntries.map((entry) => (
+                <EntryRow key={entry.id} entry={entry} />
               ))}
             </div>
           )}
         </div>
       </div>
-
-      {/* Add Event Modal */}
-      <Modal
-        open={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        title="Tambah Jadwal Pendapatan"
-        size="md"
-      >
-        <AddEventForm
-          assets={assets}
-          onSuccess={() => setAddModalOpen(false)}
-        />
-      </Modal>
     </Layout>
   );
 }

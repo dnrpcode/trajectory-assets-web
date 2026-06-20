@@ -37,11 +37,6 @@ import { RemoveFromWatchlist } from '@/modules/trading/domain/use-cases/RemoveFr
 import { ExecutePaperTrade } from '@/modules/trading/domain/use-cases/ExecutePaperTrade';
 import { GetPaperTrades } from '@/modules/trading/domain/use-cases/GetPaperTrades';
 
-import { FirebaseIncomeEventRepository } from '@/modules/income/data/FirebaseIncomeEventRepository';
-import { CreateIncomeEvent } from '@/modules/income/domain/use-cases/CreateIncomeEvent';
-import { GetIncomeEvents } from '@/modules/income/domain/use-cases/GetIncomeEvents';
-import { DeleteIncomeEvent } from '@/modules/income/domain/use-cases/DeleteIncomeEvent';
-import { MarkEventReceived } from '@/modules/income/domain/use-cases/MarkEventReceived';
 
 // ── Infrastructure ────────────────────────────────────────────────────────────
 export const authService      = new FirebaseAuthService();
@@ -91,9 +86,3 @@ export const removeFromWatchlist   = new RemoveFromWatchlist(watchlistRepository
 export const executePaperTrade     = new ExecutePaperTrade(paperTradeRepository);
 export const getPaperTrades        = new GetPaperTrades(paperTradeRepository);
 
-// ── Income ────────────────────────────────────────────────────────────────────
-export const incomeEventRepository = new FirebaseIncomeEventRepository();
-export const createIncomeEvent     = new CreateIncomeEvent(incomeEventRepository);
-export const getIncomeEvents       = new GetIncomeEvents(incomeEventRepository);
-export const deleteIncomeEvent     = new DeleteIncomeEvent(incomeEventRepository);
-export const markEventReceived     = new MarkEventReceived(incomeEventRepository);
