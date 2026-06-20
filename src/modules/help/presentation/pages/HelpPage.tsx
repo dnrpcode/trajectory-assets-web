@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, LayoutGrid, Activity, ShieldCheck, TrendingUp, MessageSquare, FileText, Settings, Play } from 'lucide-react';
-import { Layout } from './Layout';
-import { useTour } from './TourContext';
+import { Layout } from '@/shared/ui/Layout';
+import { useTour } from '@/shared/ui/TourContext';
 
 interface Section {
   icon: React.ReactNode;
@@ -170,7 +170,6 @@ export function HelpPage() {
         </button>
       </div>
 
-      {/* Glossary */}
       <div
         className="rounded-2xl p-5 mb-6"
         style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}

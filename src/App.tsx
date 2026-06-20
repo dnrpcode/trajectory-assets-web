@@ -18,7 +18,7 @@ import { SettingsPage } from '@/modules/user/presentation/pages/SettingsPage';
 import { AdvisoryPage } from '@/modules/dashboard/presentation/pages/AdvisoryPage';
 import { ProjectionsPage } from '@/modules/dashboard/presentation/pages/ProjectionsPage';
 import { ChatPage } from '@/modules/advisor/presentation/pages/ChatPage';
-import { HelpPage } from '@/shared/ui/HelpPage';
+import { HelpPage } from '@/modules/help';
 import { NotFoundPage } from '@/shared/ui/NotFoundPage';
 import { TradingPage } from '@/modules/trading/presentation/pages/TradingPage';
 import { CoinDetailPage } from '@/modules/trading/presentation/pages/CoinDetailPage';
