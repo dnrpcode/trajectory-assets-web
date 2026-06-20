@@ -23,8 +23,8 @@ export function getDividendErrorMessage(error: unknown): string {
   return 'Gagal memuat data dividen.';
 }
 
-const CHART = 'https://query1.finance.yahoo.com/v8/finance/chart';
-const SEARCH = 'https://query2.finance.yahoo.com/v1/finance/search';
+const CHART = '/api/dividend/chart';
+const SEARCH = '/api/dividend/search';
 
 type RawDividend = { amount: number; date: number };
 type ChartResult = {
@@ -42,7 +42,7 @@ class YahooDividendRepositoryImpl implements IDividendRepository {
 
   async getDividendInfo(ticker: string): Promise<DividendInfo> {
     const yTicker = this.toJK(ticker);
-    const url = `${CHART}/${yTicker}?interval=1mo&range=5y&events=dividends&corsDomain=finance.yahoo.com`;
+    const url = `${CHART}?ticker=${encodeURIComponent(yTicker)}`;
 
     let res: Response;
     try {
@@ -95,7 +95,7 @@ class YahooDividendRepositoryImpl implements IDividendRepository {
   }
 
   async searchTicker(query: string): Promise<TickerSuggestion[]> {
-    const url = `${SEARCH}?q=${encodeURIComponent(query + ' JK')}&lang=en-US&region=ID&quotesCount=8`;
+    const url = `${SEARCH}?q=${encodeURIComponent(query + ' JK')}`;
     let res: Response;
     try {
       res = await fetch(url, { headers: { Accept: 'application/json' } });
