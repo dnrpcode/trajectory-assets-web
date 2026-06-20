@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "portfolio": "Portfolio",
+    "trading": "Trading",
     "journal": "Journal",
     "advisory": "Rebalancing",
     "projections": "CAGR Simulator",

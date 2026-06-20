@@ -30,6 +30,14 @@ import { BackfillPortfolioHistory } from '../../domain/use-cases/portfolio/Backf
 import { AIAdvisorRepository } from '../../data/ai/AIAdvisorRepository';
 import { SendAdvisorMessage } from '../../domain/use-cases/advisor/SendAdvisorMessage';
 
+import { FirebaseWatchlistRepository } from '../../data/firebase/FirebaseWatchlistRepository';
+import { FirebasePaperTradeRepository } from '../../data/firebase/FirebasePaperTradeRepository';
+import { GetWatchlist } from '../../domain/use-cases/trading/GetWatchlist';
+import { AddToWatchlist } from '../../domain/use-cases/trading/AddToWatchlist';
+import { RemoveFromWatchlist } from '../../domain/use-cases/trading/RemoveFromWatchlist';
+import { ExecutePaperTrade } from '../../domain/use-cases/trading/ExecutePaperTrade';
+import { GetPaperTrades } from '../../domain/use-cases/trading/GetPaperTrades';
+
 // ── Infrastructure ────────────────────────────────────────────────────────────
 export const authService      = new FirebaseAuthService();
 export const userRepository   = new FirebaseUserRepository();
@@ -68,3 +76,12 @@ export const backfillPortfolioHistory = new BackfillPortfolioHistory(entryReposi
 // ── AI Advisor ────────────────────────────────────────────────────────────────
 export const aiAdvisorRepository = new AIAdvisorRepository();
 export const sendAdvisorMessage  = new SendAdvisorMessage(aiAdvisorRepository);
+
+// ── Trading ───────────────────────────────────────────────────────────────────
+export const watchlistRepository   = new FirebaseWatchlistRepository();
+export const paperTradeRepository  = new FirebasePaperTradeRepository();
+export const getWatchlist          = new GetWatchlist(watchlistRepository);
+export const addToWatchlist        = new AddToWatchlist(watchlistRepository);
+export const removeFromWatchlist   = new RemoveFromWatchlist(watchlistRepository);
+export const executePaperTrade     = new ExecutePaperTrade(paperTradeRepository);
+export const getPaperTrades        = new GetPaperTrades(paperTradeRepository);

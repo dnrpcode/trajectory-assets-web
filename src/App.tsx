@@ -20,6 +20,8 @@ import { ProjectionsPage } from './presentation/pages/Projections/ProjectionsPag
 import { ChatPage } from './presentation/pages/Chat/ChatPage';
 import { HelpPage } from './presentation/pages/Help/HelpPage';
 import { NotFoundPage } from './presentation/pages/NotFoundPage';
+import { TradingPage } from './presentation/pages/Trading/TradingPage';
+import { CoinDetailPage } from './presentation/pages/Trading/CoinDetailPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -130,6 +132,22 @@ function AppRoutes() {
         element={
           <OnboardingGuard>
             <HelpPage />
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/trading"
+        element={
+          <OnboardingGuard>
+            <TradingPage />
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/trading/:coinId"
+        element={
+          <OnboardingGuard>
+            <CoinDetailPage />
           </OnboardingGuard>
         }
       />

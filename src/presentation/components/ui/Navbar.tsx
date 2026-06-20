@@ -1,7 +1,7 @@
 
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut, BookOpen } from 'lucide-react';
+import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut, BookOpen, BarChart2 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { useAuthStore } from '@/presentation/hooks/useAuth';
 import { logout as logoutUseCase } from '@/infrastructure/di/container';
@@ -9,6 +9,7 @@ import { logout as logoutUseCase } from '@/infrastructure/di/container';
 const navItems = [
   { to: '/dashboard', labelKey: 'nav.dashboard', icon: <LayoutGrid size={18} strokeWidth={1.75} />, dataTour: 'nav-dashboard' },
   { to: '/portfolio', labelKey: 'nav.portfolio', icon: <Activity size={18} strokeWidth={1.75} />, dataTour: 'nav-portfolio' },
+  { to: '/trading', labelKey: 'nav.trading', icon: <BarChart2 size={18} strokeWidth={1.75} />, dataTour: 'nav-trading' },
   { to: '/advisory', labelKey: 'nav.advisory', icon: <ShieldCheck size={18} strokeWidth={1.75} />, dataTour: 'nav-advisory' },
   { to: '/projections', labelKey: 'nav.projections', icon: <TrendingUp size={18} strokeWidth={1.75} />, dataTour: 'nav-projections' },
   { to: '/chat', labelKey: 'nav.chat', icon: <MessageSquare size={18} strokeWidth={1.75} />, dataTour: 'nav-chat' },
