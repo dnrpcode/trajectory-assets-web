@@ -9,30 +9,34 @@ const GAP = 16;
 
 interface Rect { top: number; left: number; width: number; height: number }
 
-function getTooltipPos(rect: Rect, placement: TourPlacement, tooltipH: number) {
+function getEffectiveW() {
+  return Math.min(TOOLTIP_W, window.innerWidth - 16);
+}
+
+function getTooltipPos(rect: Rect, placement: TourPlacement, tooltipH: number, tooltipW: number) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
   switch (placement) {
     case 'right': return {
-      left: clamp(rect.left + rect.width + GAP, 0, vw - TOOLTIP_W - 8),
+      left: clamp(rect.left + rect.width + GAP, 0, vw - tooltipW - 8),
       top: clamp(rect.top + rect.height / 2 - tooltipH / 2, 8, vh - tooltipH - 8),
     };
     case 'left': return {
-      left: clamp(rect.left - GAP - TOOLTIP_W, 8, vw - TOOLTIP_W - 8),
+      left: clamp(rect.left - GAP - tooltipW, 8, vw - tooltipW - 8),
       top: clamp(rect.top + rect.height / 2 - tooltipH / 2, 8, vh - tooltipH - 8),
     };
     case 'bottom': return {
       top: clamp(rect.top + rect.height + GAP, 8, vh - tooltipH - 8),
-      left: clamp(rect.left + rect.width / 2 - TOOLTIP_W / 2, 8, vw - TOOLTIP_W - 8),
+      left: clamp(rect.left + rect.width / 2 - tooltipW / 2, 8, vw - tooltipW - 8),
     };
     case 'top': return {
       top: clamp(rect.top - GAP - tooltipH, 8, vh - tooltipH - 8),
-      left: clamp(rect.left + rect.width / 2 - TOOLTIP_W / 2, 8, vw - TOOLTIP_W - 8),
+      left: clamp(rect.left + rect.width / 2 - tooltipW / 2, 8, vw - tooltipW - 8),
     };
     default:
-      return { top: window.innerHeight / 2 - tooltipH / 2, left: window.innerWidth / 2 - TOOLTIP_W / 2 };
+      return { top: window.innerHeight / 2 - tooltipH / 2, left: window.innerWidth / 2 - tooltipW / 2 };
   }
 }
 
@@ -42,6 +46,12 @@ export function TourOverlay() {
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipH, setTooltipH] = useState(180);
+
+  const isMobileNavStep = window.innerWidth < 768 && !!(step?.target?.includes('nav-'));
+
+  // On mobile, nav items are in the sidebar drawer — use 'bottom' to avoid spilling off-screen
+  const effectivePlacement: TourPlacement = isMobileNavStep ? 'bottom' : (step?.placement ?? 'center');
+  const tooltipW = getEffectiveW();
 
   const findTarget = useCallback(() => {
     if (!step?.target) { setTargetRect(null); return; }
@@ -59,8 +69,9 @@ export function TourOverlay() {
         setTimeout(poll, 100);
       }
     };
-    setTimeout(poll, 350);
-  }, [step]);
+    // Extra delay on mobile nav steps to let the drawer animation finish (240ms)
+    setTimeout(poll, isMobileNavStep ? 450 : 350);
+  }, [step, isMobileNavStep]);
 
   useEffect(() => {
     if (!isActive) { setTargetRect(null); return; }
@@ -80,7 +91,6 @@ export function TourOverlay() {
   if (!isActive || !step) return null;
 
   const isCenter = !step.target || !targetRect;
-  const placement = step.placement ?? 'center';
 
   const hl: Rect = targetRect
     ? { top: targetRect.top - PADDING, left: targetRect.left - PADDING, width: targetRect.width + PADDING * 2, height: targetRect.height + PADDING * 2 }
@@ -89,8 +99,8 @@ export function TourOverlay() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const tooltipPos = isCenter
-    ? { top: vh / 2 - tooltipH / 2, left: vw / 2 - TOOLTIP_W / 2 }
-    : getTooltipPos(hl, placement, tooltipH);
+    ? { top: vh / 2 - tooltipH / 2, left: vw / 2 - tooltipW / 2 }
+    : getTooltipPos(hl, effectivePlacement, tooltipH, tooltipW);
 
   const stepNum = currentStep + 1;
   const isFirst = currentStep === 0;
@@ -121,7 +131,7 @@ export function TourOverlay() {
         ref={tooltipRef}
         style={{
           position: 'fixed', top: tooltipPos.top, left: tooltipPos.left,
-          width: TOOLTIP_W, zIndex: 9002,
+          width: tooltipW, zIndex: 9002,
           background: 'var(--bg-raised)', border: '1px solid var(--border-default)',
           borderRadius: 14, padding: '20px',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',

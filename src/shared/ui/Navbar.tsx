@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut, BookOpen, BarChart2, CalendarDays, X } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { useAuthStore } from '@/modules/auth';
+import { useTour } from './TourContext';
 import { logout as logoutUseCase } from '@/infrastructure/di/container';
 
 const navItems = [
@@ -48,14 +49,16 @@ export function Navbar({ mobileOpen = false, onMobileClose }: NavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const prevPath = useRef(location.pathname);
+  const { isActive: tourActive } = useTour();
 
-  // Close drawer on navigation (skip on initial mount)
+  // Close drawer on navigation — skip during tour (tour controls the drawer)
   useEffect(() => {
+    if (tourActive) return;
     if (location.pathname !== prevPath.current) {
       prevPath.current = location.pathname;
       onMobileClose?.();
     }
-  }, [location.pathname, onMobileClose]);
+  }, [location.pathname, onMobileClose, tourActive]);
 
   const handleLogout = async () => {
     await logoutUseCase.execute();

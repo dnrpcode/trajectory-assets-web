@@ -11,9 +11,14 @@ interface TourContextValue {
   next: () => void;
   prev: () => void;
   skip: () => void;
+  registerDrawerControl: (fn: (open: boolean) => void) => void;
 }
 
 const TourContext = createContext<TourContextValue | null>(null);
+
+function stepNeedsDrawer(idx: number): boolean {
+  return TOUR_STEPS[idx]?.target?.includes('nav-') ?? false;
+}
 
 export function TourProvider({ children }: { children: React.ReactNode }) {
   const [isActive, setIsActive] = useState(false);
@@ -21,29 +26,43 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const hasAutoStarted = useRef(false);
+  const drawerControlFn = useRef<((open: boolean) => void) | null>(null);
+
+  const registerDrawerControl = useCallback((fn: (open: boolean) => void) => {
+    drawerControlFn.current = fn;
+  }, []);
+
+  const controlDrawer = useCallback((open: boolean) => {
+    if (window.innerWidth < 768 && drawerControlFn.current) {
+      drawerControlFn.current(open);
+    }
+  }, []);
 
   const goToStep = useCallback((idx: number) => {
     const s = TOUR_STEPS[idx];
     if (s?.path) navigate(s.path);
     setCurrentStep(idx);
-  }, [navigate]);
+    controlDrawer(stepNeedsDrawer(idx));
+  }, [navigate, controlDrawer]);
 
   const start = useCallback(() => {
     setCurrentStep(0);
     setIsActive(true);
     const first = TOUR_STEPS[0];
     if (first?.path) navigate(first.path);
-  }, [navigate]);
+    controlDrawer(false);
+  }, [navigate, controlDrawer]);
 
   const next = useCallback(() => {
     const nextIdx = currentStep + 1;
     if (nextIdx >= TOUR_STEPS.length) {
       setIsActive(false);
+      controlDrawer(false);
       localStorage.setItem(TOUR_STORAGE_KEY, 'true');
       return;
     }
     goToStep(nextIdx);
-  }, [currentStep, goToStep]);
+  }, [currentStep, goToStep, controlDrawer]);
 
   const prev = useCallback(() => {
     if (currentStep <= 0) return;
@@ -52,8 +71,9 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 
   const skip = useCallback(() => {
     setIsActive(false);
+    controlDrawer(false);
     localStorage.setItem(TOUR_STORAGE_KEY, 'true');
-  }, []);
+  }, [controlDrawer]);
 
   // Auto-start once when user first lands on /dashboard after onboarding
   useEffect(() => {
@@ -71,7 +91,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   return (
     <TourContext.Provider value={{
       isActive, currentStep, totalSteps: TOUR_STEPS.length,
-      step, start, next, prev, skip,
+      step, start, next, prev, skip, registerDrawerControl,
     }}>
       {children}
     </TourContext.Provider>

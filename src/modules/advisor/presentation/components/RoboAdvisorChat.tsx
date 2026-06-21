@@ -238,8 +238,8 @@ export function RoboAdvisorChat({ assets, user, onUpdateRiskProfile, onUpdateTar
 
   return (
     <div
-      className="flex flex-col rounded-3xl overflow-hidden"
-      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', height: '560px' }}
+      className="flex flex-col rounded-3xl overflow-hidden md:h-[560px] h-[min(calc(100dvh-230px),560px)]"
+      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', minHeight: '320px' }}
     >
       {/* Header */}
       <div

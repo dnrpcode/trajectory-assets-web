@@ -10,11 +10,12 @@ import { Modal } from '@/shared/ui/Modal';
 import { Spinner } from '@/shared/ui/Spinner';
 import { AllocationPieChart } from '../components/AllocationPieChart';
 import { WealthGrowthChart } from '../components/WealthGrowthChart';
+import { BenchmarkChart } from '../components/BenchmarkChart';
 import { PlatformAllocationChart } from '../components/PlatformAllocationChart';
 import { PnLByCategoryChart } from '../components/PnLByCategoryChart';
 import { StaleAssetBanner } from '@/modules/portfolio/presentation/components/StaleAssetBanner';
 import { EntryForm } from '@/modules/portfolio/presentation/components/EntryForm';
-import { usePortfolioSummary, usePortfolioHistory } from '../hooks/usePortfolio';
+import { usePortfolioSummary, usePortfolioHistory, useMarketHistory } from '../hooks/usePortfolio';
 import { useActiveAssets } from '@/modules/portfolio/presentation/hooks/useAssets';
 import { useAuthStore } from '@/modules/auth';
 import { formatCurrencyCompact, formatPercent } from '@/shared/utils/formatCurrency';
@@ -30,6 +31,8 @@ export function DashboardPage() {
   const { data: history = [] } = usePortfolioHistory();
   const { data: assets = [] } = useActiveAssets();
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [chartTab, setChartTab] = useState<'growth' | 'benchmark'>('growth');
+  const { data: ihsgHistory = [], isLoading: ihsgLoading, isError: ihsgError } = useMarketHistory('^JKSE');
 
   const monthOverMonth = history.length >= 2
     ? history[history.length - 1].totalValueIDR - history[history.length - 2].totalValueIDR
@@ -112,13 +115,39 @@ export function DashboardPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card variant="default" padding="none" className="lg:col-span-2">
-              <div className="px-6 py-4 border-b border-[var(--border-subtle)]">
+              <div className="px-6 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
                 <h3 className="font-semibold text-[var(--text-primary)] text-sm" style={{ letterSpacing: 'var(--tracking-snug)' }}>
-                  Pertumbuhan Portofolio
+                  {chartTab === 'growth' ? 'Pertumbuhan Portofolio' : 'Benchmark vs IHSG'}
                 </h3>
+                <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--border-subtle)' }}>
+                  {(['growth', 'benchmark'] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setChartTab(tab)}
+                      className="px-3 py-1 text-xs font-medium transition-colors"
+                      style={{
+                        background: chartTab === tab ? 'var(--blue-tint)' : 'transparent',
+                        color: chartTab === tab ? 'var(--blue-400)' : 'var(--text-muted)',
+                        borderRight: tab === 'growth' ? '1px solid var(--border-subtle)' : undefined,
+                      }}
+                    >
+                      {tab === 'growth' ? 'Nilai' : 'vs IHSG'}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="px-2 py-6">
-                <WealthGrowthChart data={history} />
+                {chartTab === 'growth' ? (
+                  <WealthGrowthChart data={history} />
+                ) : (
+                  <BenchmarkChart
+                    portfolioHistory={history}
+                    marketHistory={ihsgHistory}
+                    marketName="IHSG"
+                    isLoading={ihsgLoading}
+                    isError={ihsgError}
+                  />
+                )}
               </div>
             </Card>
 

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import { Navbar } from './Navbar';
+import { useTour } from './TourContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,6 +23,11 @@ function LogoMark({ size = 24 }: { size?: number }) {
 
 export function Layout({ children }: LayoutProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { registerDrawerControl } = useTour();
+
+  useEffect(() => {
+    registerDrawerControl(setDrawerOpen);
+  }, [registerDrawerControl]);
 
   return (
     <div style={{ background: 'var(--bg-base)' }}>

@@ -11,6 +11,8 @@ import { EntryForm } from './EntryForm';
 import { useDeleteAsset } from '../hooks/useAssets';
 import { formatCurrency, formatPercent } from '@/shared/utils/formatCurrency';
 import { computeIsStale } from '@/shared/utils/calculations';
+import { useStockQuote } from '../hooks/useStockData';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 type FormEntryType = 'new_position' | 'price_update' | 'top_up' | 'partial_sell' | 'full_sell' | 'income' | 'fee';
 
@@ -42,6 +44,10 @@ export function AssetCard({ asset }: Props) {
 
   const isStale = computeIsStale(asset);
   const isPositive = asset.unrealizedGainIDR >= 0;
+
+  const isSaham = asset.category === 'saham' && !!asset.ticker;
+  const { data: quote } = useStockQuote(isSaham ? asset.ticker : undefined);
+  const quoteUp = (quote?.changePct ?? 0) >= 0;
 
   const getModalTitle = () => {
     if (entryType === 'price_update') return t('portfolio.updatePrice');
@@ -126,6 +132,35 @@ export function AssetCard({ asset }: Props) {
               </div>
             ))}
           </div>
+
+          {/* Live market price badge — saham IDX only */}
+          {isSaham && quote && (
+            <div
+              className="flex items-center gap-2 mb-3 px-3 py-1.5 rounded-lg"
+              style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)' }}
+            >
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Pasar</span>
+              <span className="font-mono text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {formatCurrency(quote.livePrice)}
+              </span>
+              <span
+                className="flex items-center gap-1 text-xs font-semibold font-mono ml-auto"
+                style={{ color: quoteUp ? 'var(--gain-400)' : 'var(--loss-400)' }}
+              >
+                {quoteUp ? <TrendingUp size={11} strokeWidth={2.5} /> : <TrendingDown size={11} strokeWidth={2.5} />}
+                {quoteUp ? '+' : ''}{quote.changePct.toFixed(2)}%
+              </span>
+              <span
+                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
+                style={{
+                  background: quote.marketState === 'REGULAR' ? 'var(--gain-tint)' : 'var(--bg-overlay)',
+                  color: quote.marketState === 'REGULAR' ? 'var(--gain-400)' : 'var(--text-muted)',
+                }}
+              >
+                {quote.marketState === 'REGULAR' ? 'Live' : 'Tutup'}
+              </span>
+            </div>
+          )}
 
           <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
             <Button variant="secondary" size="sm" onClick={() => openModal('price_update')} className="flex-1 text-xs">
