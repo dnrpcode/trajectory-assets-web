@@ -43,6 +43,22 @@ export const TOUR_STEPS: TourStep[] = [
     placement: 'right',
   },
   {
+    id: 'trading',
+    titleKey: 'tour.tradingTitle',
+    descKey: 'tour.tradingDesc',
+    target: '[data-tour="nav-trading"]',
+    path: '/trading',
+    placement: 'right',
+  },
+  {
+    id: 'income',
+    titleKey: 'tour.incomeTitle',
+    descKey: 'tour.incomeDesc',
+    target: '[data-tour="nav-income"]',
+    path: '/income',
+    placement: 'right',
+  },
+  {
     id: 'advisory',
     titleKey: 'tour.advisoryTitle',
     descKey: 'tour.advisoryDesc',

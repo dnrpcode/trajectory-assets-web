@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, LayoutGrid, Activity, ShieldCheck, TrendingUp, MessageSquare, FileText, Settings, Play } from 'lucide-react';
+import {
+  ChevronDown, LayoutGrid, Activity, ShieldCheck, TrendingUp,
+  MessageSquare, FileText, Settings, Play, Sparkles, BarChart2,
+  CalendarDays, LineChart,
+} from 'lucide-react';
 import { Layout } from '@/shared/ui/Layout';
 import { useTour } from '@/shared/ui/TourContext';
 
@@ -13,57 +17,39 @@ interface Section {
 function AccordionItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div
-      className="border-b last:border-b-0"
-      style={{ borderColor: 'var(--border-dim)' }}
-    >
-      <button
-        className="w-full flex items-center justify-between py-3.5 text-left gap-3"
-        onClick={() => setOpen((v) => !v)}
-      >
+    <div className="border-b last:border-b-0" style={{ borderColor: 'var(--border-dim)' }}>
+      <button className="w-full flex items-center justify-between py-3.5 text-left gap-3" onClick={() => setOpen((v) => !v)}>
         <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{q}</span>
         <ChevronDown
-          size={15}
-          strokeWidth={2}
-          className="flex-shrink-0 transition-transform duration-200"
-          style={{
-            color: 'var(--text-muted)',
-            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-          }}
+          size={15} strokeWidth={2} className="flex-shrink-0 transition-transform duration-200"
+          style={{ color: 'var(--text-muted)', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
         />
       </button>
       {open && (
-        <p className="pb-4 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          {a}
-        </p>
+        <p className="pb-4 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{a}</p>
       )}
     </div>
   );
 }
 
-function HelpSection({ icon, title, items }: { icon: React.ReactNode; title: string; items: { q: string; a: string }[] }) {
+function HelpSection({ icon, title, items, accent }: { icon: React.ReactNode; title: string; items: { q: string; a: string }[]; accent?: string }) {
   return (
-    <div
-      className="rounded-2xl"
-      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
-    >
-      <div
-        className="flex items-center gap-3 px-6 py-4 border-b"
-        style={{ borderColor: 'var(--border-subtle)' }}
-      >
-        <span style={{ color: 'var(--blue-400)' }}>{icon}</span>
-        <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-          {title}
-        </h2>
+    <div className="rounded-2xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+      <div className="flex items-center gap-3 px-6 py-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+        <span style={{ color: accent ?? 'var(--blue-400)' }}>{icon}</span>
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>{title}</h2>
       </div>
       <div className="px-6">
-        {items.map((item) => (
-          <AccordionItem key={item.q} q={item.q} a={item.a} />
-        ))}
+        {items.map((item) => <AccordionItem key={item.q} q={item.q} a={item.a} />)}
       </div>
     </div>
   );
 }
+
+const GLOSSARY_TERMS = [
+  'CAGR', 'Unrealized Gain', 'Avg Cost', 'Rebalancing',
+  'RSI', 'Monte Carlo', 'Support/Resistance', 'Yield',
+] as const;
 
 export function HelpPage() {
   const { t } = useTranslation();
@@ -88,6 +74,42 @@ export function HelpPage() {
         { q: t('help.q_portfolio_2'), a: t('help.a_portfolio_2') },
         { q: t('help.q_portfolio_3'), a: t('help.a_portfolio_3') },
         { q: t('help.q_portfolio_4'), a: t('help.a_portfolio_4') },
+      ],
+    },
+    {
+      icon: <LineChart size={16} strokeWidth={1.75} />,
+      titleKey: 'help.stockLiveTitle',
+      items: [
+        { q: t('help.q_stocklive_1'), a: t('help.a_stocklive_1') },
+        { q: t('help.q_stocklive_2'), a: t('help.a_stocklive_2') },
+        { q: t('help.q_stocklive_3'), a: t('help.a_stocklive_3') },
+      ],
+    },
+    {
+      icon: <Sparkles size={16} strokeWidth={1.75} />,
+      titleKey: 'help.forecastTitle',
+      items: [
+        { q: t('help.q_forecast_1'), a: t('help.a_forecast_1') },
+        { q: t('help.q_forecast_2'), a: t('help.a_forecast_2') },
+        { q: t('help.q_forecast_3'), a: t('help.a_forecast_3') },
+      ],
+    },
+    {
+      icon: <CalendarDays size={16} strokeWidth={1.75} />,
+      titleKey: 'help.incomePageTitle',
+      items: [
+        { q: t('help.q_income_1'), a: t('help.a_income_1') },
+        { q: t('help.q_income_2'), a: t('help.a_income_2') },
+        { q: t('help.q_income_3'), a: t('help.a_income_3') },
+      ],
+    },
+    {
+      icon: <BarChart2 size={16} strokeWidth={1.75} />,
+      titleKey: 'help.tradingPageTitle',
+      items: [
+        { q: t('help.q_trading_1'), a: t('help.a_trading_1') },
+        { q: t('help.q_trading_2'), a: t('help.a_trading_2') },
+        { q: t('help.q_trading_3'), a: t('help.a_trading_3') },
       ],
     },
     {
@@ -140,14 +162,7 @@ export function HelpPage() {
     <Layout>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1
-            style={{
-              color: 'var(--text-primary)',
-              fontSize: '20px',
-              fontWeight: 700,
-              letterSpacing: 'var(--tracking-snug)',
-            }}
-          >
+          <h1 style={{ color: 'var(--text-primary)', fontSize: '20px', fontWeight: 700, letterSpacing: 'var(--tracking-snug)' }}>
             {t('help.title')}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: 4 }}>
@@ -170,20 +185,21 @@ export function HelpPage() {
         </button>
       </div>
 
-      <div
-        className="rounded-2xl p-5 mb-6"
-        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
-      >
+      {/* Glossary */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
         <p className="text-xs font-bold uppercase mb-3" style={{ color: 'var(--blue-400)', letterSpacing: 'var(--tracking-caps)' }}>
           {t('help.glossaryTitle')}
         </p>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-          {(['CAGR', 'Unrealized Gain', 'Avg Cost', 'Rebalancing'] as const).map((term) => (
-            <div key={term} className="flex gap-2 items-start text-xs py-2 border-b lg:border-b-0" style={{ borderColor: 'var(--border-dim)' }}>
-              <span className="font-bold flex-shrink-0 w-28" style={{ color: 'var(--text-primary)' }}>{term}</span>
-              <span style={{ color: 'var(--text-secondary)' }}>{t(`help.glossary_${term.toLowerCase().replace(/ /g, '_')}`)}</span>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-0">
+          {GLOSSARY_TERMS.map((term) => {
+            const key = term.toLowerCase().replace(/[/ ]/g, '_');
+            return (
+              <div key={term} className="flex gap-2 items-start text-xs py-2 border-b last:border-b-0 lg:[&:nth-last-child(-n+2)]:border-b-0" style={{ borderColor: 'var(--border-dim)' }}>
+                <span className="font-bold flex-shrink-0 w-32" style={{ color: 'var(--text-primary)' }}>{term}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{t(`help.glossary_${key}`)}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -194,6 +210,13 @@ export function HelpPage() {
             icon={sec.icon}
             title={t(sec.titleKey)}
             items={sec.items}
+            accent={
+              sec.titleKey === 'help.forecastTitle' ? 'var(--ai-accent)' :
+              sec.titleKey === 'help.incomePageTitle' ? 'var(--gain-400)' :
+              sec.titleKey === 'help.tradingPageTitle' ? 'var(--warn-400)' :
+              sec.titleKey === 'help.stockLiveTitle' ? 'var(--blue-300)' :
+              undefined
+            }
           />
         ))}
       </div>
