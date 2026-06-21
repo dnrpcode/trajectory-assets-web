@@ -54,6 +54,7 @@ function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={authUser ? <Navigate to="/dashboard" /> : <LoginPage />} />
       <Route path="/register" element={authUser ? <Navigate to="/dashboard" /> : <RegisterPage />} />
       <Route

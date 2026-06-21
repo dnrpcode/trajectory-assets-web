@@ -36,7 +36,7 @@ export function NotFoundPage() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px',
+      padding: '24px 16px',
       fontFamily: 'var(--font-sans)',
       overflow: 'hidden',
       position: 'relative',
@@ -82,11 +82,11 @@ export function NotFoundPage() {
         pointerEvents: 'none',
       }} />
 
-      {/* Floating random chars in background */}
-      {Array.from({ length: 12 }).map((_, i) => (
+      {/* Floating chars — 8 items, max left 82% to avoid overflow on narrow screens */}
+      {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} style={{
           position: 'fixed',
-          left: `${5 + i * 8}%`,
+          left: `${5 + i * 10}%`,
           top: `${10 + (i % 5) * 18}%`,
           fontSize: '11px',
           fontFamily: 'var(--font-mono)',
@@ -96,16 +96,16 @@ export function NotFoundPage() {
           pointerEvents: 'none',
           userSelect: 'none',
         }}>
-          {['0x404', 'ERR', 'NULL', 'NaN', '?', '!', '∅', 'undefined', '{}', '[]', '404', randomGlitch][i]}
+          {(['0x404', 'ERR', 'NULL', 'NaN', '∅', 'undef', '404', randomGlitch] as const)[i]}
         </div>
       ))}
 
       {/* Main content */}
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 480 }}>
+      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%', maxWidth: 480 }}>
 
         {/* Big 404 */}
         <div style={{
-          fontSize: 'clamp(80px, 18vw, 140px)',
+          fontSize: 'clamp(72px, 22vw, 140px)',
           fontWeight: 900,
           fontFamily: 'var(--font-mono)',
           lineHeight: 1,
@@ -122,12 +122,13 @@ export function NotFoundPage() {
 
         {/* Glitch subtitle */}
         <div style={{
-          fontSize: '18px',
+          fontSize: 'clamp(13px, 4vw, 18px)',
           fontWeight: 700,
           fontFamily: 'var(--font-mono)',
           color: 'var(--text-primary)',
           marginBottom: 12,
           letterSpacing: '0.05em',
+          overflow: 'hidden',
         }}>
           <GlitchText text="PAGE_NOT_FOUND" />
         </div>
@@ -137,13 +138,14 @@ export function NotFoundPage() {
           background: 'var(--bg-surface)',
           border: '1px solid var(--border-subtle)',
           borderRadius: 12,
-          padding: '14px 18px',
-          marginBottom: 28,
+          padding: '12px 14px',
+          marginBottom: 24,
           textAlign: 'left',
           fontFamily: 'var(--font-mono)',
-          fontSize: '12px',
+          fontSize: '11px',
+          wordBreak: 'break-all',
         }}>
-          <div style={{ color: 'var(--loss-400)', marginBottom: 4 }}>
+          <div style={{ marginBottom: 4 }}>
             <span style={{ color: 'var(--text-muted)' }}>trajectory</span>
             <span style={{ color: 'var(--blue-400)' }}>@app</span>
             <span style={{ color: 'var(--text-muted)' }}> ~ % </span>
@@ -157,12 +159,13 @@ export function NotFoundPage() {
           </div>
         </div>
 
-        {/* CTA buttons */}
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+        {/* CTA buttons — full-width stacked on mobile */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button
             onClick={() => navigate(user ? '/dashboard' : '/login')}
             style={{
-              padding: '10px 24px',
+              width: '100%',
+              padding: '12px 24px',
               borderRadius: 10,
               border: 'none',
               background: 'linear-gradient(135deg, var(--blue-500), var(--ai-accent))',
@@ -179,7 +182,8 @@ export function NotFoundPage() {
           <button
             onClick={() => navigate(-1)}
             style={{
-              padding: '10px 24px',
+              width: '100%',
+              padding: '12px 24px',
               borderRadius: 10,
               border: '1px solid var(--border-default)',
               background: 'var(--bg-raised)',
@@ -196,7 +200,7 @@ export function NotFoundPage() {
 
         {/* Ticker */}
         <div style={{
-          marginTop: 40,
+          marginTop: 36,
           overflow: 'hidden',
           borderTop: '1px solid var(--border-dim)',
           paddingTop: 12,
