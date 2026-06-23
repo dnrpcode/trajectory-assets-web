@@ -32,10 +32,10 @@ const INCOME_FEE_CATEGORY_VALUES = [
 const baseSchema = z.object({
   entryType: z.enum(formEntryTypes),
   assetId: z.string().optional(),
-  assetName: z.string().min(1, 'Nama aset wajib diisi'),
-  ticker: z.string().optional(),
+  assetName: z.string().min(1, 'Nama aset wajib diisi').max(100, 'Nama aset terlalu panjang'),
+  ticker: z.string().max(20, 'Ticker terlalu panjang').optional(),
   category: z.enum(['saham', 'reksa_dana', 'obligasi_sbn', 'emas', 'kripto', 'cash', 'lainnya']),
-  platform: z.string().min(1, 'Platform wajib diisi'),
+  platform: z.string().min(1, 'Platform wajib diisi').max(50, 'Platform terlalu panjang'),
   currency: z.string().default('IDR'),
   exchangeRateToIDR: z.coerce.number().optional(),
   pricePerUnit: z.coerce.number().optional(),
@@ -43,7 +43,7 @@ const baseSchema = z.object({
   amount: z.coerce.number().optional(),
   incomeFeeCategory: z.enum(['dividend', 'coupon', 'interest', 'platform_fee', 'tax', 'other']).optional(),
   date: z.string().min(1, 'Tanggal wajib diisi'),
-  notes: z.string().optional(),
+  notes: z.string().max(500, 'Catatan terlalu panjang').optional(),
 });
 
 const schema = baseSchema

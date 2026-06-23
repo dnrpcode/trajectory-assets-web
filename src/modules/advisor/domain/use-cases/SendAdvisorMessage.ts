@@ -21,6 +21,12 @@ export interface SendAdvisorMessageInput {
   userMessage: string;
 }
 
+const VALID_RISK_PROFILES: ReadonlySet<string> = new Set(['conservative', 'moderate', 'aggressive']);
+
+function sanitize(value: string, maxLen = 100): string {
+  return value.replace(/[`\n\r]/g, ' ').slice(0, maxLen);
+}
+
 export class SendAdvisorMessage {
   constructor(private aiRepo: IAIAdvisorRepository) {}
 
@@ -57,7 +63,7 @@ export class SendAdvisorMessage {
       .sort((a, b) => b.currentValueIDR - a.currentValueIDR)
       .map(
         (a) =>
-          `- ${a.assetName}${a.ticker ? ` (${a.ticker})` : ""}: ${formatCurrencyCompact(a.currentValueIDR)} | gain ${a.unrealizedGainPct >= 0 ? "+" : ""}${a.unrealizedGainPct.toFixed(1)}% | platform: ${a.platform}`,
+          `- ${sanitize(a.assetName)}${a.ticker ? ` (${sanitize(a.ticker, 20)})` : ""}: ${formatCurrencyCompact(a.currentValueIDR)} | gain ${a.unrealizedGainPct >= 0 ? "+" : ""}${a.unrealizedGainPct.toFixed(1)}% | platform: ${sanitize(a.platform, 50)}`,
       )
       .join("\n");
 
@@ -75,8 +81,8 @@ export class SendAdvisorMessage {
 ## Data Portofolio User Saat Ini
 
 **Profil:**
-- Nama: ${user.displayName}
-- Profil Risiko: ${user.riskProfile}
+- Nama: ${sanitize(user.displayName ?? '', 80)}
+- Profil Risiko: ${sanitize(user.riskProfile ?? '', 20)}
 - Horizon Investasi: ${user.investmentHorizon}
 
 **Nilai Portofolio:**
@@ -166,7 +172,7 @@ PENTING:
         summary?: string;
       };
 
-      if (parsed.type === "updateRiskProfile" && parsed.riskProfile) {
+      if (parsed.type === "updateRiskProfile" && parsed.riskProfile && VALID_RISK_PROFILES.has(parsed.riskProfile)) {
         const action: AdvisorAction = {
           type: "updateRiskProfile",
           riskProfile: parsed.riskProfile as RiskProfile,
