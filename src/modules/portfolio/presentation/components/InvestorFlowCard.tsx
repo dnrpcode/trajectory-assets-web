@@ -4,6 +4,19 @@ import {
   ReferenceLine, Tooltip, ComposedChart, Line,
 } from 'recharts';
 import { useInvestorFlow, type FlowSignal, type ScorecardPoint } from '../hooks/useInvestorFlow';
+import { InfoTooltip } from '@/shared/ui/InfoTooltip';
+
+// ── Tooltip texts ─────────────────────────────────────────────────────────────
+
+const TIPS = {
+  cmf: 'Chaikin Money Flow (CMF)\n\nMengukur apakah volume lebih banyak terjadi saat harga naik (beli) atau turun (jual) dalam 20 hari.\n\n> +15 = akumulasi kuat\n−15 s/d +15 = netral\n< −15 = distribusi kuat',
+  mfi: 'Money Flow Index (MFI)\n\nVersi RSI berbasis volume. Mengukur kecepatan dan kekuatan aliran dana masuk/keluar.\n\n> 70 = jenuh beli (overbought)\n< 30 = jenuh jual (oversold)\n30–70 = normal',
+  obv: 'On-Balance Volume (OBV)\n\nMenjumlahkan volume saat harga naik dan mengurangkan saat harga turun. Tren OBV naik = tekanan beli mendominasi secara kumulatif.',
+  buyPct: 'Tekanan Beli (%)\n\nSeberapa dekat harga penutupan terhadap harga tertinggi hari itu.\n\n100% = tutup di high (semua pembeli)\n0% = tutup di low (semua penjual)\n>55% = tekanan beli dominan',
+  netFlow: 'Net Aliran Dana\n\nEstimasi nilai bersih tekanan beli/jual per sesi, dihitung dari posisi close dalam range hari × volume × harga.\n\nBar hijau = net beli\nBar merah = net jual\nGaris biru = kumulatif 10 sesi',
+  signal: 'Sinyal Komposit\n\nDihitung dari 4 faktor: CMF, MFI, tren OBV, dan rasio sesi akumulasi vs distribusi dalam 10 hari terakhir.\n\nKekuatan sinyal ditunjukkan oleh kotak-kotak di sebelah kanan badge.',
+  scorecard: 'Scorecard Harian\n\nBeli% = posisi close dalam range hari\nCMF = nilai CMF hari tersebut\n▲ = sesi akumulasi\n▼ = sesi distribusi\n– = netral',
+} as const;
 
 // ── Signal config ─────────────────────────────────────────────────────────────
 
@@ -118,7 +131,7 @@ export function InvestorFlowCard({ ticker }: { ticker: string }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
         <div>
           <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Aliran Dana Investor</p>
-          <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '2px 0 0 0' }}>CMF · MFI · OBV · Tekanan Beli/Jual</p>
+          <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '2px 0 0 0' }}>Estimasi teknikal · bukan data asing/domestik IDX</p>
         </div>
         <button onClick={() => refetch()} title="Refresh"
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', borderRadius: 6 }}>
@@ -136,6 +149,7 @@ export function InvestorFlowCard({ ticker }: { ticker: string }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 99, background: cfg.bg, border: `1px solid ${cfg.border}` }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: cfg.color }}>{cfg.label}</span>
+                <InfoTooltip content={TIPS.signal} size={11} />
               </div>
               {/* Score bar */}
               <div style={{ flex: 1 }}>
@@ -177,7 +191,10 @@ export function InvestorFlowCard({ ticker }: { ticker: string }) {
             {/* CMF */}
             <div style={{ padding: '12px 14px', borderRight: '1px solid var(--border-dim)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CMF</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CMF</span>
+                  <InfoTooltip content={TIPS.cmf} size={10} />
+                </div>
                 <TrendIcon trend={data.cmfTrend} />
               </div>
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, margin: '0 0 6px 0', color: data.latestCmf >= 0 ? 'var(--gain-400)' : 'var(--loss-400)' }}>
@@ -200,7 +217,10 @@ export function InvestorFlowCard({ ticker }: { ticker: string }) {
             {/* MFI */}
             <div style={{ padding: '12px 14px', borderRight: '1px solid var(--border-dim)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>MFI</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>MFI</span>
+                  <InfoTooltip content={TIPS.mfi} size={10} />
+                </div>
                 <span style={{ fontSize: 9, color: data.latestMfi > 70 ? 'var(--warn-400)' : data.latestMfi < 30 ? 'var(--blue-300)' : 'var(--text-muted)' }}>
                   {data.latestMfi > 70 ? 'Jenuh Beli' : data.latestMfi < 30 ? 'Jenuh Jual' : 'Normal'}
                 </span>
@@ -225,7 +245,10 @@ export function InvestorFlowCard({ ticker }: { ticker: string }) {
             {/* OBV + Tekanan Beli */}
             <div style={{ padding: '12px 14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OBV</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OBV</span>
+                  <InfoTooltip content={TIPS.obv} size={10} />
+                </div>
                 <TrendIcon trend={data.obvTrend} />
               </div>
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, margin: '0 0 3px 0', color: data.obvTrend === 'rising' ? 'var(--gain-400)' : data.obvTrend === 'falling' ? 'var(--loss-400)' : 'var(--text-primary)' }}>
@@ -239,15 +262,21 @@ export function InvestorFlowCard({ ticker }: { ticker: string }) {
                   { from: 60, to: 100, color: 'var(--gain-400)' },
                 ]}
               />
-              <p style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 3 }}>Tekanan beli {data.latestBuyPct.toFixed(0)}%</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                <p style={{ fontSize: 9, color: 'var(--text-muted)', margin: 0 }}>Tekanan beli {data.latestBuyPct.toFixed(0)}%</p>
+                <InfoTooltip content={TIPS.buyPct} size={9} />
+              </div>
             </div>
           </div>
 
           {/* ── Net flow bar chart + cumulative line ── */}
           <div style={{ padding: '12px 16px 4px', borderBottom: '1px solid var(--border-dim)' }}>
-            <p style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>
-              Net Aliran Dana · 10 Sesi
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+              <p style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                Net Aliran Dana · 10 Sesi
+              </p>
+              <InfoTooltip content={TIPS.netFlow} size={10} />
+            </div>
             <ResponsiveContainer width="100%" height={110}>
               <ComposedChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <XAxis dataKey="date" tick={{ fill: 'var(--text-muted)', fontSize: 9 }} axisLine={false} tickLine={false} />
@@ -284,9 +313,12 @@ export function InvestorFlowCard({ ticker }: { ticker: string }) {
 
           {/* ── 10-day scorecard table ── */}
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-dim)' }}>
-            <p style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>
-              Scorecard 10 Sesi
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+              <p style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                Scorecard 10 Sesi
+              </p>
+              <InfoTooltip content={TIPS.scorecard} size={10} />
+            </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--font-mono)', tableLayout: 'fixed' }}>
                 <thead>
