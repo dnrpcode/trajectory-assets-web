@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, Trash2, ArrowLeft, Sparkles, Menu, TrendingUp, TrendingDown } from 'lucide-react';
+import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, Trash2, ArrowLeft, Sparkles, Menu, TrendingUp, TrendingDown, Pencil } from 'lucide-react';
 import { Navbar } from '@/shared/ui/Navbar';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { useActiveAssets, useDeleteAsset } from '../hooks/useAssets';
+import { useActiveAssets, useDeleteAsset, useUpdateAssetMeta } from '../hooks/useAssets';
 import { useAssetEntries, useDeleteEntry } from '../hooks/useEntries';
 import { Modal } from '@/shared/ui/Modal';
 import { EntryForm } from '../components/EntryForm';
@@ -18,6 +18,86 @@ import { computeIsStale } from '@/shared/utils/calculations';
 import { InfoTooltip } from '@/shared/ui/InfoTooltip';
 import { StockLivePanel } from '../components/StockLivePanel';
 import { StockForecastCard } from '@/modules/forecast';
+
+// ── Edit Asset Modal ─────────────────────────────────────────────────────────
+
+function EditAssetModal({
+  asset,
+  onClose,
+  onSave,
+  isSaving,
+}: {
+  asset: { id: string; assetName: string; ticker?: string; platform: string };
+  onClose: () => void;
+  onSave: (patch: { id: string; assetName: string; ticker: string; platform: string }) => void;
+  isSaving: boolean;
+}) {
+  const [name, setName] = useState(asset.assetName);
+  const [ticker, setTicker] = useState(asset.ticker ?? '');
+  const [platform, setPlatform] = useState(asset.platform);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onSave({ id: asset.id, assetName: name.trim(), ticker: ticker.trim().toUpperCase(), platform: platform.trim() });
+  };
+
+  const fieldStyle: React.CSSProperties = {
+    width: '100%', padding: '9px 12px', borderRadius: 8,
+    border: '1px solid var(--border-default)', background: 'var(--bg-raised)',
+    color: 'var(--text-primary)', fontSize: 14, fontFamily: 'var(--font-sans)',
+    outline: 'none', boxSizing: 'border-box',
+  };
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontSize: 12, fontWeight: 600,
+    color: 'var(--text-secondary)', marginBottom: 5,
+  };
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 14, padding: 24, width: '100%', maxWidth: 380, boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+          <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(77,124,255,0.1)', border: '1px solid rgba(77,124,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Pencil size={15} stroke="var(--blue-400)" strokeWidth={2} />
+          </div>
+          <h3 style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 600, margin: 0 }}>Edit Info Aset</h3>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={labelStyle}>Nama Aset *</label>
+            <input style={fieldStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama aset" required />
+          </div>
+          <div>
+            <label style={labelStyle}>Kode Tiket <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(opsional)</span></label>
+            <input
+              style={{ ...fieldStyle, fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}
+              value={ticker}
+              onChange={(e) => setTicker(e.target.value)}
+              placeholder="mis. BBCA, GOTO"
+            />
+            <p style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 4 }}>Untuk saham IDX, masukkan kode tanpa .JK (mis. BBCA)</p>
+          </div>
+          <div>
+            <label style={labelStyle}>Platform</label>
+            <input style={fieldStyle} value={platform} onChange={(e) => setPlatform(e.target.value)} placeholder="mis. Ajaib, IPOT, Bibit" />
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+            <Button type="button" variant="secondary" size="md" onClick={onClose} style={{ flex: 1 }}>Batal</Button>
+            <Button type="submit" variant="primary" size="md" loading={isSaving} style={{ flex: 1 }}>Simpan</Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -235,11 +315,13 @@ export function AssetDetailPage() {
   const [actionModal, setActionModal] = useState<ActionEntryType | null>(null);
   const [deleteAssetConfirm, setDeleteAssetConfirm] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: assets = [], isLoading: assetsLoading } = useActiveAssets();
   const { data: entries = [], isLoading: entriesLoading } = useAssetEntries(assetId ?? '');
   const { mutateAsync: deleteEntry, isPending: isDeletingEntry } = useDeleteEntry();
   const { mutateAsync: deleteAssetMutation, isPending: isDeletingAsset } = useDeleteAsset();
+  const { mutateAsync: updateAssetMeta, isPending: isSavingMeta } = useUpdateAssetMeta();
 
   const asset = assets.find((a) => a.id === assetId);
   const isLoading = assetsLoading || entriesLoading;
@@ -312,6 +394,15 @@ export function AssetDetailPage() {
                     <h1 style={{ color: 'var(--text-primary)', fontSize: 16, fontWeight: 700, margin: 0 }}>{asset.assetName}</h1>
                     {asset.ticker && <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{asset.ticker}</span>}
                     {isStale && <Badge variant="stale" dot>STALE</Badge>}
+                    <button
+                      onClick={() => setEditOpen(true)}
+                      title="Edit info aset"
+                      style={{ background: 'none', border: 'none', padding: 3, cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', borderRadius: 4, transition: 'color 120ms' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--blue-400)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                    >
+                      <Pencil size={13} strokeWidth={2} />
+                    </button>
                   </div>
                   <div style={{ display: 'flex', gap: 5, marginTop: 5 }}>
                     <Badge variant="accent">{CATEGORY_LABELS[asset.category]}</Badge>
@@ -481,6 +572,18 @@ export function AssetDetailPage() {
       </div>
 
       {/* Modals */}
+      {editOpen && (
+        <EditAssetModal
+          asset={asset}
+          onClose={() => setEditOpen(false)}
+          isSaving={isSavingMeta}
+          onSave={async (patch) => {
+            await updateAssetMeta(patch);
+            setEditOpen(false);
+          }}
+        />
+      )}
+
       {entryToDelete && (
         <DeleteEntryModal entry={entryToDelete} onConfirm={handleDeleteEntryConfirm} onCancel={() => setEntryToDelete(null)} isDeleting={isDeletingEntry} />
       )}
