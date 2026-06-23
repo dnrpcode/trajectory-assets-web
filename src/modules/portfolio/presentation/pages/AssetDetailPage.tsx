@@ -18,6 +18,7 @@ import { computeIsStale } from '@/shared/utils/calculations';
 import { InfoTooltip } from '@/shared/ui/InfoTooltip';
 import { StockLivePanel } from '../components/StockLivePanel';
 import { StockForecastCard } from '@/modules/forecast';
+import { InvestorFlowCard } from '../components/InvestorFlowCard';
 
 // ── Edit Asset Modal ─────────────────────────────────────────────────────────
 
@@ -533,6 +534,7 @@ export function AssetDetailPage() {
             {tab === 'market' && isSaham && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <StockLivePanel asset={asset} />
+                <InvestorFlowCard ticker={asset.ticker!} />
                 <StockForecastCard asset={asset} />
               </div>
             )}
