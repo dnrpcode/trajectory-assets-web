@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { Layout } from '@/shared/ui/Layout';
 import { Spinner } from '@/shared/ui/Spinner';
 import { Badge } from '@/shared/ui/Badge';
-import { useEntries } from '@/modules/portfolio/presentation/hooks/useEntries';
+import { useEntries } from '../hooks/useDashboardEntries';
 import { formatDate, formatMonth } from '@/shared/utils/formatDate';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import { EntryType } from '@/shared/types';
-import type { AssetEntry } from '@/modules/portfolio';
+import type { AssetEntry } from '@/shared/types/assetEntry';
 
 function EntryIcon({ type }: { type: EntryType }) {
   const props = { size: 14, strokeWidth: 2 };

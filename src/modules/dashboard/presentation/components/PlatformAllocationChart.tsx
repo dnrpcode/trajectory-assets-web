@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import type { Asset } from '@/modules/portfolio';
+import type { Asset } from '@/shared/types/asset';
 import { formatCurrencyCompact } from '@/shared/utils/formatCurrency';
 
 interface Props { assets: Asset[]; }

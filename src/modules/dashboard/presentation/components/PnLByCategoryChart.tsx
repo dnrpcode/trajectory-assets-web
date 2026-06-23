@@ -1,5 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
-import type { Asset } from '@/modules/portfolio';
+import type { Asset } from '@/shared/types/asset';
 import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '@/shared/constants/categories';
 import { formatCurrencyCompact } from '@/shared/utils/formatCurrency';
 import { AssetCategory } from '@/shared/types';

@@ -1,5 +1,5 @@
-import { IAssetEntryRepository } from '@/modules/portfolio/domain/repositories/IAssetEntryRepository';
-import { IAssetProjectionRepository } from '@/modules/portfolio/domain/repositories/IAssetProjectionRepository';
+import { IAssetEntryRepository } from '@/shared/repositories/IAssetEntryRepository';
+import { IAssetProjectionRepository } from '@/shared/repositories/IAssetProjectionRepository';
 import { IPortfolioRepository } from '../repositories/IPortfolioRepository';
 import { computeNewAvgCost } from '@/shared/utils/calculations';
 import { getCurrentMonth, getMonthFromDate } from '@/shared/utils/formatDate';

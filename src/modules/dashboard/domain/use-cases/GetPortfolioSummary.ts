@@ -1,4 +1,4 @@
-import { IAssetProjectionRepository } from '@/modules/portfolio/domain/repositories/IAssetProjectionRepository';
+import { IAssetProjectionRepository } from '@/shared/repositories/IAssetProjectionRepository';
 import { IPortfolioRepository } from '../repositories/IPortfolioRepository';
 import { PortfolioSummary } from '../entities/Portfolio';
 import { computeActualAllocation, computeIsStale } from '@/shared/utils/calculations';
