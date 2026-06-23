@@ -1,21 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
 
-export interface TopHolder {
-  name: string;
-  reportDate: string;
-  pctHeld: number;
-  position: number;
-  value: number;
-  pctChange: number;
+export interface FlowDataPoint {
+  date: string;
+  cmf: number | null;
+  obv: number;
+  adl: number;
+  close: number;
+  volume: number;
 }
+
+export type FlowSignal = 'strong_accumulation' | 'accumulation' | 'neutral' | 'distribution' | 'strong_distribution';
 
 export interface InvestorFlowData {
   ticker: string;
   symbol: string;
-  insider:     { pct: number };
-  institution: { pct: number; count: number };
-  retail:      { pct: number };
-  topHolders:  TopHolder[];
+  series: FlowDataPoint[];
+  cmf: number;
+  cmfTrend: 'rising' | 'falling' | 'neutral';
+  obvTrend: 'rising' | 'falling' | 'flat';
+  signal: FlowSignal;
 }
 
 async function fetchInvestorFlow(ticker: string): Promise<InvestorFlowData> {
@@ -30,7 +33,7 @@ export function useInvestorFlow(ticker: string | undefined) {
     queryKey: ['investorFlow', ticker],
     queryFn: () => fetchInvestorFlow(ticker!),
     enabled: !!ticker,
-    staleTime: 60 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
     retry: 1,
   });
 }
