@@ -53,3 +53,9 @@ export interface RebalancingAdvice {
   description: string;
   actionAmount: number;
 }
+
+export interface PortfolioHistoryPoint {
+  month: string; // "YYYY-MM"
+  totalValueIDR: number;
+  totalCostBasisIDR: number;
+}
