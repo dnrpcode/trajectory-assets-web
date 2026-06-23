@@ -24,6 +24,7 @@ import { DeleteEntry } from '@/modules/portfolio/domain/use-cases/DeleteEntry';
 import { GetActiveAssets } from '@/modules/portfolio/domain/use-cases/GetActiveAssets';
 import { GetAllAssets } from '@/modules/portfolio/domain/use-cases/GetAllAssets';
 import { DeleteAsset } from '@/modules/portfolio/domain/use-cases/DeleteAsset';
+import { UpdateAssetMeta } from '@/modules/portfolio/domain/use-cases/UpdateAssetMeta';
 
 import { GetPortfolioSummary } from '@/modules/dashboard/domain/use-cases/GetPortfolioSummary';
 import { GetPortfolioHistory } from '@/modules/dashboard/domain/use-cases/GetPortfolioHistory';
@@ -37,6 +38,7 @@ import { RemoveFromWatchlist } from '@/modules/trading/domain/use-cases/RemoveFr
 import { ExecutePaperTrade } from '@/modules/trading/domain/use-cases/ExecutePaperTrade';
 import { GetPaperTrades } from '@/modules/trading/domain/use-cases/GetPaperTrades';
 
+import { InvestorFlowRepository } from '@/modules/portfolio/data/InvestorFlowRepository';
 import { yahooDividendRepository } from '@/modules/income/data/YahooDividendRepository';
 import { FirebaseDividendWatchlistRepository } from '@/modules/income/data/FirebaseDividendWatchlistRepository';
 import { GetDividendInfo } from '@/modules/income/domain/use-cases/GetDividendInfo';
@@ -69,10 +71,14 @@ export const recomputeAssetProjection = new RecomputeAssetProjection(entryReposi
 export const getAssetEntries         = new GetAssetEntries(entryRepository);
 export const deleteEntry             = new DeleteEntry(entryRepository, recomputeAssetProjection);
 
+// ── Investor flow ─────────────────────────────────────────────────────────────
+export const investorFlowRepository = new InvestorFlowRepository();
+
 // ── Asset use-cases ───────────────────────────────────────────────────────────
-export const getActiveAssets = new GetActiveAssets(projectionRepository);
-export const getAllAssets     = new GetAllAssets(projectionRepository);
-export const deleteAsset     = new DeleteAsset(projectionRepository, entryRepository);
+export const getActiveAssets  = new GetActiveAssets(projectionRepository);
+export const getAllAssets      = new GetAllAssets(projectionRepository);
+export const deleteAsset      = new DeleteAsset(projectionRepository, entryRepository);
+export const updateAssetMeta  = new UpdateAssetMeta(projectionRepository);
 
 // ── Portfolio use-cases ───────────────────────────────────────────────────────
 export const getPortfolioSummary = new GetPortfolioSummary(projectionRepository, portfolioRepository);
