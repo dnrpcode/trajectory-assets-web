@@ -1,4 +1,4 @@
-import { IAuthService } from '@/modules/user/domain/repositories/IAuthService';
+import { IAuthService } from '@/modules/user';
 
 export class Logout {
   constructor(private authService: IAuthService) {}

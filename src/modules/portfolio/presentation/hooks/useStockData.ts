@@ -72,6 +72,7 @@ export function useStockQuote(ticker: string | undefined) {
     },
     enabled: !!symbol,
     staleTime: 60_000,
+    gcTime: 10 * 60_000,
     refetchInterval: 90_000,
     retry: 1,
   });
@@ -107,6 +108,7 @@ export function useStockChart(ticker: string | undefined, range: ChartRange) {
     },
     enabled: !!symbol,
     staleTime: range === '1d' ? 60_000 : 3_600_000,
+    gcTime: 10 * 60_000,
     retry: 1,
   });
 }

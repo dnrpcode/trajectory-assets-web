@@ -7,7 +7,7 @@ import {
   onAuthStateChanged as firebaseOnAuthStateChanged,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/data/firebase/config';
-import { IAuthService, AuthUser } from '@/modules/user/domain/repositories/IAuthService';
+import { IAuthService, AuthUser } from '@/modules/user';
 
 function toAuthUser(fbUser: { uid: string; email: string | null; displayName: string | null }): AuthUser {
   return { uid: fbUser.uid, email: fbUser.email, displayName: fbUser.displayName };

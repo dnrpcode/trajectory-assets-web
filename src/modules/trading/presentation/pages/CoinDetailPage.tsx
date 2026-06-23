@@ -8,32 +8,12 @@ import { Spinner } from '@/shared/ui/Spinner';
 import { SignalBadge } from '../components/SignalBadge';
 import { TradeSetupCard } from '../components/TradeSetupCard';
 import { useCoinDetail, useCoinMarkets, useWatchlist } from '../hooks/useTrading';
-import { computeMA } from '@/shared/utils/indicators';
+import { computeMA, computeRSI } from '@/shared/utils/indicators';
 
 function formatDate(ms: number) {
   return new Date(ms).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 }
 
-// inline RSI array helper
-function computeRSIArr(prices: number[], period: number): number[] {
-  const rsi: number[] = new Array(prices.length).fill(NaN);
-  if (prices.length < period + 1) return rsi;
-  let avgGain = 0, avgLoss = 0;
-  for (let i = 1; i <= period; i++) {
-    const d = prices[i] - prices[i - 1];
-    if (d >= 0) avgGain += d; else avgLoss += Math.abs(d);
-  }
-  avgGain /= period; avgLoss /= period;
-  rsi[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
-  for (let i = period + 1; i < prices.length; i++) {
-    const d = prices[i] - prices[i - 1];
-    const g = d >= 0 ? d : 0, l = d < 0 ? Math.abs(d) : 0;
-    avgGain = (avgGain * (period - 1) + g) / period;
-    avgLoss = (avgLoss * (period - 1) + l) / period;
-    rsi[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
-  }
-  return rsi;
-}
 
 export function CoinDetailPage() {
   const { coinId } = useParams<{ coinId: string }>();
@@ -103,7 +83,7 @@ export function CoinDetailPage() {
     ma25: isNaN(ma25[i]) ? null : parseFloat(ma25[i].toFixed(4)),
   }));
 
-  const rsiArr = computeRSIArr(closes, 14);
+  const rsiArr = computeRSI(closes, 14);
   const rsiData = ohlc.map((p, i) => ({
     time: p.time,
     rsi: isNaN(rsiArr[i]) ? null : parseFloat(rsiArr[i].toFixed(1)),

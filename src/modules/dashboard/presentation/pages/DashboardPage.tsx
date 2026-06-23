@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -27,7 +27,7 @@ export function DashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const { data: summary, isLoading: summaryLoading } = usePortfolioSummary();
+  const { data: summary, isLoading: summaryLoading, isError: summaryError } = usePortfolioSummary();
   const { data: history = [] } = usePortfolioHistory();
   const { data: assets = [] } = useActiveAssets();
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -47,17 +47,25 @@ export function DashboardPage() {
     user?.riskProfile ?? 'moderate',
   );
 
-  const totalAssetValue = assets.filter((a) => a.status === 'active').reduce((s, a) => s + a.currentValueIDR, 0);
-  const breakdown = user ? computeCategoryBreakdown(assets, user) : [];
-  const { score } = breakdown.length > 0 ? getRebalancingRecommendations(breakdown, totalAssetValue) : { score: 0 };
+  const totalAssetValue = useMemo(
+    () => assets.filter((a) => a.status === 'active').reduce((s, a) => s + a.currentValueIDR, 0),
+    [assets],
+  );
+  const breakdown = useMemo(
+    () => (user ? computeCategoryBreakdown(assets, user) : []),
+    [assets, user],
+  );
+  const { score } = useMemo(
+    () => (breakdown.length > 0 ? getRebalancingRecommendations(breakdown, totalAssetValue) : { score: 0 }),
+    [breakdown, totalAssetValue],
+  );
+  const topAssets = useMemo(
+    () => [...assets].filter((a) => a.status === 'active').sort((a, b) => b.currentValueIDR - a.currentValueIDR).slice(0, 5),
+    [assets],
+  );
 
   const scoreColor = score >= 85 ? 'var(--gain-500)' : score >= 60 ? 'var(--warn-400)' : 'var(--loss-500)';
   const scoreBg = score >= 85 ? 'var(--gain-tint)' : score >= 60 ? 'var(--warn-tint)' : 'var(--loss-tint)';
-
-  const topAssets = [...assets]
-    .filter((a) => a.status === 'active')
-    .sort((a, b) => b.currentValueIDR - a.currentValueIDR)
-    .slice(0, 5);
 
   return (
     <Layout>
@@ -83,6 +91,11 @@ export function DashboardPage() {
 
       {summaryLoading ? (
         <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+      ) : summaryError ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Gagal memuat dashboard</p>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Periksa koneksi internet dan muat ulang halaman.</p>
+        </div>
       ) : !summary || summary.totalValueIDR === 0 ? (
         <EmptyState onAdd={() => setAddModalOpen(true)} />
       ) : (

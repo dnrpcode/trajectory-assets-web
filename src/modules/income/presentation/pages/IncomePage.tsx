@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Layout } from '@/shared/ui/Layout';
 import { Spinner } from '@/shared/ui/Spinner';
+import { useToast } from '@/shared/ui/Toast';
 import { cn } from '@/shared/utils/cn';
 import { formatDate } from '@/shared/utils/formatDate';
 import {
@@ -80,6 +81,7 @@ function TickerSearch({ watchlistTickers, onAdd }: TickerSearchProps) {
   const [searching, setSearching] = useState(false);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -99,6 +101,7 @@ function TickerSearch({ watchlistTickers, onAdd }: TickerSearchProps) {
         setOpen(true);
       } catch {
         setResults([]);
+        toast('Pencarian gagal. Periksa koneksi dan coba lagi.', 'error');
       } finally {
         setSearching(false);
       }
@@ -339,6 +342,8 @@ function LoadingCard({ ticker }: { ticker: string }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+const PALETTE = ['var(--gain-500)', 'var(--blue-400)', '#a855f7', 'var(--warn-400)', '#f43f5e', '#06b6d4', '#f97316'];
+
 export function IncomePage() {
   const { data: watchlist = [], isLoading: watchlistLoading } = useDividendWatchlist();
   const { mutate: add } = useAddToDividendWatchlist();
@@ -395,8 +400,6 @@ export function IncomePage() {
 
   const todayY = today.getFullYear(), todayM = today.getMonth(), todayD = today.getDate();
 
-  // Unique color per ticker
-  const PALETTE = ['var(--gain-500)', 'var(--blue-400)', '#a855f7', 'var(--warn-400)', '#f43f5e', '#06b6d4', '#f97316'];
   const tickerColor = useMemo(() => {
     const map: Record<string, string> = {};
     tickers.forEach((t, i) => { map[t] = PALETTE[i % PALETTE.length]; });

@@ -1,5 +1,5 @@
-import { IAuthService, AuthUser } from '@/modules/user/domain/repositories/IAuthService';
-import { IUserRepository } from '@/modules/user/domain/repositories/IUserRepository';
+import { IAuthService, AuthUser } from '@/modules/user';
+import { IUserRepository } from '@/modules/user';
 import { getAllocationTarget } from '@/shared/constants/allocationTargets';
 
 export class RegisterWithEmail {

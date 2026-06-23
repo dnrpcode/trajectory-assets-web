@@ -8,7 +8,7 @@ import { useEntries } from '@/modules/portfolio/presentation/hooks/useEntries';
 import { formatDate, formatMonth } from '@/shared/utils/formatDate';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import { EntryType } from '@/shared/types';
-import { AssetEntry } from '@/modules/portfolio/domain/entities/AssetEntry';
+import type { AssetEntry } from '@/modules/portfolio';
 
 function EntryIcon({ type }: { type: EntryType }) {
   const props = { size: 14, strokeWidth: 2 };

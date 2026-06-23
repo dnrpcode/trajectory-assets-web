@@ -1,4 +1,4 @@
-import { IAuthService, AuthUser } from '@/modules/user/domain/repositories/IAuthService';
+import { IAuthService, AuthUser } from '@/modules/user';
 
 export class LoginWithEmail {
   constructor(private authService: IAuthService) {}

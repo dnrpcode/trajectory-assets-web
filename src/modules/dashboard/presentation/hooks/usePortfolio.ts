@@ -30,6 +30,7 @@ export function useMarketHistory(symbol: string) {
     queryKey: ['marketHistory', symbol],
     queryFn: () => fetchMarketHistory(symbol),
     staleTime: 3_600_000,
+    gcTime: 10 * 60_000,
     retry: 1,
   });
 }
@@ -41,6 +42,7 @@ export function usePortfolioSummary() {
     queryFn: () => getPortfolioSummary.execute(user!.id),
     enabled: !!user,
     staleTime: 30_000,
+    gcTime: 10 * 60_000,
   });
 }
 
@@ -59,5 +61,6 @@ export function usePortfolioHistory() {
     },
     enabled: !!user,
     staleTime: 60_000,
+    gcTime: 10 * 60_000,
   });
 }

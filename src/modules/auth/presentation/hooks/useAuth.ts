@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import { authService, getUserById, logout as logoutUseCase } from '@/infrastructure/di/container';
-import { User } from '@/modules/user/domain/entities/User';
-import { AuthUser } from '@/modules/user/domain/repositories/IAuthService';
+import type { User } from '@/modules/user';
+import type { AuthUser } from '@/modules/user';
 
 interface AuthState {
   user: User | null;

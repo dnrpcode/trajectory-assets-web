@@ -40,6 +40,7 @@ export function useWatchlist() {
     queryFn: () => getWatchlist.execute(user!.id),
     enabled: !!user,
     staleTime: 60_000,
+    gcTime: 10 * 60_000,
   });
 }
 
@@ -65,10 +66,11 @@ export function useRemoveFromWatchlist() {
 
 export function useCoinMarkets(coinIds: string[]) {
   return useQuery({
-    queryKey: ['coinMarkets', coinIds.join(',')],
+    queryKey: ['coinMarkets', coinIds],
     queryFn: () => CoinGeckoService.getMarkets(coinIds),
     enabled: coinIds.length > 0,
     staleTime: 60_000,
+    gcTime: 10 * 60_000,
     retry: cgRetry,
     retryDelay: cgRetryDelay,
   });
@@ -97,6 +99,7 @@ export function useCoinDetail(coinId: string) {
     },
     enabled: !!coinId,
     staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
     retry: cgRetry,
     retryDelay: cgRetryDelay,
   });
@@ -111,6 +114,7 @@ export function usePaperTrades() {
     queryFn: () => getPaperTrades.getAll(user!.id),
     enabled: !!user,
     staleTime: 30_000,
+    gcTime: 10 * 60_000,
   });
 }
 
@@ -121,6 +125,7 @@ export function useCoinPaperTrades(coinId: string) {
     queryFn: () => getPaperTrades.getByCoin(user!.id, coinId),
     enabled: !!user && !!coinId,
     staleTime: 30_000,
+    gcTime: 10 * 60_000,
   });
 }
 
@@ -212,6 +217,7 @@ export function useSignalScanner() {
     queryKey: ['signalScanner'],
     queryFn: scanCoins,
     staleTime: 10 * 60_000,
+    gcTime: 10 * 60_000,
     retry: false, // scanCoins handles its own retries internally
     enabled: false,
   });
@@ -224,6 +230,7 @@ export function useUsdToIdr() {
     queryKey: ['usdToIdr'],
     queryFn: () => CoinGeckoService.getUsdToIdr(),
     staleTime: 10 * 60_000,
+    gcTime: 10 * 60_000,
     retry: cgRetry,
     retryDelay: cgRetryDelay,
   });

@@ -12,6 +12,7 @@ export function useAssetEntries(assetId: string) {
     queryFn: () => getAssetEntries.executeByAsset(user!.id, assetId),
     enabled: !!user && !!assetId,
     staleTime: 30_000,
+    gcTime: 10 * 60_000,
   });
 }
 
@@ -22,6 +23,7 @@ export function useEntries() {
     queryFn: () => getAssetEntries.executeByUser(user!.id),
     enabled: !!user,
     staleTime: 30_000,
+    gcTime: 10 * 60_000,
   });
 }
 

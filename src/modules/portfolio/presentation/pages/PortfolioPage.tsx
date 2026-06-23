@@ -16,7 +16,7 @@ export function PortfolioPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const staleFilter = searchParams.get('filter') === 'stale';
-  const { data: assets = [], isLoading } = useActiveAssets();
+  const { data: assets = [], isLoading, isError } = useActiveAssets();
   const { data: allAssets = [] } = useAllAssets();
   const hasClosedAssets = assets.length === 0 && allAssets.some((a) => a.status === 'closed');
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -75,6 +75,11 @@ export function PortfolioPage() {
 
       {isLoading ? (
         <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Gagal memuat portofolio</p>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Periksa koneksi internet dan muat ulang halaman.</p>
+        </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, TrendingUp, Scan, AlertTriangle } from 'lucide-react';
 import { Layout } from '@/shared/ui/Layout';
 import { Button } from '@/shared/ui/Button';
@@ -14,9 +14,9 @@ export function TradingPage() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const { data: watchlist = [], isLoading: watchlistLoading } = useWatchlist();
 
-  const coinIds = watchlist.map((w) => w.coinId);
+  const coinIds = useMemo(() => watchlist.map((w) => w.coinId), [watchlist]);
   const { data: markets = [], error: marketsError } = useCoinMarkets(coinIds);
-  const marketMap = Object.fromEntries(markets.map((m: CoinMarket) => [m.id, m]));
+  const marketMap = useMemo(() => Object.fromEntries(markets.map((m: CoinMarket) => [m.id, m])), [markets]);
 
   return (
     <Layout>

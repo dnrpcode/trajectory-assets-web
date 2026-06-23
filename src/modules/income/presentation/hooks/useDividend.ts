@@ -21,6 +21,7 @@ export function useDividendWatchlist() {
     queryFn: () => getDividendWatchlist.execute(user!.id),
     enabled: !!user,
     staleTime: 60_000,
+    gcTime: 10 * 60_000,
   });
 }
 
@@ -30,6 +31,7 @@ export function useDividendInfo(ticker: string | null) {
     queryFn: () => getDividendInfo.execute(ticker!),
     enabled: !!ticker,
     staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
     retry: divRetry,
   });
 }
@@ -47,6 +49,7 @@ export function useWatchlistDividends(tickers: string[]) {
     },
     enabled: tickers.length > 0,
     staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
     retry: 0,
   });
 }
