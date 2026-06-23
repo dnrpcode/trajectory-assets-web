@@ -13,11 +13,12 @@ import { Card } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
 import { formatCurrency, formatPercent, formatCurrencyCompact } from '@/shared/utils/formatCurrency';
 import { CATEGORY_LABELS } from '@/shared/constants/categories';
-import { AssetEntry } from '@/modules/portfolio/domain/entities/AssetEntry';
+import { buildPriceHistory } from '../utils/assetChartUtils';
+import type { AssetEntry } from '@/modules/portfolio';
 import { computeIsStale } from '@/shared/utils/calculations';
 import { InfoTooltip } from '@/shared/ui/InfoTooltip';
 import { StockLivePanel } from '../components/StockLivePanel';
-import { StockForecastCard } from '@/modules/forecast';
+import { StockForecastCard } from '@/modules/portfolio';
 import { InvestorFlowCard } from '../components/InvestorFlowCard';
 
 // ── Edit Asset Modal ─────────────────────────────────────────────────────────
@@ -101,17 +102,6 @@ function EditAssetModal({
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function buildPriceHistory(entries: AssetEntry[]) {
-  const types = new Set(['new_position', 'price_update', 'top_up', 'partial_sell', 'full_sell']);
-  return entries
-    .filter((e) => !e.isCorrected && types.has(e.entryType) && e.pricePerUnit != null)
-    .map((e) => ({
-      date: e.date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }),
-      price: e.pricePerUnit!,
-    }));
-}
-
 type EntryColor = { bg: string; border: string; text: string };
 const ENTRY_STYLES: Record<string, EntryColor> = {
   new_position: { bg: 'rgba(77,124,255,0.06)', border: 'rgba(77,124,255,0.2)', text: 'var(--blue-300)' },
@@ -125,14 +115,17 @@ const ENTRY_STYLES: Record<string, EntryColor> = {
 };
 const DEFAULT_STYLE: EntryColor = { bg: 'var(--bg-raised)', border: 'var(--border-subtle)', text: 'var(--text-secondary)' };
 
-function buildMockInsights(assetName: string, unrealizedGainPct: number, isStale: boolean, totalIncomeIDR: number, realizedGainIDR: number): string[] {
+function buildInsights(
+  t: (k: string, opts?: Record<string, unknown>) => string,
+  assetName: string, unrealizedGainPct: number, isStale: boolean, totalIncomeIDR: number, realizedGainIDR: number,
+): string[] {
   const out: string[] = [];
-  if (isStale) out.push(`Harga ${assetName} belum diperbarui bulan ini. Perbarui untuk melihat valuasi terkini.`);
-  if (unrealizedGainPct > 20) out.push(`${assetName} naik ${unrealizedGainPct.toFixed(1)}% dari rata-rata beli. Pertimbangkan partial sell untuk kurangi risiko konsentrasi.`);
-  else if (unrealizedGainPct < -15) out.push(`${assetName} rugi ${Math.abs(unrealizedGainPct).toFixed(1)}%. Evaluasi fundamental sebelum averaging down atau cut loss.`);
-  else out.push(`Posisi ${assetName} di zona netral (${unrealizedGainPct >= 0 ? '+' : ''}${unrealizedGainPct.toFixed(1)}%). Pantau fundamental untuk menentukan waktu yang tepat.`);
-  if (totalIncomeIDR > 0) out.push(`Aset ini menghasilkan pendapatan ${formatCurrency(totalIncomeIDR)}. Income konsisten = sinyal positif jangka panjang.`);
-  if (realizedGainIDR > 0) out.push(`Keuntungan terealisasi: ${formatCurrency(realizedGainIDR)}.`);
+  if (isStale) out.push(t('assetDetail.insightStale', { name: assetName }));
+  if (unrealizedGainPct > 20) out.push(t('assetDetail.insightGain', { name: assetName, pct: unrealizedGainPct.toFixed(1) }));
+  else if (unrealizedGainPct < -15) out.push(t('assetDetail.insightLoss', { name: assetName, pct: Math.abs(unrealizedGainPct).toFixed(1) }));
+  else out.push(t('assetDetail.insightNeutral', { name: assetName, pct: `${unrealizedGainPct >= 0 ? '+' : ''}${unrealizedGainPct.toFixed(1)}` }));
+  if (totalIncomeIDR > 0) out.push(t('assetDetail.insightIncome', { amount: formatCurrency(totalIncomeIDR) }));
+  if (realizedGainIDR > 0) out.push(t('assetDetail.insightRealized', { amount: formatCurrency(realizedGainIDR) }));
   return out;
 }
 
@@ -351,7 +344,7 @@ export function AssetDetailPage() {
   const activeEntries = entries.filter((e) => !e.isCorrected);
   const correctedEntries = entries.filter((e) => e.isCorrected);
   const sortedEntries = [...(showCorrected ? entries : activeEntries)].sort((a, b) => b.date.getTime() - a.date.getTime());
-  const aiInsights = buildMockInsights(asset.assetName, asset.unrealizedGainPct, isStale, asset.totalIncomeIDR, asset.realizedGainIDR);
+  const aiInsights = buildInsights(t, asset.assetName, asset.unrealizedGainPct, isStale, asset.totalIncomeIDR, asset.realizedGainIDR);
 
   const handleDeleteEntryConfirm = async () => {
     if (!entryToDelete) return;
@@ -580,7 +573,7 @@ export function AssetDetailPage() {
           onClose={() => setEditOpen(false)}
           isSaving={isSavingMeta}
           onSave={async (patch) => {
-            await updateAssetMeta(patch);
+            await updateAssetMeta({ assetId: patch.id, assetName: patch.assetName, ticker: patch.ticker, platform: patch.platform });
             setEditOpen(false);
           }}
         />

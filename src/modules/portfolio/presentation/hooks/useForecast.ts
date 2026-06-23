@@ -24,6 +24,7 @@ export function useStockForecast(ticker: string | undefined) {
     },
     enabled: !!symbol,
     staleTime: 30 * 60_000, // 30 min — daily model barely moves intraday
+    gcTime: 10 * 60_000,
     retry: 1,
   });
 }
@@ -35,6 +36,7 @@ export function useStockNews(ticker: string | undefined) {
     queryFn: async (): Promise<NewsItem[]> => fetchNews(ticker!),
     enabled: !!symbol,
     staleTime: 30 * 60_000,
+    gcTime: 10 * 60_000,
     retry: 1,
   });
 }

@@ -6,6 +6,9 @@ export type { AssetEntry } from './domain/entities/AssetEntry';
 export type { IAssetEntryRepository } from './domain/repositories/IAssetEntryRepository';
 export type { IAssetProjectionRepository } from './domain/repositories/IAssetProjectionRepository';
 
+// Domain entities (investor flow)
+export type { InvestorFlowData, FlowSeriesPoint, ScorecardPoint, FlowSignal } from './domain/entities/InvestorFlow';
+
 // Domain use-cases
 export { CreateEntry } from './domain/use-cases/CreateEntry';
 export type { CreateEntryInput } from './domain/use-cases/CreateEntry';
@@ -15,6 +18,8 @@ export { RecomputeAssetProjection } from './domain/use-cases/RecomputeAssetProje
 export { GetActiveAssets } from './domain/use-cases/GetActiveAssets';
 export { GetAllAssets } from './domain/use-cases/GetAllAssets';
 export { DeleteAsset } from './domain/use-cases/DeleteAsset';
+export { UpdateAssetMeta } from './domain/use-cases/UpdateAssetMeta';
+export type { UpdateAssetMetaInput } from './domain/use-cases/UpdateAssetMeta';
 
 // Data
 export { FirebaseAssetEntryRepository } from './data/FirebaseAssetEntryRepository';
@@ -32,3 +37,4 @@ export { AssetDetailPage } from './presentation/pages/AssetDetailPage';
 export { AssetCard } from './presentation/components/AssetCard';
 export { StaleAssetBanner } from './presentation/components/StaleAssetBanner';
 export { EntryForm } from './presentation/components/EntryForm';
+export { StockForecastCard } from './presentation/components/StockForecastCard';
