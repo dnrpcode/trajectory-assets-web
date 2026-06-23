@@ -1,10 +1,10 @@
-import { Asset } from '@/modules/portfolio/domain/entities/Asset';
-import { User } from '@/modules/user/domain/entities/User';
+import { Asset } from '@/shared/types/asset';
+import { User } from '@/shared/types/user';
 import { CategoryBreakdown, RebalancingAdvice, AssetCategory, AllocationTarget, RiskProfile } from '../types';
 import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '../constants/categories';
 import { getAllocationTarget } from '../constants/allocationTargets';
 import { computeActualAllocation } from './calculations';
-import { PortfolioHistoryPoint } from '@/modules/dashboard/domain/entities/Portfolio';
+import { PortfolioHistoryPoint } from '@/shared/types';
 
 export function calculateCAGR(startValue: number, endValue: number, months: number): number {
   if (startValue <= 0 || endValue <= 0 || months <= 0) return 0;

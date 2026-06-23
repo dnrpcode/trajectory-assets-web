@@ -1,4 +1,4 @@
-import { Asset } from '@/modules/portfolio/domain/entities/Asset';
+import { Asset } from '@/shared/types/asset';
 import { AllocationTarget, AssetCategory } from '../types';
 import { getCurrentMonth, getMonthFromDate } from './formatDate';
 

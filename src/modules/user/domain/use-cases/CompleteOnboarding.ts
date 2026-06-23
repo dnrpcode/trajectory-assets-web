@@ -1,5 +1,5 @@
 import { IUserRepository } from '../repositories/IUserRepository';
-import { IGoalRepository } from '@/modules/goals/domain/repositories/IGoalRepository';
+import { IGoalRepository } from '@/shared/repositories/IGoalRepository';
 import { RiskProfile, InvestmentHorizon } from '@/shared/types';
 import { getAllocationTarget } from '@/shared/constants/allocationTargets';
 

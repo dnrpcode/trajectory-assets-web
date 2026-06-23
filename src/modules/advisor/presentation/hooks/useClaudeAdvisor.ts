@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import type { Asset } from '@/modules/portfolio';
-import type { User } from '@/modules/user';
+import type { Asset } from '@/shared/types/asset';
+import type { User } from '@/shared/types/user';
 import { AdvisorAction, AdvisorMessage } from '../../domain/entities/AdvisorConversation';
 import { sendAdvisorMessage } from '@/infrastructure/di/container';
 

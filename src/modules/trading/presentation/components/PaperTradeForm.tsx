@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { TradingSignal } from '@/shared/utils/indicators';
 import { useExecutePaperTrade } from '../hooks/useTrading';
-import { useAuthStore } from '@/modules/auth';
-import { usePortfolioSummary } from '@/modules/dashboard/presentation/hooks/usePortfolio';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
+import { usePortfolioSummary } from '../hooks/useTradingPortfolio';
 import { Button } from '@/shared/ui/Button';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 

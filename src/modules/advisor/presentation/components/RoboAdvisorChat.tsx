@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bot, Send, Check, X, AlertTriangle, ShieldCheck, PieChart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Asset } from '@/modules/portfolio';
-import type { User } from '@/modules/user';
+import type { Asset } from '@/shared/types/asset';
+import type { User } from '@/shared/types/user';
 import { AllocationTarget, RiskProfile } from '@/shared/types';
 import { useClaudeAdvisor, PendingAction } from '../hooks/useClaudeAdvisor';
 import { CATEGORY_LABELS } from '@/shared/constants/categories';
