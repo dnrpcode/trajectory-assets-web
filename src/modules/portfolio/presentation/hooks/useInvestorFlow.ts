@@ -1,18 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
 
+export interface TopHolder {
+  name: string;
+  reportDate: string;
+  pctHeld: number;
+  position: number;
+  value: number;
+  pctChange: number;
+}
+
 export interface InvestorFlowData {
   ticker: string;
-  date: string;
-  foreign:  { buy: number; sell: number; net: number };
-  domestic: { buy: number; sell: number; net: number };
-  total: number;
-  lastPrice: number;
-  change: number;
-  volume: number;
+  symbol: string;
+  insider:     { pct: number };
+  institution: { pct: number; count: number };
+  retail:      { pct: number };
+  topHolders:  TopHolder[];
 }
 
 async function fetchInvestorFlow(ticker: string): Promise<InvestorFlowData> {
-  // ticker may include .JK — strip it for IDX
   const code = ticker.replace(/\.JK$/i, '').toUpperCase();
   const res = await fetch(`/api/market/flow?ticker=${encodeURIComponent(code)}`);
   if (!res.ok) throw new Error(`Flow fetch failed: ${res.status}`);
@@ -24,7 +30,7 @@ export function useInvestorFlow(ticker: string | undefined) {
     queryKey: ['investorFlow', ticker],
     queryFn: () => fetchInvestorFlow(ticker!),
     enabled: !!ticker,
-    staleTime: 15 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
     retry: 1,
   });
 }

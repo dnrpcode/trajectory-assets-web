@@ -1,115 +1,93 @@
-import { RefreshCw, TrendingUp, TrendingDown, Users, Globe } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Globe, Users, Building2 } from 'lucide-react';
 import { useInvestorFlow } from '../hooks/useInvestorFlow';
-import { formatCurrencyCompact } from '@/shared/utils/formatCurrency';
 
-function FlowRow({
-  label,
-  icon,
-  buy,
-  sell,
-  net,
-  total,
-  accentColor,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  buy: number;
-  sell: number;
-  net: number;
-  total: number;
-  accentColor: string;
-}) {
-  const isNetBuy = net >= 0;
-  const buyPct  = total > 0 ? (buy  / total) * 100 : 0;
-  const sellPct = total > 0 ? (sell / total) * 100 : 0;
-  const absPct  = total > 0 ? (Math.abs(net) / total) * 100 : 0;
+function pct(n: number) {
+  return `${n.toFixed(1)}%`;
+}
+
+function OwnershipBar({ institutionPct, insiderPct, retailPct }: { institutionPct: number; insiderPct: number; retailPct: number }) {
+  const segments = [
+    { label: 'Asing/Institusi', pct: institutionPct, color: 'var(--blue-400)' },
+    { label: 'Emiten/Insider', pct: insiderPct, color: 'var(--warn-400)' },
+    { label: 'Publik/Ritel', pct: retailPct, color: 'rgba(71,85,105,0.6)' },
+  ];
 
   return (
-    <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-dim)' }}>
-      {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <span style={{ color: accentColor }}>{icon}</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{label}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          {isNetBuy
-            ? <TrendingUp size={13} strokeWidth={2.5} style={{ color: 'var(--gain-400)' }} />
-            : <TrendingDown size={13} strokeWidth={2.5} style={{ color: 'var(--loss-400)' }} />
-          }
-          <span style={{
-            fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)',
-            color: isNetBuy ? 'var(--gain-400)' : 'var(--loss-400)',
-          }}>
-            {isNetBuy ? '+' : ''}{formatCurrencyCompact(net)}
-          </span>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            ({absPct.toFixed(1)}%)
-          </span>
-        </div>
+    <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-dim)' }}>
+      <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caps)', marginBottom: 10 }}>
+        Komposisi Kepemilikan
+      </p>
+      {/* Stacked bar */}
+      <div style={{ display: 'flex', height: 12, borderRadius: 6, overflow: 'hidden', gap: 1, marginBottom: 10 }}>
+        {segments.map((s) => (
+          <div key={s.label} title={`${s.label}: ${pct(s.pct)}`}
+            style={{ width: `${s.pct}%`, background: s.color, minWidth: s.pct > 0.5 ? 2 : 0 }} />
+        ))}
       </div>
-
-      {/* Buy / sell bars */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-        {/* Buy bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)', width: 22, flexShrink: 0, textAlign: 'right' }}>Beli</span>
-          <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--bg-raised)', overflow: 'hidden' }}>
-            <div style={{ width: `${Math.min(buyPct * 2, 100)}%`, height: '100%', borderRadius: 3, background: 'var(--gain-400)', opacity: 0.7 }} />
+      {/* Legend */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
+        {segments.map((s) => (
+          <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{s.label}</span>
+            <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-primary)' }}>{pct(s.pct)}</span>
           </div>
-          <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--gain-400)', width: 56, flexShrink: 0, textAlign: 'right' }}>
-            {formatCurrencyCompact(buy)}
-          </span>
-        </div>
-        {/* Sell bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)', width: 22, flexShrink: 0, textAlign: 'right' }}>Jual</span>
-          <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--bg-raised)', overflow: 'hidden' }}>
-            <div style={{ width: `${Math.min(sellPct * 2, 100)}%`, height: '100%', borderRadius: 3, background: 'var(--loss-400)', opacity: 0.7 }} />
-          </div>
-          <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--loss-400)', width: 56, flexShrink: 0, textAlign: 'right' }}>
-            {formatCurrencyCompact(sell)}
-          </span>
-        </div>
-      </div>
-
-      {/* Net interpretation label */}
-      <div style={{
-        marginTop: 8, padding: '4px 8px', borderRadius: 6,
-        background: isNetBuy ? 'rgba(15,186,130,0.06)' : 'rgba(240,71,106,0.06)',
-        border: `1px solid ${isNetBuy ? 'rgba(15,186,130,0.15)' : 'rgba(240,71,106,0.15)'}`,
-        display: 'inline-flex', alignItems: 'center', gap: 5,
-      }}>
-        <span style={{ fontSize: 11, color: isNetBuy ? 'var(--gain-400)' : 'var(--loss-400)', fontWeight: 600 }}>
-          {label} {isNetBuy ? 'net masuk' : 'net keluar'} {formatCurrencyCompact(Math.abs(net))}
-        </span>
+        ))}
       </div>
     </div>
   );
 }
 
-function DominanceBar({ foreignBuy, domesticBuy }: { foreignBuy: number; domesticBuy: number }) {
-  const total = foreignBuy + domesticBuy;
-  if (total === 0) return null;
-  const foreignPct = (foreignBuy / total) * 100;
-  const domesticPct = 100 - foreignPct;
+function StatRow({ icon, label, pct: pctVal, sub }: { icon: React.ReactNode; label: string; pct: number; sub?: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid var(--border-dim)' }}>
+      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--bg-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {icon}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{label}</p>
+        {sub && <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '1px 0 0 0' }}>{sub}</p>}
+      </div>
+      <span style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', flexShrink: 0 }}>
+        {pct(pctVal)}
+      </span>
+    </div>
+  );
+}
+
+function HoldersTable({ holders }: { holders: ReturnType<typeof useInvestorFlow>['data'] extends infer D ? D extends { topHolders: infer H } ? H : never : never }) {
+  if (!holders || (holders as unknown[]).length === 0) return null;
+  const list = holders as { name: string; reportDate: string; pctHeld: number; pctChange: number; position: number }[];
 
   return (
-    <div style={{ padding: '10px 16px 12px' }}>
-      <p style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 'var(--tracking-caps)' }}>
-        Proporsi Beli Hari Ini
+    <div style={{ padding: '12px 16px' }}>
+      <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caps)', marginBottom: 10 }}>
+        Pemegang Institusi Terbesar
       </p>
-      <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', gap: 1 }}>
-        <div style={{ width: `${foreignPct}%`, background: 'var(--blue-400)', borderRadius: '5px 0 0 5px', transition: 'width 600ms ease' }} title={`Asing ${foreignPct.toFixed(1)}%`} />
-        <div style={{ flex: 1, background: 'var(--warn-400)', borderRadius: '0 5px 5px 0', opacity: 0.7 }} title={`Domestik ${domesticPct.toFixed(1)}%`} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
-        <span style={{ fontSize: 10, color: 'var(--blue-400)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-          Asing {foreignPct.toFixed(1)}%
-        </span>
-        <span style={{ fontSize: 10, color: 'var(--warn-400)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-          Domestik {domesticPct.toFixed(1)}%
-        </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {list.map((h) => {
+          const isUp = h.pctChange >= 0;
+          return (
+            <div key={h.name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8, background: 'var(--bg-raised)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.name}</p>
+                <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '1px 0 0 0' }}>{h.reportDate} · {(h.position / 1_000_000).toFixed(0)}jt lembar</p>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <p style={{ fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{pct(h.pctHeld)}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'flex-end', marginTop: 2 }}>
+                  {isUp
+                    ? <TrendingUp size={10} strokeWidth={2.5} style={{ color: 'var(--gain-400)' }} />
+                    : <TrendingDown size={10} strokeWidth={2.5} style={{ color: 'var(--loss-400)' }} />
+                  }
+                  <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: isUp ? 'var(--gain-400)' : 'var(--loss-400)' }}>
+                    {isUp ? '+' : ''}{h.pctChange.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -123,14 +101,11 @@ export function InvestorFlowCard({ ticker }: { ticker: string }) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
         <div>
-          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Aliran Dana Investor</p>
-          <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '2px 0 0 0' }}>Asing vs Domestik · Sumber: IDX</p>
+          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Struktur & Aliran Kepemilikan</p>
+          <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '2px 0 0 0' }}>Asing · Emiten · Ritel · Sumber: Yahoo Finance</p>
         </div>
-        <button
-          onClick={() => refetch()}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', display: 'flex', borderRadius: 6 }}
-          title="Refresh data"
-        >
+        <button onClick={() => refetch()} title="Refresh"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', borderRadius: 6 }}>
           <RefreshCw size={14} strokeWidth={2} style={{ animation: isFetching ? 'spin 1s linear infinite' : 'none' }} />
         </button>
       </div>
@@ -138,46 +113,45 @@ export function InvestorFlowCard({ ticker }: { ticker: string }) {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {isLoading && (
-        <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-          Memuat data aliran dana…
-        </div>
+        <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Memuat data kepemilikan…</div>
       )}
 
       {isError && (
         <div style={{ padding: '24px 16px', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 8 }}>Data aliran dana tidak tersedia</p>
-          <p style={{ color: 'var(--text-muted)', fontSize: 11, lineHeight: 1.5 }}>
-            Data IDX mungkin belum tersedia di luar jam bursa, atau ticker tidak ditemukan.
-          </p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 6 }}>Data kepemilikan tidak tersedia</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 11, lineHeight: 1.5 }}>Saham ini mungkin tidak terdaftar di Yahoo Finance atau data belum tersedia.</p>
         </div>
       )}
 
       {data && (
         <>
-          <FlowRow
-            label="Asing"
-            icon={<Globe size={14} strokeWidth={2} />}
-            buy={data.foreign.buy}
-            sell={data.foreign.sell}
-            net={data.foreign.net}
-            total={data.total}
-            accentColor="var(--blue-400)"
+          <OwnershipBar
+            institutionPct={data.institution.pct}
+            insiderPct={data.insider.pct}
+            retailPct={data.retail.pct}
           />
-          <FlowRow
-            label="Domestik"
-            icon={<Users size={14} strokeWidth={2} />}
-            buy={data.domestic.buy}
-            sell={data.domestic.sell}
-            net={data.domestic.net}
-            total={data.total}
-            accentColor="var(--warn-400)"
+          <StatRow
+            icon={<Globe size={14} strokeWidth={2} style={{ color: 'var(--blue-400)' }} />}
+            label="Asing / Institusi"
+            pct={data.institution.pct}
+            sub={`${data.institution.count} institusi tercatat`}
           />
-          <DominanceBar foreignBuy={data.foreign.buy} domesticBuy={data.domestic.buy} />
-          <div style={{ padding: '6px 16px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-              {data.date} · volume {(data.volume / 1_000_000).toFixed(1)}jt lot
-            </span>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Delay ±15 mnt</span>
+          <StatRow
+            icon={<Building2 size={14} strokeWidth={2} style={{ color: 'var(--warn-400)' }} />}
+            label="Emiten / Insider"
+            pct={data.insider.pct}
+          />
+          <StatRow
+            icon={<Users size={14} strokeWidth={2} style={{ color: 'var(--text-muted)' }} />}
+            label="Publik / Ritel"
+            pct={data.retail.pct}
+            sub="estimasi dari sisa float"
+          />
+          <HoldersTable holders={data.topHolders} />
+          <div style={{ padding: '8px 16px 10px', borderTop: '1px solid var(--border-dim)' }}>
+            <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+              Data kepemilikan bersifat kuartalan. Perubahan (↑↓) per institusi mencerminkan selisih posisi dari periode sebelumnya.
+            </p>
           </div>
         </>
       )}
