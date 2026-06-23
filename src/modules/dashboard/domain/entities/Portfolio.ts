@@ -1,5 +1,7 @@
 import { AllocationTarget } from '@/shared/types';
 
+export type { PortfolioHistoryPoint } from '@/shared/types';
+
 export interface PortfolioSummary {
   totalValueIDR: number;
   totalCostBasisIDR: number;
@@ -10,10 +12,4 @@ export interface PortfolioSummary {
   allocationActual: AllocationTarget;
   staleAssetCount: number;
   lastUpdated: Date;
-}
-
-export interface PortfolioHistoryPoint {
-  month: string; // "YYYY-MM"
-  totalValueIDR: number;
-  totalCostBasisIDR: number;
 }
