@@ -10,7 +10,7 @@ import {
 import { Layout } from '@/shared/ui/Layout';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { useThemeContext } from '@/shared/ui/ThemeContext';
 import { updateUserProfile, logout } from '@/infrastructure/di/container';
 import { getAllocationTarget } from '@/shared/constants/allocationTargets';

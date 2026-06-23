@@ -1,8 +1,8 @@
 import { Layout } from '@/shared/ui/Layout';
 import { Spinner } from '@/shared/ui/Spinner';
 import { ReallocationAdvisory } from '../components/ReallocationAdvisory';
-import { useActiveAssets } from '@/modules/portfolio/presentation/hooks/useAssets';
-import { useAuthStore } from '@/modules/auth';
+import { useActiveAssets } from '../hooks/useDashboardAssets';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { computeCategoryBreakdown, getRebalancingRecommendations } from '@/shared/utils/portfolioProjections';
 
 export function AdvisoryPage() {

@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut, BookOpen, BarChart2, CalendarDays, X } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { useTour } from './TourContext';
 import { logout as logoutUseCase } from '@/infrastructure/di/container';
 

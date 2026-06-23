@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAssetEntries, deleteEntry, createEntry, recomputeAssetProjection } from '@/infrastructure/di/container';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { useToast } from '@/shared/ui/Toast';
 import { CreateEntryInput } from '@/modules/portfolio/domain/use-cases/CreateEntry';
 import { AssetEntry } from '@/modules/portfolio/domain/entities/AssetEntry';

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 
 const GLITCH_CHARS = ['▓', '░', '▒', '█', '◆', '◇', '▪', '▫'];
 

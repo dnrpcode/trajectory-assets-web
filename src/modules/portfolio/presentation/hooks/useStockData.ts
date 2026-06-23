@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { createEntry, recomputeAssetProjection } from '@/infrastructure/di/container';
 import { getCurrentMonth } from '@/shared/utils/formatDate';
 import type { Asset } from '@/modules/portfolio/domain/entities/Asset';

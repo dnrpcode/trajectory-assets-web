@@ -6,7 +6,7 @@ import { usePortfolioSummary, usePortfolioHistory } from '../hooks/usePortfolio'
 import { generateProjections, computeSmartCAGR, CAGRSource, RISK_FALLBACK } from '@/shared/utils/portfolioProjections';
 import { formatCurrencyCompact } from '@/shared/utils/formatCurrency';
 import { Card } from '@/shared/ui/Card';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { RiskProfile } from '@/shared/types';
 import { CATEGORY_LABELS } from '@/shared/constants/categories';
 

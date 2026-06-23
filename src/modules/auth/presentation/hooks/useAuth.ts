@@ -1,26 +1,8 @@
 import { useEffect } from 'react';
-import { create } from 'zustand';
 import { authService, getUserById, logout as logoutUseCase } from '@/infrastructure/di/container';
-import type { User } from '@/modules/user';
-import type { AuthUser } from '@/modules/user';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 
-interface AuthState {
-  user: User | null;
-  authUser: AuthUser | null;
-  loading: boolean;
-  setUser: (user: User | null) => void;
-  setAuthUser: (u: AuthUser | null) => void;
-  setLoading: (v: boolean) => void;
-}
-
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  authUser: null,
-  loading: true,
-  setUser: (user) => set({ user }),
-  setAuthUser: (authUser) => set({ authUser }),
-  setLoading: (loading) => set({ loading }),
-}));
+export { useAuthStore } from '@/shared/hooks/useAuthStore';
 
 export function useAuth() {
   const { user, authUser, loading, setUser, setAuthUser, setLoading } = useAuthStore();

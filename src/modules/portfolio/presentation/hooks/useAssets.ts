@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getActiveAssets, getAllAssets, deleteAsset, updateAssetMeta } from '@/infrastructure/di/container';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { useToast } from '@/shared/ui/Toast';
 import type { UpdateAssetMetaInput } from '@/modules/portfolio/domain/use-cases/UpdateAssetMeta';
 

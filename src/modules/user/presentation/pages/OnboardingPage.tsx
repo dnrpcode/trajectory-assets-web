@@ -10,9 +10,9 @@ import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { getAllocationTarget } from '@/shared/constants/allocationTargets';
 import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '@/shared/constants/categories';
-import { EntryForm } from '@/modules/portfolio/presentation/components/EntryForm';
+import { EntryForm } from '@/shared/ui/EntryForm';
 import { completeOnboarding } from '@/infrastructure/di/container';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { RiskProfile, InvestmentHorizon, AssetCategory } from '@/shared/types';
 
 const goalSchema = z.object({

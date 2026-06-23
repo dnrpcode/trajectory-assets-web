@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getPortfolioSummary, getPortfolioHistory, backfillPortfolioHistory } from '@/infrastructure/di/container';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 
 interface MarketPoint { month: string; close: number }
 

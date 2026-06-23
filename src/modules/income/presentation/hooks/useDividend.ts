@@ -5,7 +5,7 @@ import {
   addToDividendWatchlist,
   removeFromDividendWatchlist,
 } from '@/infrastructure/di/container';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import type { DividendInfo } from '../../domain/entities/Dividend';
 import { DividendError } from '../../data/YahooDividendRepository';
 

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/modules/auth';
+import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import {
   getWatchlist, addToWatchlist, removeFromWatchlist,
   executePaperTrade, getPaperTrades,
