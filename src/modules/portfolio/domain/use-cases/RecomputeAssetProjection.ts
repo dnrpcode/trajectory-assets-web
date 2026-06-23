@@ -36,6 +36,9 @@ export class RecomputeAssetProjection {
     // Grab metadata from first new_position
     const firstEntry = activeEntries.find((e) => e.entryType === 'new_position') ?? activeEntries[0];
 
+    // Cash stores every entry as units=1, pricePerUnit=amount — must use balance arithmetic instead of unit math
+    const isCash = (firstEntry.category ?? 'lainnya') === 'cash';
+
     let totalUnits = 0;
     let avgCostPerUnit = 0;
     let totalCostBasisIDR = 0;
@@ -56,10 +59,18 @@ export class RecomputeAssetProjection {
         case 'new_position': {
           const units = entry.units ?? 0;
           const price = entry.pricePerUnit ?? 0;
-          avgCostPerUnit = computeNewAvgCost(totalUnits, avgCostPerUnit, units, price);
-          totalUnits += units;
-          totalCostBasisIDR += units * price * rate;
-          currentPricePerUnit = price;
+          if (isCash) {
+            // pricePerUnit = deposit amount; units is always 1 for cash
+            totalCostBasisIDR += price * rate;
+            totalUnits = 1;
+            avgCostPerUnit = totalCostBasisIDR;
+            currentPricePerUnit = totalCostBasisIDR;
+          } else {
+            avgCostPerUnit = computeNewAvgCost(totalUnits, avgCostPerUnit, units, price);
+            totalUnits += units;
+            totalCostBasisIDR += units * price * rate;
+            currentPricePerUnit = price;
+          }
           lastUpdatedDate = entry.date;
           if (entryMonth === currentMonth) hasRecentUpdate = true;
           break;
@@ -73,10 +84,17 @@ export class RecomputeAssetProjection {
         case 'top_up': {
           const units = entry.units ?? 0;
           const price = entry.pricePerUnit ?? 0;
-          avgCostPerUnit = computeNewAvgCost(totalUnits, avgCostPerUnit, units, price);
-          totalUnits += units;
-          totalCostBasisIDR += units * price * rate;
-          currentPricePerUnit = price;
+          if (isCash) {
+            totalCostBasisIDR += price * rate;
+            totalUnits = 1;
+            avgCostPerUnit = totalCostBasisIDR;
+            currentPricePerUnit = totalCostBasisIDR;
+          } else {
+            avgCostPerUnit = computeNewAvgCost(totalUnits, avgCostPerUnit, units, price);
+            totalUnits += units;
+            totalCostBasisIDR += units * price * rate;
+            currentPricePerUnit = price;
+          }
           lastUpdatedDate = entry.date;
           if (entryMonth === currentMonth) hasRecentUpdate = true;
           break;
@@ -84,24 +102,40 @@ export class RecomputeAssetProjection {
         case 'partial_sell': {
           const units = entry.units ?? 0;
           const price = entry.pricePerUnit ?? 0;
-          // Use cost-basis-derived IDR per unit to avoid FX rate mismatch
-          const cbPerUnitIDR = totalUnits > 0 ? totalCostBasisIDR / totalUnits : 0;
-          realizedGainIDR += (price * rate - cbPerUnitIDR) * units;
-          totalCostBasisIDR = Math.max(0, totalCostBasisIDR - cbPerUnitIDR * units);
-          totalUnits = Math.max(0, totalUnits - units);
-          currentPricePerUnit = price;
+          if (isCash) {
+            // pricePerUnit = amount withdrawn; subtract from balance, no gain/loss
+            totalCostBasisIDR = Math.max(0, totalCostBasisIDR - price * rate);
+            totalUnits = 1;
+            avgCostPerUnit = totalCostBasisIDR;
+            currentPricePerUnit = totalCostBasisIDR;
+          } else {
+            // Use cost-basis-derived IDR per unit to avoid FX rate mismatch
+            const cbPerUnitIDR = totalUnits > 0 ? totalCostBasisIDR / totalUnits : 0;
+            realizedGainIDR += (price * rate - cbPerUnitIDR) * units;
+            totalCostBasisIDR = Math.max(0, totalCostBasisIDR - cbPerUnitIDR * units);
+            totalUnits = Math.max(0, totalUnits - units);
+            currentPricePerUnit = price;
+          }
           lastUpdatedDate = entry.date;
           if (entryMonth === currentMonth) hasRecentUpdate = true;
           break;
         }
         case 'full_sell': {
           const price = entry.pricePerUnit ?? 0;
-          realizedGainIDR += price * rate * totalUnits - totalCostBasisIDR;
-          totalUnits = 0;
-          totalCostBasisIDR = 0;
-          avgCostPerUnit = 0;
-          currentPricePerUnit = price;
-          status = 'closed';
+          if (isCash) {
+            totalCostBasisIDR = 0;
+            totalUnits = 1;
+            avgCostPerUnit = 0;
+            currentPricePerUnit = 0;
+            status = 'closed';
+          } else {
+            realizedGainIDR += price * rate * totalUnits - totalCostBasisIDR;
+            totalUnits = 0;
+            totalCostBasisIDR = 0;
+            avgCostPerUnit = 0;
+            currentPricePerUnit = price;
+            status = 'closed';
+          }
           lastUpdatedDate = entry.date;
           if (entryMonth === currentMonth) hasRecentUpdate = true;
           break;
