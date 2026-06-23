@@ -1,5 +1,5 @@
-import { IAuthService, AuthUser } from '@/modules/user';
-import { IUserRepository } from '@/modules/user';
+import { IAuthService, AuthUser } from '@/shared/types/auth';
+import { IUserRepository } from '@/shared/repositories/IUserRepository';
 import { getAllocationTarget } from '@/shared/constants/allocationTargets';
 
 export class LoginWithGoogle {

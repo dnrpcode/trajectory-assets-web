@@ -1,4 +1,4 @@
-import { IAuthService, AuthUser } from '@/modules/user';
+import { IAuthService, AuthUser } from '@/shared/types/auth';
 
 export class LoginWithEmail {
   constructor(private authService: IAuthService) {}
