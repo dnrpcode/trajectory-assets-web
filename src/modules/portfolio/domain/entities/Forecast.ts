@@ -3,6 +3,27 @@ export interface DailyBar {
   close: number;
 }
 
+export interface PriceTarget {
+  bear: number;    // P25
+  base: number;    // P50
+  bull: number;    // P75
+  bearPct: number; // % change from current price
+  basePct: number;
+  bullPct: number;
+}
+
+export interface MultiHorizonTargets {
+  lastPrice: number;
+  sampleDays: number;
+  annualizedVolPct: number;
+  targets: {
+    '1d': PriceTarget;
+    '7d': PriceTarget;
+    '30d': PriceTarget;
+    '1y': PriceTarget;
+  };
+}
+
 export interface HistogramBucket {
   price: number;
   count: number;

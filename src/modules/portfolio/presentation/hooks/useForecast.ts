@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchDailyHistory, fetchNews } from '../../data/forecastApi';
 import { computeForecast } from '../../domain/use-cases/ComputeForecast';
-import type { ForecastResult, NewsItem } from '../../domain/entities/Forecast';
+import { computePriceTargets } from '../../domain/use-cases/ComputePriceTargets';
+import type { ForecastResult, NewsItem, MultiHorizonTargets } from '../../domain/entities/Forecast';
 
 function toJK(ticker: string): string {
   return ticker.includes('.') ? ticker : `${ticker}.JK`;
@@ -23,7 +24,22 @@ export function useStockForecast(ticker: string | undefined) {
       return { result, lastPrice, marketState };
     },
     enabled: !!symbol,
-    staleTime: 30 * 60_000, // 30 min — daily model barely moves intraday
+    staleTime: 30 * 60_000,
+    gcTime: 10 * 60_000,
+    retry: 1,
+  });
+}
+
+export function usePriceTargets(ticker: string | undefined) {
+  const symbol = ticker ? toJK(ticker) : undefined;
+  return useQuery({
+    queryKey: ['priceTargets', symbol],
+    queryFn: async (): Promise<MultiHorizonTargets | null> => {
+      const { bars } = await fetchDailyHistory(ticker!);
+      return computePriceTargets.execute(bars);
+    },
+    enabled: !!symbol,
+    staleTime: 30 * 60_000,
     gcTime: 10 * 60_000,
     retry: 1,
   });
