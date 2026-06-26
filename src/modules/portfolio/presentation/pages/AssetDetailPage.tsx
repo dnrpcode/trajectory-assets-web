@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, Trash2, ArrowLeft, Sparkles, Menu, TrendingUp, TrendingDown, Pencil } from 'lucide-react';
+import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, Trash2, ArrowLeft, Menu, TrendingUp, TrendingDown, Pencil } from 'lucide-react';
 import { Navbar } from '@/shared/ui/Navbar';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,7 @@ import { StockLivePanel } from '../components/StockLivePanel';
 import { StockForecastCard } from '@/modules/portfolio';
 import { PriceTargetCard } from '../components/PriceTargetCard';
 import { InvestorFlowCard } from '../components/InvestorFlowCard';
+import { AssetInsightCard } from '../components/AssetInsightCard';
 
 // ── Edit Asset Modal ─────────────────────────────────────────────────────────
 
@@ -116,19 +117,6 @@ const ENTRY_STYLES: Record<string, EntryColor> = {
 };
 const DEFAULT_STYLE: EntryColor = { bg: 'var(--bg-raised)', border: 'var(--border-subtle)', text: 'var(--text-secondary)' };
 
-function buildInsights(
-  t: (k: string, opts?: Record<string, unknown>) => string,
-  assetName: string, unrealizedGainPct: number, isStale: boolean, totalIncomeIDR: number, realizedGainIDR: number,
-): string[] {
-  const out: string[] = [];
-  if (isStale) out.push(t('assetDetail.insightStale', { name: assetName }));
-  if (unrealizedGainPct > 20) out.push(t('assetDetail.insightGain', { name: assetName, pct: unrealizedGainPct.toFixed(1) }));
-  else if (unrealizedGainPct < -15) out.push(t('assetDetail.insightLoss', { name: assetName, pct: Math.abs(unrealizedGainPct).toFixed(1) }));
-  else out.push(t('assetDetail.insightNeutral', { name: assetName, pct: `${unrealizedGainPct >= 0 ? '+' : ''}${unrealizedGainPct.toFixed(1)}` }));
-  if (totalIncomeIDR > 0) out.push(t('assetDetail.insightIncome', { amount: formatCurrency(totalIncomeIDR) }));
-  if (realizedGainIDR > 0) out.push(t('assetDetail.insightRealized', { amount: formatCurrency(realizedGainIDR) }));
-  return out;
-}
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
   if (!active || !payload?.length) return null;
@@ -345,8 +333,6 @@ export function AssetDetailPage() {
   const activeEntries = entries.filter((e) => !e.isCorrected);
   const correctedEntries = entries.filter((e) => e.isCorrected);
   const sortedEntries = [...(showCorrected ? entries : activeEntries)].sort((a, b) => b.date.getTime() - a.date.getTime());
-  const aiInsights = buildInsights(t, asset.assetName, asset.unrealizedGainPct, isStale, asset.totalIncomeIDR, asset.realizedGainIDR);
-
   const handleDeleteEntryConfirm = async () => {
     if (!entryToDelete) return;
     await deleteEntry(entryToDelete);
@@ -502,25 +488,7 @@ export function AssetDetailPage() {
                 </Card>
 
                 {/* AI insights */}
-                <Card variant="accent" padding="md">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Sparkles size={13} strokeWidth={2} style={{ color: 'var(--ai-accent)' }} />
-                    </div>
-                    <div>
-                      <h2 style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, margin: 0 }}>{t('assetDetail.aiRecommendation')}</h2>
-                      <p style={{ color: 'var(--text-muted)', fontSize: 10, margin: 0 }}>{t('assetDetail.aiMock')}</p>
-                    </div>
-                    <span style={{ marginLeft: 'auto' }}><Badge variant="ai">Beta</Badge></span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {aiInsights.map((insight, i) => (
-                      <div key={i} style={{ background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.12)', borderRadius: 8, padding: '9px 11px', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                        {insight}
-                      </div>
-                    ))}
-                  </div>
-                </Card>
+                <AssetInsightCard asset={asset} entries={activeEntries} />
               </div>
             )}
 
