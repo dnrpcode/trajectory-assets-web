@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Layout } from '@/shared/ui/Layout';
-import { Spinner } from '@/shared/ui/Spinner';
+import { JournalSkeleton } from '@/shared/ui/Skeleton';
 import { Badge } from '@/shared/ui/Badge';
 import { useEntries } from '../hooks/useDashboardEntries';
 import { formatDate, formatMonth } from '@/shared/utils/formatDate';
@@ -105,7 +105,7 @@ export function JournalPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+        <JournalSkeleton />
       ) : months.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div

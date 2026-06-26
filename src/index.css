@@ -280,3 +280,8 @@
   .transition-base   { transition: all var(--transition-base); }
   .transition-smooth { transition: all var(--transition-smooth); }
 }
+
+@keyframes skeleton-sweep {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

@@ -4,7 +4,7 @@ import { CoinGeckoError, getCoinGeckoErrorMessage } from '../../data/CoinGeckoRe
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ComposedChart, Line } from 'recharts';
 import { Layout } from '@/shared/ui/Layout';
 import { Card } from '@/shared/ui/Card';
-import { Spinner } from '@/shared/ui/Spinner';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { SignalBadge } from '../components/SignalBadge';
 import { TradeSetupCard } from '../components/TradeSetupCard';
 import { useCoinDetail, useCoinMarkets, useWatchlist } from '../hooks/useTrading';
@@ -26,7 +26,22 @@ export function CoinDetailPage() {
   const market = markets[0];
 
   if (isLoading) return (
-    <Layout><div className="flex justify-center py-24"><Spinner size="lg" /></div></Layout>
+    <Layout>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 40 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+          <Skeleton width={32} height={32} borderRadius={8} />
+          <Skeleton width={48} height={48} borderRadius="50%" />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <Skeleton width={140} height={18} />
+            <Skeleton width={80} height={12} />
+          </div>
+        </div>
+        <Skeleton height={60} borderRadius={12} />
+        <Skeleton height={240} borderRadius={14} />
+        <Skeleton height={100} borderRadius={14} />
+        <Skeleton height={140} borderRadius={14} />
+      </div>
+    </Layout>
   );
 
   if (error || !detail) {

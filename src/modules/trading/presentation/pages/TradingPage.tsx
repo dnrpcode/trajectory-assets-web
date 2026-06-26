@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Plus, TrendingUp, Scan, AlertTriangle } from 'lucide-react';
 import { Layout } from '@/shared/ui/Layout';
 import { Button } from '@/shared/ui/Button';
-import { Spinner } from '@/shared/ui/Spinner';
+import { CoinListSkeleton } from '@/shared/ui/Skeleton';
 import { CoinCard } from '../components/CoinCard';
 import { CoinSearchModal } from '../components/CoinSearchModal';
 import { SignalScannerModal } from '../components/SignalScannerModal';
@@ -56,7 +56,7 @@ export function TradingPage() {
 
       {/* Watchlist */}
       {watchlistLoading ? (
-        <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+        <CoinListSkeleton />
       ) : watchlist.length === 0 ? (
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',

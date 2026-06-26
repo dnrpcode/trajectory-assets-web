@@ -1,16 +1,18 @@
-import { useState } from 'react';
-import { Plus, Briefcase } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Briefcase, Download, FileText, List } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Layout } from '@/shared/ui/Layout';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
-import { Spinner } from '@/shared/ui/Spinner';
+import { PortfolioSkeleton } from '@/shared/ui/Skeleton';
 import { AssetCard } from '../components/AssetCard';
 import { EntryForm } from '../components/EntryForm';
 import { useActiveAssets, useAllAssets } from '../hooks/useAssets';
+import { useEntries } from '../hooks/useEntries';
 import { AssetCategory } from '@/shared/types';
 import { CATEGORY_LABELS, ALL_CATEGORIES } from '@/shared/constants/categories';
+import { exportAssetSummaryCSV, exportTransactionHistoryCSV } from '@/shared/utils/exportPortfolio';
 
 export function PortfolioPage() {
   const { t } = useTranslation();
@@ -18,9 +20,23 @@ export function PortfolioPage() {
   const staleFilter = searchParams.get('filter') === 'stale';
   const { data: assets = [], isLoading, isError } = useActiveAssets();
   const { data: allAssets = [] } = useAllAssets();
+  const { data: entries = [] } = useEntries();
   const hasClosedAssets = assets.length === 0 && allAssets.some((a) => a.status === 'closed');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<AssetCategory | 'all'>('all');
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!exportMenuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setExportMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [exportMenuOpen]);
 
   const filtered = assets.filter((a) => {
     if (staleFilter && !a.isStale) return false;
@@ -39,15 +55,107 @@ export function PortfolioPage() {
             {assets.length} {t('portfolio.noAssets')}
           </p>
         </div>
-        <Button
-          onClick={() => setAddModalOpen(true)}
-          size="md"
-          icon={
-            <Plus size={14} strokeWidth={2.5} />
-          }
-        >
-          {t('portfolio.addPosition')}
-        </Button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {/* Export dropdown */}
+          <div ref={exportMenuRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setExportMenuOpen((v) => !v)}
+              title="Export data"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 12px',
+                borderRadius: 10,
+                border: '1px solid var(--border-default)',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+                transition: 'background 0.15s',
+              }}
+            >
+              <Download size={14} strokeWidth={2.2} />
+              Export
+            </button>
+            {exportMenuOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 'calc(100% + 6px)',
+                  background: 'var(--bg-raised)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+                  zIndex: 50,
+                  minWidth: 210,
+                }}
+              >
+                <button
+                  onClick={() => { exportAssetSummaryCSV(assets); setExportMenuOpen(false); }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '11px 14px',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    textAlign: 'left',
+                  }}
+                >
+                  <FileText size={13} color="var(--blue-400)" strokeWidth={2} />
+                  <div>
+                    <div style={{ fontWeight: 600, lineHeight: 1.2 }}>Ringkasan Aset</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Valuasi, gain/loss, income</div>
+                  </div>
+                </button>
+                <div style={{ height: 1, background: 'var(--border-dim)', margin: '0 10px' }} />
+                <button
+                  onClick={() => { exportTransactionHistoryCSV(entries); setExportMenuOpen(false); }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '11px 14px',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)',
+                    fontSize: 13,
+                    textAlign: 'left',
+                  }}
+                >
+                  <List size={13} color="var(--blue-400)" strokeWidth={2} />
+                  <div>
+                    <div style={{ fontWeight: 600, lineHeight: 1.2 }}>Riwayat Transaksi</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Semua entri ledger (CSV)</div>
+                  </div>
+                </button>
+                <div style={{ padding: '7px 14px 8px', borderTop: '1px solid var(--border-dim)', marginTop: 2 }}>
+                  <p style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                    Format CSV · kompatibel Excel & Google Sheets
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Button
+            onClick={() => setAddModalOpen(true)}
+            size="md"
+            icon={<Plus size={14} strokeWidth={2.5} />}
+          >
+            {t('portfolio.addPosition')}
+          </Button>
+        </div>
       </div>
 
       {/* Category filter chips */}
@@ -74,7 +182,7 @@ export function PortfolioPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+        <PortfolioSkeleton />
       ) : isError ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Gagal memuat portofolio</p>

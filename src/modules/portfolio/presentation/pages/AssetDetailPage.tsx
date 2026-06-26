@@ -17,6 +17,7 @@ import { buildPriceHistory } from '../utils/assetChartUtils';
 import type { AssetEntry } from '@/modules/portfolio';
 import { computeIsStale } from '@/shared/utils/calculations';
 import { InfoTooltip } from '@/shared/ui/InfoTooltip';
+import { AssetDetailSkeleton } from '@/shared/ui/Skeleton';
 import { StockLivePanel } from '../components/StockLivePanel';
 import { StockForecastCard } from '@/modules/portfolio';
 import { PriceTargetCard } from '../components/PriceTargetCard';
@@ -310,11 +311,7 @@ export function AssetDetailPage() {
   const isLoading = assetsLoading || entriesLoading;
 
   if (isLoading) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t('common.loading')}</span>
-      </div>
-    );
+    return <AssetDetailSkeleton />;
   }
 
   if (!asset) {

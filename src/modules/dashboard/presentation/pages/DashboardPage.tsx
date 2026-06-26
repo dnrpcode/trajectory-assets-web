@@ -7,7 +7,7 @@ import { StatCard } from '@/shared/ui/StatCard';
 import { Card } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
 import { Modal } from '@/shared/ui/Modal';
-import { Spinner } from '@/shared/ui/Spinner';
+import { DashboardSkeleton } from '@/shared/ui/Skeleton';
 import { AllocationPieChart } from '../components/AllocationPieChart';
 import { WealthGrowthChart } from '../components/WealthGrowthChart';
 import { BenchmarkChart } from '../components/BenchmarkChart';
@@ -90,7 +90,7 @@ export function DashboardPage() {
       )}
 
       {summaryLoading ? (
-        <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+        <DashboardSkeleton />
       ) : summaryError ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Gagal memuat dashboard</p>
