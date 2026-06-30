@@ -78,7 +78,7 @@ export const investorFlowRepository = new InvestorFlowRepository();
 export const getActiveAssets  = new GetActiveAssets(projectionRepository);
 export const getAllAssets      = new GetAllAssets(projectionRepository);
 export const deleteAsset      = new DeleteAsset(projectionRepository, entryRepository);
-export const updateAssetMeta  = new UpdateAssetMeta(projectionRepository);
+export const updateAssetMeta  = new UpdateAssetMeta(projectionRepository, entryRepository);
 
 // ── Portfolio use-cases ───────────────────────────────────────────────────────
 export const getPortfolioSummary = new GetPortfolioSummary(projectionRepository, portfolioRepository);

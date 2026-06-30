@@ -7,4 +7,9 @@ export interface IAssetEntryRepository {
   markCorrected(userId: string, entryId: string): Promise<void>;
   delete(userId: string, entryId: string): Promise<void>;
   deleteByAssetId(userId: string, assetId: string): Promise<void>;
+  updateMetaByAssetId(
+    userId: string,
+    assetId: string,
+    patch: { assetName?: string; ticker?: string; platform?: string },
+  ): Promise<void>;
 }

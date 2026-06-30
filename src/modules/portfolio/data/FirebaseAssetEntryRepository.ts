@@ -75,4 +75,18 @@ export class FirebaseAssetEntryRepository implements IAssetEntryRepository {
     const snap = await getDocs(q);
     await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
   }
+
+  async updateMetaByAssetId(
+    userId: string,
+    assetId: string,
+    patch: { assetName?: string; ticker?: string; platform?: string },
+  ): Promise<void> {
+    const q = query(this.colRef(userId), where('assetId', '==', assetId));
+    const snap = await getDocs(q);
+    const payload = stripUndefined({
+      ...patch,
+      updatedAt: Timestamp.fromDate(new Date()),
+    } as Record<string, unknown>);
+    await Promise.all(snap.docs.map((d) => updateDoc(d.ref, payload)));
+  }
 }

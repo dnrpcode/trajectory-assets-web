@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { Sparkles, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/shared/ui/Badge';
 import type { Asset } from '@/shared/types/asset';
@@ -10,7 +10,21 @@ interface Props {
   entries: AssetEntry[];
 }
 
-function TypingText({ text }: { text: string }) {
+// Parse **bold** and *italic* markdown inline tokens into React nodes
+function renderMarkdown(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={i}>{part.slice(1, -1)}</em>;
+    }
+    return <Fragment key={i}>{part}</Fragment>;
+  });
+}
+
+function TypingText({ text, renderFn }: { text: string; renderFn?: (s: string) => React.ReactNode }) {
   const [displayed, setDisplayed] = useState('');
 
   useEffect(() => {
@@ -25,7 +39,7 @@ function TypingText({ text }: { text: string }) {
     return () => clearInterval(id);
   }, [text]);
 
-  return <>{displayed}</>;
+  return <>{renderFn ? renderFn(displayed) : displayed}</>;
 }
 
 function InsightBullets({ text }: { text: string }) {
@@ -39,10 +53,9 @@ function InsightBullets({ text }: { text: string }) {
   const rest    = lines.filter((l) => !l.startsWith('•') && !l.startsWith('-'));
 
   if (bullets.length === 0) {
-    // Fallback: render as plain paragraph
     return (
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>
-        <TypingText text={text} />
+        <TypingText text={text} renderFn={renderMarkdown} />
       </p>
     );
   }
@@ -50,10 +63,13 @@ function InsightBullets({ text }: { text: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {rest.length > 0 && (
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>{rest.join(' ')}</p>
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
+          {renderMarkdown(rest.join(' '))}
+        </p>
       )}
       {bullets.map((line, i) => {
         const content = line.replace(/^[•\-]\s*/, '');
+        const isLast = i === bullets.length - 1;
         return (
           <div
             key={i}
@@ -68,7 +84,9 @@ function InsightBullets({ text }: { text: string }) {
           >
             <span style={{ color: 'var(--ai-accent)', fontSize: 14, lineHeight: 1.5, flexShrink: 0 }}>•</span>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65, margin: 0 }}>
-              {i === bullets.length - 1 ? <TypingText text={content} /> : content}
+              {isLast
+                ? <TypingText text={content} renderFn={renderMarkdown} />
+                : renderMarkdown(content)}
             </p>
           </div>
         );
