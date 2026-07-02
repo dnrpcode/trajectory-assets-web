@@ -46,6 +46,7 @@ export function useDeleteEntry() {
       queryClient.invalidateQueries({ queryKey: ['activeAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['portfolioHistory', user?.id] });
     },
     onError: () => {
       toast('Gagal menghapus transaksi. Periksa koneksi dan coba lagi.', 'error');
@@ -74,6 +75,7 @@ export function useCreateEntry() {
       queryClient.invalidateQueries({ queryKey: ['activeAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['portfolioHistory', user?.id] });
     },
     onError: () => {
       toast('Gagal menyimpan transaksi. Periksa koneksi dan coba lagi.', 'error');
@@ -104,6 +106,7 @@ export function useEditEntry() {
       queryClient.invalidateQueries({ queryKey: ['activeAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['portfolioHistory', user?.id] });
       toast('Transaksi berhasil diperbarui.', 'success');
     },
     onError: () => {

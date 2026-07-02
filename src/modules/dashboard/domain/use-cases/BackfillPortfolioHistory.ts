@@ -27,7 +27,12 @@ export class BackfillPortfolioHistory {
     private portfolioRepo: IPortfolioRepository,
   ) {}
 
-  async execute(userId: string): Promise<void> {
+  /**
+   * @param marketPrices  ticker → { "YYYY-MM" → closing price in asset's currency }
+   *   Passed from the hook layer so domain stays free of HTTP concerns.
+   *   Used to fill historical month-end prices for saham when no price_update entry exists.
+   */
+  async execute(userId: string, marketPrices: Record<string, Record<string, number>> = {}): Promise<void> {
     const [allEntries, assets] = await Promise.all([
       this.entryRepo.getByUserId(userId),
       this.projectionRepo.getByUserId(userId),
@@ -35,10 +40,13 @@ export class BackfillPortfolioHistory {
 
     if (allEntries.length === 0) return;
 
-    // Current asset value by assetId (for price approximation)
+    // Current asset price by assetId — fallback of last resort
     const assetCurrentPrice: Record<string, number> = {};
+    // Ticker → assetId map so we can look up market prices per asset
+    const assetTickerById: Record<string, string> = {};
     for (const a of assets) {
       assetCurrentPrice[a.id] = a.currentPricePerUnit;
+      if (a.ticker) assetTickerById[a.id] = a.ticker.replace(/\.JK$/i, '');
     }
 
     // Sort entries oldest-first
@@ -57,13 +65,16 @@ export class BackfillPortfolioHistory {
     const currentMonth = getCurrentMonth();
     const allMonths = monthsBetween(firstMonth, currentMonth);
 
-    // Fetch existing history to avoid overwriting months that already have data
+    // Fetch existing history
     const existing = await this.portfolioRepo.getHistory(userId);
     const existingMonths = new Set(existing.map((h) => h.month));
+    // If we have market prices, we should recompute all months to use them
+    const hasMarketPrices = Object.keys(marketPrices).length > 0;
 
     // For each month, replay entries up to end of that month and compute state per asset
     for (const month of allMonths) {
-      if (existingMonths.has(month) && month !== currentMonth) continue;
+      // Skip past months unless we now have market data that can improve them
+      if (existingMonths.has(month) && month !== currentMonth && !hasMarketPrices) continue;
 
       const endOfMonth = new Date(`${month}-01`);
       endOfMonth.setMonth(endOfMonth.getMonth() + 1);
@@ -122,8 +133,15 @@ export class BackfillPortfolioHistory {
         }
 
         if (!closed) {
-          // Use current asset price if no historical price entry exists for this month
-          const priceIDR = latestPrice > 0 ? latestPrice : (assetCurrentPrice[assetId] ?? 0);
+          let priceIDR = latestPrice;
+          // For saham: prefer Yahoo Finance month-end price over stale purchase price
+          if (priceIDR <= 0 || true) {
+            const ticker = assetTickerById[assetId];
+            const mktPrice = ticker ? (marketPrices[ticker]?.[month] ?? marketPrices[ticker.toUpperCase()]?.[month]) : undefined;
+            if (mktPrice != null && mktPrice > 0) priceIDR = mktPrice;
+          }
+          // Final fallback: current price stored in Asset projection
+          if (priceIDR <= 0) priceIDR = assetCurrentPrice[assetId] ?? 0;
           totalValueIDR += units * priceIDR;
           totalCostBasisIDR += costBasis;
         }
