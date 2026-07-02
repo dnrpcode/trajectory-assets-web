@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useActiveAssets, useDeleteAsset, useUpdateAssetMeta } from '../hooks/useAssets';
-import { useAssetEntries, useDeleteEntry } from '../hooks/useEntries';
+import { useAssetEntries, useDeleteEntry, useEditEntry } from '../hooks/useEntries';
 import { Modal } from '@/shared/ui/Modal';
 import { EntryForm } from '../components/EntryForm';
 import { Badge } from '@/shared/ui/Badge';
@@ -141,7 +141,7 @@ function EntryIcon({ type, color }: { type: string; color: string }) {
   return <RotateCcw {...p} />;
 }
 
-function EntryRow({ entry, onDelete }: { entry: AssetEntry; onDelete: (e: AssetEntry) => void }) {
+function EntryRow({ entry, onDelete, onEdit }: { entry: AssetEntry; onDelete: (e: AssetEntry) => void; onEdit: (e: AssetEntry) => void }) {
   const { t } = useTranslation();
   const style = ENTRY_STYLES[entry.entryType] ?? DEFAULT_STYLE;
 
@@ -195,15 +195,26 @@ function EntryRow({ entry, onDelete }: { entry: AssetEntry; onDelete: (e: AssetE
             </div>
           )}
           {!entry.isCorrected && (
-            <button
-              onClick={() => onDelete(entry)}
-              title={t('assetDetail.deleteTransaction')}
-              style={{ background: 'transparent', border: '1px solid transparent', borderRadius: 6, color: 'var(--text-muted)', padding: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 150ms', marginTop: 1 }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--loss-400)'; e.currentTarget.style.background = 'rgba(240,71,106,0.08)'; e.currentTarget.style.borderColor = 'rgba(240,71,106,0.2)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
-            >
-              <Trash2 size={12} strokeWidth={2} />
-            </button>
+            <>
+              <button
+                onClick={() => onEdit(entry)}
+                title="Edit transaksi"
+                style={{ background: 'transparent', border: '1px solid transparent', borderRadius: 6, color: 'var(--text-muted)', padding: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 150ms', marginTop: 1 }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--blue-400)'; e.currentTarget.style.background = 'rgba(77,124,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(77,124,255,0.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+              >
+                <Pencil size={12} strokeWidth={2} />
+              </button>
+              <button
+                onClick={() => onDelete(entry)}
+                title={t('assetDetail.deleteTransaction')}
+                style={{ background: 'transparent', border: '1px solid transparent', borderRadius: 6, color: 'var(--text-muted)', padding: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 150ms', marginTop: 1 }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--loss-400)'; e.currentTarget.style.background = 'rgba(240,71,106,0.08)'; e.currentTarget.style.borderColor = 'rgba(240,71,106,0.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+              >
+                <Trash2 size={12} strokeWidth={2} />
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -253,6 +264,118 @@ function DeleteEntryModal({ entry, onConfirm, onCancel, isDeleting }: { entry: A
   );
 }
 
+// ── Edit Entry Modal ──────────────────────────────────────────────────────────
+
+function EditEntryModal({
+  entry,
+  onSave,
+  onCancel,
+  isSaving,
+}: {
+  entry: AssetEntry;
+  onSave: (patch: Parameters<ReturnType<typeof useEditEntry>['mutateAsync']>[0]['patch']) => void;
+  onCancel: () => void;
+  isSaving: boolean;
+}) {
+  const [date, setDate]                 = useState(entry.date.toISOString().slice(0, 10));
+  const [pricePerUnit, setPricePerUnit] = useState(entry.pricePerUnit?.toString() ?? '');
+  const [units, setUnits]               = useState(entry.units?.toString() ?? '');
+  const [amount, setAmount]             = useState(entry.amount?.toString() ?? '');
+  const [notes, setNotes]               = useState(entry.notes ?? '');
+
+  const showPrice  = entry.pricePerUnit != null;
+  const showUnits  = entry.units != null;
+  const showAmount = entry.amount != null;
+
+  const fieldStyle: React.CSSProperties = {
+    width: '100%', padding: '9px 11px', borderRadius: 8, border: '1px solid var(--border-default)',
+    background: 'var(--bg-raised)', color: 'var(--text-primary)', fontSize: 13, outline: 'none',
+    boxSizing: 'border-box',
+  };
+  const labelStyle: React.CSSProperties = {
+    fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 5, display: 'block',
+    textTransform: 'uppercase', letterSpacing: '0.05em',
+  };
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const patch: Parameters<typeof onSave>[0] = {
+      date: new Date(date + 'T12:00:00'),
+      notes: notes.trim() || undefined,
+    };
+    if (showPrice && pricePerUnit) patch.pricePerUnit = parseFloat(pricePerUnit.replace(/,/g, '.'));
+    if (showUnits && units)       patch.units        = parseFloat(units.replace(/,/g, '.'));
+    if (showAmount && amount)     patch.amount       = parseFloat(amount.replace(/,/g, '.'));
+    onSave(patch);
+  }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={onCancel}
+    >
+      <div
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 14, padding: 24, width: '100%', maxWidth: 380, boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(77,124,255,0.1)', border: '1px solid rgba(77,124,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Pencil size={15} strokeWidth={2} style={{ color: 'var(--blue-400)' }} />
+          </div>
+          <div>
+            <h3 style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 600, margin: 0 }}>Edit Transaksi</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: 0 }}>Entry lama akan disimpan sebagai koreksi</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={labelStyle}>Tanggal</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={fieldStyle} required />
+          </div>
+
+          {showPrice && (
+            <div>
+              <label style={labelStyle}>Harga / Unit</label>
+              <input type="number" value={pricePerUnit} onChange={(e) => setPricePerUnit(e.target.value)} style={fieldStyle} step="any" min="0" placeholder="0" />
+            </div>
+          )}
+
+          {showUnits && (
+            <div>
+              <label style={labelStyle}>Jumlah Unit</label>
+              <input type="number" value={units} onChange={(e) => setUnits(e.target.value)} style={fieldStyle} step="any" min="0" placeholder="0" />
+            </div>
+          )}
+
+          {showAmount && (
+            <div>
+              <label style={labelStyle}>Nominal (IDR)</label>
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} style={fieldStyle} step="any" min="0" placeholder="0" />
+            </div>
+          )}
+
+          <div>
+            <label style={labelStyle}>Catatan</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="Opsional"
+              style={{ ...fieldStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+            <Button type="button" variant="secondary" size="md" onClick={onCancel} style={{ flex: 1 }}>Batal</Button>
+            <Button type="submit" variant="primary" size="md" loading={isSaving} style={{ flex: 1 }}>Simpan</Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ── Tab button ────────────────────────────────────────────────────────────────
 
 function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -295,6 +418,7 @@ export function AssetDetailPage() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('summary');
   const [entryToDelete, setEntryToDelete] = useState<AssetEntry | null>(null);
+  const [entryToEdit, setEntryToEdit]     = useState<AssetEntry | null>(null);
   const [showCorrected, setShowCorrected] = useState(false);
   const [actionModal, setActionModal] = useState<ActionEntryType | null>(null);
   const [deleteAssetConfirm, setDeleteAssetConfirm] = useState(false);
@@ -304,6 +428,7 @@ export function AssetDetailPage() {
   const { data: assets = [], isLoading: assetsLoading } = useActiveAssets();
   const { data: entries = [], isLoading: entriesLoading } = useAssetEntries(assetId ?? '');
   const { mutateAsync: deleteEntry, isPending: isDeletingEntry } = useDeleteEntry();
+  const { mutateAsync: editEntry,  isPending: isEditingEntry  } = useEditEntry();
   const { mutateAsync: deleteAssetMutation, isPending: isDeletingAsset } = useDeleteAsset();
   const { mutateAsync: updateAssetMeta, isPending: isSavingMeta } = useUpdateAssetMeta();
 
@@ -523,7 +648,7 @@ export function AssetDetailPage() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                     {sortedEntries.map((entry) => (
-                      <EntryRow key={entry.id} entry={entry} onDelete={setEntryToDelete} />
+                      <EntryRow key={entry.id} entry={entry} onDelete={setEntryToDelete} onEdit={setEntryToEdit} />
                     ))}
                   </div>
                 )}
@@ -548,6 +673,18 @@ export function AssetDetailPage() {
 
       {entryToDelete && (
         <DeleteEntryModal entry={entryToDelete} onConfirm={handleDeleteEntryConfirm} onCancel={() => setEntryToDelete(null)} isDeleting={isDeletingEntry} />
+      )}
+
+      {entryToEdit && (
+        <EditEntryModal
+          entry={entryToEdit}
+          isSaving={isEditingEntry}
+          onCancel={() => setEntryToEdit(null)}
+          onSave={async (patch) => {
+            await editEntry({ original: entryToEdit, patch });
+            setEntryToEdit(null);
+          }}
+        />
       )}
 
       {actionModal && (

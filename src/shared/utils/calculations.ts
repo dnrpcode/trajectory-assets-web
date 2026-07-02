@@ -2,8 +2,9 @@ import { Asset } from '@/shared/types/asset';
 import { AllocationTarget, AssetCategory } from '../types';
 import { getCurrentMonth, getMonthFromDate } from './formatDate';
 
-export function computeIsStale(asset: Pick<Asset, 'status' | 'lastUpdatedDate'>): boolean {
+export function computeIsStale(asset: Pick<Asset, 'status' | 'category' | 'lastUpdatedDate'>): boolean {
   if (asset.status !== 'active') return false;
+  if (asset.category === 'cash') return false;
   return getMonthFromDate(asset.lastUpdatedDate) !== getCurrentMonth();
 }
 

@@ -162,8 +162,9 @@ export class RecomputeAssetProjection {
     const unrealizedGainPct =
       totalCostBasisIDR > 0 ? (unrealizedGainIDR / totalCostBasisIDR) * 100 : 0;
 
-    // isStale = no price_update / top_up / sell in current month
-    const isStale = status === 'active' && !hasRecentUpdate;
+    // isStale = no price_update / top_up / sell in current month (cash is exempt)
+    const isCashAsset = (firstEntry.category ?? 'lainnya') === 'cash';
+    const isStale = status === 'active' && !hasRecentUpdate && !isCashAsset;
 
     const existingAsset = await this.projectionRepo.getById(userId, assetId);
 
