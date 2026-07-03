@@ -3,36 +3,95 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper: must be authenticated and own the userId segment
+    // ── Helpers ───────────────────────────────────────────────────────────────
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
 
-    // User profile
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
+    function isString(v, maxLen) {
+      return v is string && v.size() <= maxLen;
+    }
 
-      // All sub-collections are owner-only
+    function isOptionalString(v, maxLen) {
+      return v == null || (v is string && v.size() <= maxLen);
+    }
+
+    // ── User profile ──────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId)
+        && isString(request.resource.data.email, 320)
+        && isOptionalString(request.resource.data.displayName, 100);
+
+      // ── AssetEntry (immutable ledger) ─────────────────────────────────────
       match /entries/{entryId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && request.resource.data.keys().hasAll(['userId', 'entryType', 'currency', 'date', 'isCorrected'])
+          && request.resource.data.userId == userId
+          && request.resource.data.entryType in [
+               'new_position', 'price_update', 'top_up', 'partial_sell',
+               'full_sell', 'income', 'fee', 'correction'
+             ]
+          && isString(request.resource.data.currency, 10)
+          && isOptionalString(request.resource.data.assetName, 200)
+          && isOptionalString(request.resource.data.ticker, 20)
+          && isOptionalString(request.resource.data.notes, 2000)
+          && request.resource.data.isCorrected is bool;
+        // Only allowed update is marking isCorrected=true (correction workflow)
+        allow update: if isOwner(userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isCorrected', 'updatedAt'])
+          && request.resource.data.isCorrected == true;
+        allow delete: if false; // ledger is append-only; deletions handled via isCorrected flag
       }
+
+      // ── Asset projection (recomputed, not user-edited directly) ───────────
       match /assets/{assetId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId)
+          && request.resource.data.userId == userId
+          && isString(request.resource.data.assetName, 200)
+          && isOptionalString(request.resource.data.ticker, 20)
+          && request.resource.data.category in [
+               'saham', 'reksa_dana', 'obligasi_sbn', 'emas', 'kripto', 'cash', 'lainnya'
+             ]
+          && request.resource.data.status in ['active', 'closed'];
       }
+
+      // ── Goals ─────────────────────────────────────────────────────────────
       match /goals/{goalId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId)
+          && isOptionalString(request.resource.data.name, 200)
+          && isOptionalString(request.resource.data.notes, 1000);
       }
+
+      // ── Portfolio history snapshots ────────────────────────────────────────
       match /portfolioHistory/{month} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId);
       }
+
+      // ── Crypto watchlist ──────────────────────────────────────────────────
       match /watchlist/{coinId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId)
+          && isString(request.resource.data.coinId, 100);
       }
+
+      // ── Paper trades ──────────────────────────────────────────────────────
       match /paperTrades/{tradeId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId)
+          && isString(request.resource.data.coinId, 100)
+          && request.resource.data.side in ['buy', 'sell'];
       }
+
+      // ── Dividend watchlist ────────────────────────────────────────────────
       match /dividendWatchlist/{ticker} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId)
+          && isString(request.resource.data.ticker, 20);
       }
     }
 
