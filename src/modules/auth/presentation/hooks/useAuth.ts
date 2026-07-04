@@ -4,6 +4,11 @@ import { useAuthStore } from '@/shared/hooks/useAuthStore';
 
 export { useAuthStore } from '@/shared/hooks/useAuthStore';
 
+// useAuth mounts in several components (AppRoutes + guards). This module-level
+// flag makes sure the pending redirect is resolved exactly once, not once per
+// mount — concurrent getRedirectResult() calls can race and duplicate work.
+let redirectCompletionStarted = false;
+
 export function useAuth() {
   const { user, authUser, loading, setUser, setAuthUser, setLoading } = useAuthStore();
 
@@ -13,7 +18,10 @@ export function useAuth() {
     // LoginPage tidak pernah ter-mount untuk memanggil getRedirectResult(); tanpa
     // itu, onAuthStateChanged iOS bisa tertunda selamanya → stuck loading.
     // Fire-and-forget: onAuthStateChanged di bawah yang menyelesaikan loading state.
-    loginWithGoogle.completeRedirect().catch(() => { /* ditangani oleh onAuthStateChanged */ });
+    if (!redirectCompletionStarted) {
+      redirectCompletionStarted = true;
+      loginWithGoogle.completeRedirect().catch(() => { /* ditangani oleh onAuthStateChanged */ });
+    }
 
     const unsubscribe = authService.onAuthStateChanged(async (au) => {
       setAuthUser(au);
