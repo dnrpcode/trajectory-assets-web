@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useActiveAssets, useDeleteAsset, useUpdateAssetMeta } from '../hooks/useAssets';
-import { useAssetEntries, useDeleteEntry, useEditEntry } from '../hooks/useEntries';
+import { useAssetEntries, useDeleteEntry, useEditEntry, useCreateEntry } from '../hooks/useEntries';
 import { Modal } from '@/shared/ui/Modal';
 import { EntryForm } from '../components/EntryForm';
 import { Badge } from '@/shared/ui/Badge';
@@ -429,6 +429,7 @@ export function AssetDetailPage() {
   const { data: entries = [], isLoading: entriesLoading } = useAssetEntries(assetId ?? '');
   const { mutateAsync: deleteEntry, isPending: isDeletingEntry } = useDeleteEntry();
   const { mutateAsync: editEntry,  isPending: isEditingEntry  } = useEditEntry();
+  const { mutateAsync: createEntry, isPending: isQuickUpdating } = useCreateEntry();
   const { mutateAsync: deleteAssetMutation, isPending: isDeletingAsset } = useDeleteAsset();
   const { mutateAsync: updateAssetMeta, isPending: isSavingMeta } = useUpdateAssetMeta();
 
@@ -464,6 +465,24 @@ export function AssetDetailPage() {
   const handleDeleteAsset = async () => {
     await deleteAssetMutation(asset.id);
     navigate('/portfolio');
+  };
+
+  const handleQuickPriceUpdate = async () => {
+    const now = new Date();
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    await createEntry({
+      userId: asset.userId,
+      assetId: asset.id,
+      assetName: asset.assetName,
+      ticker: asset.ticker,
+      category: asset.category,
+      platform: asset.platform,
+      entryType: 'price_update',
+      month,
+      pricePerUnit: asset.currentPricePerUnit,
+      currency: asset.currency,
+      date: now,
+    });
   };
 
   return (
@@ -539,8 +558,28 @@ export function AssetDetailPage() {
 
             {/* ── Action buttons ── */}
             <div style={{ display: 'flex', borderTop: '1px solid var(--border-subtle)' }}>
+              {/* price_update with inline quick-update option */}
+              <div style={{ flex: 1, display: 'flex', borderRight: '1px solid var(--border-subtle)' }}>
+                <button
+                  onClick={() => setActionModal('price_update')}
+                  style={{ flex: 1, padding: '9px 4px', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: 'var(--bg-raised)', border: 'none', color: 'var(--text-secondary)', transition: 'background 150ms', borderRight: '1px solid var(--border-subtle)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(77,124,255,0.08)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-raised)'; }}
+                >
+                  {t('portfolio.updatePrice')}
+                </button>
+                <button
+                  onClick={handleQuickPriceUpdate}
+                  disabled={isQuickUpdating || asset.currentPricePerUnit <= 0}
+                  title={`Pakai harga terakhir: ${formatCurrency(asset.currentPricePerUnit)}`}
+                  style={{ padding: '9px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer', background: 'rgba(77,124,255,0.06)', border: 'none', color: 'var(--blue-400)', transition: 'background 150ms', whiteSpace: 'nowrap', opacity: isQuickUpdating ? 0.6 : 1 }}
+                  onMouseEnter={(e) => { if (!isQuickUpdating) e.currentTarget.style.background = 'rgba(77,124,255,0.14)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(77,124,255,0.06)'; }}
+                >
+                  {isQuickUpdating ? '...' : '↺ Hari Ini'}
+                </button>
+              </div>
               {[
-                { key: 'price_update', label: t('portfolio.updatePrice'), color: 'var(--text-secondary)', bg: 'var(--bg-raised)', hover: 'rgba(77,124,255,0.08)' },
                 { key: 'top_up', label: t('portfolio.topUp'), color: 'var(--gain-400)', bg: 'rgba(15,186,130,0.04)', hover: 'rgba(15,186,130,0.1)' },
                 { key: 'partial_sell', label: t('portfolio.sellPartial'), color: 'var(--warn-400)', bg: 'rgba(245,158,11,0.04)', hover: 'rgba(245,158,11,0.1)' },
                 { key: 'full_sell', label: t('portfolio.sellAll'), color: 'var(--loss-400)', bg: 'rgba(240,71,106,0.04)', hover: 'rgba(240,71,106,0.1)' },
