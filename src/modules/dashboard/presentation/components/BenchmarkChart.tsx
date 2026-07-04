@@ -26,12 +26,20 @@ function buildChartData(
 
   const marketByMonth = new Map(marketHistory.map((d) => [d.month, d.close]));
 
-  // Find the first portfolio month that also has market data
+  // Skip leading months where the portfolio value is a tiny fraction of the peak
+  // (e.g. a small test entry months before the main investments began).
+  // Using 5% of peak as threshold — avoids +100,000% distortion on the y-axis.
+  const peak = Math.max(...portfolioHistory.map((p) => p.totalValueIDR));
+  const minMeaningful = peak * 0.05;
+  const meaningful = portfolioHistory.filter((p) => p.totalValueIDR >= minMeaningful);
+  if (meaningful.length === 0) return [];
+
+  // Find the first meaningful month that also has market data
   let basePortfolio = 0;
   let baseMarket = 0;
   let baseFound = false;
 
-  for (const ph of portfolioHistory) {
+  for (const ph of meaningful) {
     const mClose = marketByMonth.get(ph.month);
     if (mClose && ph.totalValueIDR > 0) {
       basePortfolio = ph.totalValueIDR;
@@ -42,6 +50,10 @@ function buildChartData(
   }
 
   if (!baseFound) return [];
+
+  // Only chart from the first meaningful month onward
+  const startMonth = meaningful[0].month;
+  portfolioHistory = portfolioHistory.filter((p) => p.month >= startMonth);
 
   return portfolioHistory
     .map((ph) => {

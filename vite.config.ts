@@ -2,6 +2,8 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+import { readFileSync } from 'fs'
+const { version } = JSON.parse(readFileSync('./package.json', 'utf-8')) as { version: string }
 
 // In local dev, Vercel Edge Functions (api/) don't run — intercept /api/* so
 // Vite never tries to serve the .ts files as browser modules (causes esbuild loader errors).
@@ -22,6 +24,9 @@ function apiDevStubPlugin(): Plugin {
 }
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+  },
   plugins: [
     react(),
     apiDevStubPlugin(),

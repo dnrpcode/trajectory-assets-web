@@ -109,6 +109,13 @@ export function Navbar({ mobileOpen = false, onMobileClose }: NavbarProps) {
         ))}
       </nav>
 
+      {/* Version */}
+      <div className="px-5 pb-1" style={{ flexShrink: 0 }}>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
+          v{__APP_VERSION__}
+        </span>
+      </div>
+
       {/* User info */}
       {user && (
         <div className="px-3 py-3 border-t border-[var(--border-subtle)]" style={{ flexShrink: 0 }}>
