@@ -1,5 +1,40 @@
 # Trajectory — Project Intelligence
 
+## ⚠️ Development Checklist — WAJIB di setiap task
+
+Sebelum menganggap task selesai (fitur baru, perubahan UI, atau perubahan behavior), pastikan **keempat poin ini** terpenuhi. Ini bukan saran, ini syarat commit.
+
+1. **Multi-language (i18n)**
+   - Semua teks yang user-facing HARUS pakai `t('namespace.key')` dari `useTranslation()` — jangan hardcode string Indonesia atau Inggris langsung di JSX.
+   - Tambahkan key baru ke **kedua** file: `src/i18n/locales/id.json` dan `src/i18n/locales/en.json`. Jangan pernah menambah ke salah satu saja.
+   - Ikuti namespace yang sudah ada (`nav.*`, `common.*`, `dashboard.*`, `portfolio.*`, dst). Kalau perlu namespace baru, buat sesuai nama module.
+   - Pengecualian yang boleh hardcode: konten demo/contoh di simulasi Halaman Panduan (misal nama saham dummy "BBCA", angka contoh) — itu memang disengaja berbahasa Indonesia sebagai ilustrasi, bukan UI chrome.
+
+2. **Theme dark/light**
+   - Jangan pernah hardcode warna hex/rgb langsung di style. Selalu pakai CSS custom properties dari `src/index.css` (`--bg-surface`, `--text-primary`, `--border-subtle`, `--blue-400`, `--gain-400`, dll — daftar lengkap ada di bagian "CSS / Design System" di bawah).
+   - Kalau butuh token baru, tambahkan ke `:root` DAN ke `[data-theme="light"]` di `src/index.css` supaya kedua tema tetap konsisten.
+   - Untuk komponen native (date input, dll), pakai `colorScheme` dari `useThemeContext()` — jangan hardcode `'dark'`.
+   - Sebelum submit: bayangkan atau cek toggle ke light mode — teks harus tetap terbaca, bukan cuma "terlihat oke di dark".
+
+3. **Clean Architecture & Modular**
+   - Struktur wajib per module: `domain/{entities,repositories,use-cases}` → `data/` (implementasi Firebase/API) → `presentation/{pages,components,hooks}`.
+   - Business logic masuk ke `domain/use-cases/`, BUKAN ditulis inline di komponen React atau di hook.
+   - Import antar module HANYA lewat `@/modules/[name]` (barrel export via `index.ts`) — jangan cross-import file domain/data secara langsung dari module lain.
+   - Singleton/service baru didaftarkan di `src/infrastructure/di/container.ts`, jangan `new` langsung di komponen.
+   - Kalau menambah entity/tipe baru, taruh di `domain/entities/`, bukan didefinisikan ulang inline di beberapa file.
+
+4. **Sinkronisasi Halaman Panduan (`/help`)**
+   - Setiap kali menambah fitur baru, mengubah alur kerja fitur yang ada, atau mengubah UI signifikan (form baru, tombol baru, flow baru): **update juga `src/modules/help/presentation/pages/HelpPage.tsx`**.
+   - Yang perlu disinkronkan:
+     - `QUICK_START` — kalau ada langkah onboarding baru
+     - `DEMOS` — kalau ada fitur besar baru yang butuh simulasi visual, atau simulasi lama sudah tidak cocok dengan UI aktual
+     - `ENTRY_TYPES` — kalau ada tipe entri transaksi baru
+     - `PRO_TIPS` / `GLOSSARY` — kalau ada istilah atau tips baru yang relevan
+     - `FAQS` — kalau perilaku fitur berubah sehingga jawaban FAQ lama jadi salah/usang
+   - Prinsipnya: Halaman Panduan harus selalu jadi cerminan akurat dari aplikasi yang live. Panduan yang menyimpang dari fitur asli lebih buruk daripada tidak ada panduan sama sekali.
+
+---
+
 ## Overview
 Personal portfolio intelligence platform untuk investor retail Indonesia.
 Stack: React 18 + Vite + TypeScript (strict) + Tailwind CSS v3 + Firebase Auth + Firestore.
