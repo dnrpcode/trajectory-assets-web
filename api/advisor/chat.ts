@@ -30,12 +30,10 @@ function json(data: unknown, status = 200, origin = ''): Response {
 }
 
 // ── Firebase ID token verification ────────────────────────────────────────────
-// Verifies via Firebase REST API (accounts:lookup). The Web API key is the same
-// value as VITE_FIREBASE_API_KEY — already public in the client bundle — so
-// using it here adds authentication without leaking anything new.
-// Set FIREBASE_WEB_API_KEY in Vercel dashboard (same value as VITE_FIREBASE_API_KEY).
+// Verifies via Firebase REST API (accounts:lookup). Uses VITE_FIREBASE_API_KEY —
+// already public in the client bundle — so no additional secret is needed.
 async function verifyFirebaseToken(idToken: string): Promise<string | null> {
-  const webApiKey = (process.env.FIREBASE_WEB_API_KEY ?? '').trim();
+  const webApiKey = (process.env.VITE_FIREBASE_API_KEY ?? '').trim();
   if (!webApiKey) return null; // env var not configured → fail closed
 
   try {
