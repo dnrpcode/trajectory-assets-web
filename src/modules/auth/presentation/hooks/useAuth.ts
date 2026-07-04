@@ -13,6 +13,8 @@ export function useAuth() {
   const { user, authUser, loading, setUser, setAuthUser, setLoading } = useAuthStore();
 
   useEffect(() => {
+    let settled = false;
+
     // Selesaikan pending Google signInWithRedirect() di sini — di root — bukan di
     // LoginPage. AppRoutes hanya render <FullPageSpinner/> selama loading, jadi
     // LoginPage tidak pernah ter-mount untuk memanggil getRedirectResult(); tanpa
@@ -23,11 +25,23 @@ export function useAuth() {
       loginWithGoogle.completeRedirect().catch(() => { /* ditangani oleh onAuthStateChanged */ });
     }
 
+    // Fail-safe: apa pun yang terjadi, jangan biarkan app terjebak di spinner
+    // selamanya. Kalau onAuthStateChanged tak kunjung fire (mis. SDK auth hang
+    // di iOS Safari), lepas loading setelah 8 detik supaya user tidak stuck.
+    const failsafe = setTimeout(() => {
+      if (!settled) { settled = true; setLoading(false); }
+    }, 8000);
+
     const unsubscribe = authService.onAuthStateChanged(async (au) => {
       setAuthUser(au);
       if (au) {
         try {
-          const domainUser = await getUserById.execute(au.uid);
+          // Race getUserById dengan timeout — kalau baca Firestore menggantung,
+          // jangan sampai loading ikut menggantung selamanya.
+          const domainUser = await Promise.race([
+            getUserById.execute(au.uid),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
+          ]);
           setUser(domainUser);
         } catch {
           setUser(null);
@@ -35,9 +49,12 @@ export function useAuth() {
       } else {
         setUser(null);
       }
+      settled = true;
+      clearTimeout(failsafe);
       setLoading(false);
     });
-    return unsubscribe;
+
+    return () => { clearTimeout(failsafe); unsubscribe(); };
   }, [setUser, setAuthUser, setLoading]);
 
   const doLogout = async () => {
