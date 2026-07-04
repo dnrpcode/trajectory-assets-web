@@ -14,19 +14,19 @@ export function calculateCAGR(startValue: number, endValue: number, months: numb
 
 // Benchmark return tahunan per kelas aset (pasar Indonesia, rata-rata historis)
 export const EXPECTED_RETURNS: Record<AssetCategory, number> = {
-  saham: 12.0,
-  reksa_dana: 9.0,
+  saham: 12,
+  reksa_dana: 9,
   obligasi_sbn: 6.5,
-  emas: 8.0,
-  kripto: 20.0,
+  emas: 8,
+  kripto: 20,
   cash: 4.5,
-  lainnya: 7.0,
+  lainnya: 7,
 };
 
 export const RISK_FALLBACK: Record<RiskProfile, number> = {
   conservative: 6.5,
-  moderate: 9.0,
-  aggressive: 13.0,
+  moderate: 9,
+  aggressive: 13,
 };
 
 export type CAGRSource =
