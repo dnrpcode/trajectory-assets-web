@@ -27,8 +27,23 @@ function toResult(credential: UserCredential): { user: AuthUser; isNew: boolean 
 // Redirect-based sign-in is the reliable path there.
 function isMobileOrInApp(): boolean {
   const ua = navigator.userAgent || '';
-  return /iPhone|iPad|iPod|Android/i.test(ua);
+  if (/iPhone|iPad|iPod|Android/i.test(ua)) return true;
+  // iPadOS 13+ Safari reports its UA as plain "Macintosh" (desktop masquerade) —
+  // only real touch-capable Macs are iPads, so this catches those too.
+  if (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return true;
+  return false;
 }
+
+// Popup can still fail even on devices we didn't flag as mobile (e.g. "Request
+// Desktop Site" on iPhone, aggressive tracker/popup blockers, some Android
+// WebViews). Any of these error codes means the popup itself broke, not that
+// the user deliberately backed out — safe to silently retry via redirect.
+const POPUP_FALLBACK_CODES = new Set([
+  'auth/popup-closed-by-user',
+  'auth/popup-blocked',
+  'auth/cancelled-popup-request',
+  'auth/operation-not-supported-in-this-environment',
+]);
 
 export class FirebaseAuthService implements IAuthService {
   async signInWithEmail(email: string, password: string): Promise<AuthUser> {
@@ -41,8 +56,17 @@ export class FirebaseAuthService implements IAuthService {
       await signInWithRedirect(auth, googleProvider);
       return null; // browser navigates away; result is read back via getGoogleRedirectResult()
     }
-    const credential = await signInWithPopup(auth, googleProvider);
-    return toResult(credential);
+    try {
+      const credential = await signInWithPopup(auth, googleProvider);
+      return toResult(credential);
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      if (code && POPUP_FALLBACK_CODES.has(code)) {
+        await signInWithRedirect(auth, googleProvider);
+        return null;
+      }
+      throw err;
+    }
   }
 
   async getGoogleRedirectResult(): Promise<{ user: AuthUser; isNew: boolean } | null> {
