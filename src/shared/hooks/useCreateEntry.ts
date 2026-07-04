@@ -28,6 +28,7 @@ export function useCreateEntry() {
       queryClient.invalidateQueries({ queryKey: ['activeAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['portfolioSeries', user?.id] });
     },
     onError: () => {
       toast('Gagal menyimpan transaksi. Periksa koneksi dan coba lagi.', 'error');

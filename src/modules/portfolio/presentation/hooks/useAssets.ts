@@ -62,6 +62,7 @@ export function useDeleteAsset() {
       queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioHistory', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['portfolioSeries', user?.id] });
     },
     onError: () => {
       toast('Gagal menghapus aset. Periksa koneksi dan coba lagi.', 'error');

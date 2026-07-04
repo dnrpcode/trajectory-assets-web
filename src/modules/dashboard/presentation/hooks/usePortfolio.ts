@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
-import { getPortfolioSummary, getPortfolioHistory, backfillPortfolioHistory, projectionRepository } from '@/infrastructure/di/container';
+import { getPortfolioSummary, getPortfolioHistory, backfillPortfolioHistory, projectionRepository, entryRepository } from '@/infrastructure/di/container';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
+import { buildPortfolioSeries, type PortfolioSeriesPoint } from '@/shared/utils/portfolioSeries';
 
 interface MarketPoint { month: string; close: number }
 
 /** Fetch monthly closes for a symbol (5-year range). Returns {} on error so backfill degrades gracefully. */
 async function fetchMonthlyPrices(ticker: string): Promise<Record<string, number>> {
   try {
-    const symbol = ticker.includes('.') ? ticker : `${ticker}.JK`;
+    // Index symbols (^JKSE) pass through as-is; bare IDX tickers get .JK suffix
+    const symbol = ticker.startsWith('^') || ticker.includes('.') ? ticker : `${ticker}.JK`;
     const url = `/api/market/chart?symbol=${encodeURIComponent(symbol)}&range=5y&interval=1mo`;
     const res = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!res.ok) return {};
@@ -69,6 +71,43 @@ export function usePortfolioSummary() {
     queryFn: () => getPortfolioSummary.execute(user!.id),
     enabled: !!user,
     staleTime: 30_000,
+    gcTime: 10 * 60_000,
+  });
+}
+
+/**
+ * Client-side monthly series for the growth & benchmark charts.
+ * Replays the entry ledger directly — no Firestore history cache, so the
+ * charts always agree with the stat cards and react instantly to mutations.
+ */
+export function usePortfolioSeries() {
+  const user = useAuthStore((s) => s.user);
+  return useQuery<PortfolioSeriesPoint[]>({
+    queryKey: ['portfolioSeries', user?.id],
+    queryFn: async () => {
+      const [entries, assets] = await Promise.all([
+        entryRepository.getByUserId(user!.id),
+        projectionRepository.getByUserId(user!.id),
+      ]);
+
+      // Monthly closes for saham tickers + IHSG, fetched in parallel (failures → {})
+      const tickers = [...new Set(
+        assets
+          .filter((a) => a.category === 'saham' && a.ticker)
+          .map((a) => a.ticker!.replace(/\.JK$/i, '').toUpperCase()),
+      )];
+      const marketPrices: Record<string, Record<string, number>> = {};
+      const [ihsgCloses] = await Promise.all([
+        fetchMonthlyPrices('^JKSE'),
+        ...tickers.map(async (tk) => {
+          marketPrices[tk] = await fetchMonthlyPrices(tk);
+        }),
+      ]);
+
+      return buildPortfolioSeries({ entries, assets, marketPrices, ihsgCloses });
+    },
+    enabled: !!user,
+    staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
   });
 }

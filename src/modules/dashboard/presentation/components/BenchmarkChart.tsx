@@ -1,77 +1,52 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import type { PortfolioHistoryPoint } from '@/modules/dashboard/domain/entities/Portfolio';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import type { PortfolioSeriesPoint } from '@/shared/utils/portfolioSeries';
 import { formatMonth } from '@/shared/utils/formatDate';
-
-interface MarketPoint { month: string; close: number }
+import { formatCurrencyCompact } from '@/shared/utils/formatCurrency';
 
 interface Props {
-  portfolioHistory: PortfolioHistoryPoint[];
-  marketHistory: MarketPoint[];
+  series: PortfolioSeriesPoint[];
   marketName?: string;
   isLoading?: boolean;
-  isError?: boolean;
 }
 
-interface ChartRow {
-  month: string;
-  portfolio: number | null;
-  market: number | null;
+interface TooltipPayloadItem { value: number; dataKey: string }
+
+function BenchmarkTooltip({ active, payload, label, marketName }: {
+  active?: boolean; payload?: TooltipPayloadItem[]; label?: string; marketName: string;
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  const value = payload.find((p) => p.dataKey === 'value')?.value;
+  const ihsg = payload.find((p) => p.dataKey === 'ihsg')?.value;
+  const diffPct = value != null && ihsg != null && ihsg > 0 ? ((value - ihsg) / ihsg) * 100 : null;
+
+  return (
+    <div style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '10px 12px', fontSize: 12 }}>
+      <p style={{ color: 'var(--text-primary)', fontWeight: 600, margin: '0 0 6px' }}>{formatMonth(String(label))}</p>
+      {value != null && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 18 }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Portofolio</span>
+          <span style={{ color: 'var(--blue-400)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{formatCurrencyCompact(value)}</span>
+        </div>
+      )}
+      {ihsg != null && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 18, marginTop: 3 }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Jika beli {marketName}</span>
+          <span style={{ color: 'var(--warn-400)', fontFamily: 'var(--font-mono)' }}>{formatCurrencyCompact(ihsg)}</span>
+        </div>
+      )}
+      {diffPct != null && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 18, marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--border-dim)' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Selisih</span>
+          <span style={{ color: diffPct >= 0 ? 'var(--gain-400)' : 'var(--loss-400)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+            {diffPct >= 0 ? '+' : ''}{diffPct.toFixed(1)}%
+          </span>
+        </div>
+      )}
+    </div>
+  );
 }
 
-function buildChartData(
-  portfolioHistory: PortfolioHistoryPoint[],
-  marketHistory: MarketPoint[],
-): ChartRow[] {
-  if (portfolioHistory.length === 0) return [];
-
-  const marketByMonth = new Map(marketHistory.map((d) => [d.month, d.close]));
-
-  // Skip leading months where the portfolio value is a tiny fraction of the peak
-  // (e.g. a small test entry months before the main investments began).
-  // Using 5% of peak as threshold — avoids +100,000% distortion on the y-axis.
-  const peak = Math.max(...portfolioHistory.map((p) => p.totalValueIDR));
-  const minMeaningful = peak * 0.05;
-  const meaningful = portfolioHistory.filter((p) => p.totalValueIDR >= minMeaningful);
-  if (meaningful.length === 0) return [];
-
-  // Find the first meaningful month that also has market data
-  let basePortfolio = 0;
-  let baseMarket = 0;
-  let baseFound = false;
-
-  for (const ph of meaningful) {
-    const mClose = marketByMonth.get(ph.month);
-    if (mClose && ph.totalValueIDR > 0) {
-      basePortfolio = ph.totalValueIDR;
-      baseMarket = mClose;
-      baseFound = true;
-      break;
-    }
-  }
-
-  if (!baseFound) return [];
-
-  // Only chart from the first meaningful month onward
-  const startMonth = meaningful[0].month;
-  portfolioHistory = portfolioHistory.filter((p) => p.month >= startMonth);
-
-  return portfolioHistory
-    .map((ph) => {
-      const mClose = marketByMonth.get(ph.month);
-      return {
-        month: ph.month,
-        portfolio: basePortfolio > 0 ? ((ph.totalValueIDR / basePortfolio) - 1) * 100 : null,
-        market: mClose && baseMarket > 0 ? ((mClose / baseMarket) - 1) * 100 : null,
-      };
-    })
-    .filter((d) => d.portfolio !== null);
-}
-
-function formatPct(v: number) {
-  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
-}
-
-export function BenchmarkChart({ portfolioHistory, marketHistory, marketName = 'IHSG', isLoading, isError }: Props) {
+export function BenchmarkChart({ series, marketName = 'IHSG', isLoading }: Props) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48 text-sm" style={{ color: 'var(--text-muted)' }}>
@@ -80,41 +55,38 @@ export function BenchmarkChart({ portfolioHistory, marketHistory, marketName = '
     );
   }
 
-  if (isError) {
-    return (
-      <div className="flex items-center justify-center h-48 text-sm" style={{ color: 'var(--text-muted)' }}>
-        Gagal memuat data {marketName}
-      </div>
-    );
-  }
-
-  const chartData = buildChartData(portfolioHistory, marketHistory);
+  const chartData = series.filter((p) => p.ihsg != null);
 
   if (chartData.length < 2) {
     return (
       <div className="flex items-center justify-center h-48 text-sm" style={{ color: 'var(--text-muted)' }}>
-        Belum ada data historis yang cukup
+        Belum ada data {marketName} yang cukup untuk perbandingan
       </div>
     );
   }
 
+  const last = chartData[chartData.length - 1];
+  const outperformPct = last.ihsg && last.ihsg > 0 ? ((last.value - last.ihsg) / last.ihsg) * 100 : 0;
+  const outColor = outperformPct >= 0 ? 'var(--gain-400)' : 'var(--loss-400)';
+
   return (
     <div>
-      <div className="flex items-center gap-4 px-2 mb-3">
+      <div className="flex items-center gap-4 px-4 mb-3 flex-wrap">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-0.5 rounded" style={{ background: 'var(--blue-400)' }} />
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Portofolio</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-0.5 rounded" style={{ background: 'var(--warn-400)' }} />
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{marketName}</span>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Jika dana yang sama dibelikan {marketName}</span>
         </div>
-        <span className="text-xs ml-auto" style={{ color: 'var(--text-muted)' }}>Return relatif dari bulan pertama (basis = 0%)</span>
+        <span className="text-xs ml-auto font-mono font-semibold" style={{ color: outColor }}>
+          {outperformPct >= 0 ? '+' : ''}{outperformPct.toFixed(1)}% vs {marketName}
+        </span>
       </div>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 10 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-dim)" />
-          <ReferenceLine y={0} stroke="var(--border-subtle)" strokeDasharray="4 4" />
           <XAxis
             dataKey="month"
             tickFormatter={(v: string) => { const [, m] = v.split('-'); return m; }}
@@ -122,44 +94,14 @@ export function BenchmarkChart({ portfolioHistory, marketHistory, marketName = '
             tickLine={false}
           />
           <YAxis
-            tickFormatter={(v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(0)}%`}
+            tickFormatter={(v: number) => formatCurrencyCompact(v)}
             tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
             tickLine={false}
+            domain={['auto', 'auto']}
           />
-          <Tooltip
-            formatter={(value, name) => [
-              formatPct(Number(value)),
-              name === 'portfolio' ? 'Portofolio' : marketName,
-            ]}
-            labelFormatter={(label) => formatMonth(String(label))}
-            contentStyle={{
-              background: 'var(--bg-raised)',
-              border: '1px solid var(--border-default)',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: 'var(--text-primary)',
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="portfolio"
-            name="portfolio"
-            stroke="var(--blue-400)"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4, fill: 'var(--blue-400)' }}
-            connectNulls
-          />
-          <Line
-            type="monotone"
-            dataKey="market"
-            name="market"
-            stroke="var(--warn-400)"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4, fill: 'var(--warn-400)' }}
-            connectNulls
-          />
+          <Tooltip content={<BenchmarkTooltip marketName={marketName} />} />
+          <Line type="monotone" dataKey="value" stroke="var(--blue-400)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: 'var(--blue-400)' }} />
+          <Line type="monotone" dataKey="ihsg" stroke="var(--warn-400)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: 'var(--warn-400)' }} connectNulls />
         </LineChart>
       </ResponsiveContainer>
     </div>

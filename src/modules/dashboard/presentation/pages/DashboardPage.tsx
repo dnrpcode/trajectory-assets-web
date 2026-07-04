@@ -15,7 +15,7 @@ import { PlatformAllocationChart } from '../components/PlatformAllocationChart';
 import { PnLByCategoryChart } from '../components/PnLByCategoryChart';
 import { StaleAssetBanner } from '@/shared/ui/StaleAssetBanner';
 import { EntryForm } from '@/shared/ui/EntryForm';
-import { usePortfolioSummary, usePortfolioHistory, useMarketHistory } from '../hooks/usePortfolio';
+import { usePortfolioSummary, usePortfolioSeries } from '../hooks/usePortfolio';
 import { useActiveAssets } from '../hooks/useDashboardAssets';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { formatCurrencyCompact, formatPercent } from '@/shared/utils/formatCurrency';
@@ -28,11 +28,16 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const { data: summary, isLoading: summaryLoading, isError: summaryError } = usePortfolioSummary();
-  const { data: history = [] } = usePortfolioHistory();
+  const { data: series = [], isLoading: seriesLoading } = usePortfolioSeries();
   const { data: assets = [] } = useActiveAssets();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [chartTab, setChartTab] = useState<'growth' | 'benchmark'>('growth');
-  const { data: ihsgHistory = [], isLoading: ihsgLoading, isError: ihsgError } = useMarketHistory('^JKSE');
+
+  // Series in PortfolioHistoryPoint shape for utils that expect it (CAGR, MoM)
+  const history = useMemo(
+    () => series.map((p) => ({ month: p.month, totalValueIDR: p.value, totalCostBasisIDR: p.invested })),
+    [series],
+  );
 
   const monthOverMonth = history.length >= 2
     ? history[history.length - 1].totalValueIDR - history[history.length - 2].totalValueIDR
@@ -151,15 +156,9 @@ export function DashboardPage() {
               </div>
               <div className="px-2 py-6">
                 {chartTab === 'growth' ? (
-                  <WealthGrowthChart data={history} />
+                  <WealthGrowthChart series={series} isLoading={seriesLoading} />
                 ) : (
-                  <BenchmarkChart
-                    portfolioHistory={history}
-                    marketHistory={ihsgHistory}
-                    marketName="IHSG"
-                    isLoading={ihsgLoading}
-                    isError={ihsgError}
-                  />
+                  <BenchmarkChart series={series} marketName="IHSG" isLoading={seriesLoading} />
                 )}
               </div>
             </Card>

@@ -140,6 +140,7 @@ export function useSyncStockPrice(asset: Asset) {
       queryClient.invalidateQueries({ queryKey: ['allAssets', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['entries', user?.id, asset.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['portfolioSeries', user?.id] });
     },
   });
 }
