@@ -6,7 +6,7 @@ const VALID_INTERVALS = new Set(['1m','5m','15m','30m','1h','1d','1wk','1mo']);
 const VALID_RANGES    = new Set(['1d','5d','1mo','3mo','6mo','1y','2y','5y','10y','ytd','max']);
 
 function corsHeaders(origin: string) {
-  const allowed = origin === ALLOWED_ORIGIN || origin.endsWith('.vercel.app') ? origin : ALLOWED_ORIGIN;
+  const allowed = origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN;
   return { 'Access-Control-Allow-Origin': allowed, 'Vary': 'Origin' };
 }
 

@@ -3,7 +3,7 @@ export const config = { runtime: 'edge' };
 const ALLOWED_ORIGIN = 'https://trajectory-assets.vercel.app';
 
 function corsHeaders(origin: string) {
-  const allowed = origin === ALLOWED_ORIGIN || origin.endsWith('.vercel.app') ? origin : ALLOWED_ORIGIN;
+  const allowed = origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN;
   return { 'Access-Control-Allow-Origin': allowed, 'Vary': 'Origin' };
 }
 
