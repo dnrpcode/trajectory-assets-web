@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
@@ -49,10 +49,24 @@ export function LoginPage() {
     }
   };
 
+  // Completes a signInWithRedirect() that just navigated back (mobile/in-app browsers).
+  // No-op if the user landed here normally — completeRedirect() resolves to null.
+  useEffect(() => {
+    loginWithGoogle.completeRedirect()
+      .then(async (authUser) => {
+        if (!authUser) return;
+        const user = await getUserById.execute(authUser.uid);
+        navigate(user?.onboardingComplete ? '/dashboard' : '/onboarding');
+      })
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : t('auth.loginFailed')));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleGoogle = async () => {
     try {
       setError('');
       const authUser = await loginWithGoogle.execute();
+      if (!authUser) return; // redirect flow — page is navigating to Google now
       const user = await getUserById.execute(authUser.uid);
       navigate(user?.onboardingComplete ? '/dashboard' : '/onboarding');
     } catch (e: unknown) {

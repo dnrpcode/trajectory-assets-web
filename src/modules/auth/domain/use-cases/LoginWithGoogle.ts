@@ -8,9 +8,7 @@ export class LoginWithGoogle {
     private userRepo: IUserRepository,
   ) {}
 
-  async execute(): Promise<AuthUser> {
-    const { user, isNew } = await this.authService.signInWithGoogle();
-
+  private async createIfNew(user: AuthUser, isNew: boolean): Promise<AuthUser> {
     if (isNew) {
       const now = new Date();
       await this.userRepo.create({
@@ -27,7 +25,20 @@ export class LoginWithGoogle {
         updatedAt: now,
       });
     }
-
     return user;
+  }
+
+  /** Returns null on mobile — signInWithRedirect navigates away before this resolves. */
+  async execute(): Promise<AuthUser | null> {
+    const result = await this.authService.signInWithGoogle();
+    if (!result) return null;
+    return this.createIfNew(result.user, result.isNew);
+  }
+
+  /** Call on app load to complete a signInWithRedirect() that navigated back. Null if none was pending. */
+  async completeRedirect(): Promise<AuthUser | null> {
+    const result = await this.authService.getGoogleRedirectResult();
+    if (!result) return null;
+    return this.createIfNew(result.user, result.isNew);
   }
 }
