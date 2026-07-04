@@ -65,16 +65,11 @@ export class BackfillPortfolioHistory {
     const currentMonth = getCurrentMonth();
     const allMonths = monthsBetween(firstMonth, currentMonth);
 
-    // Fetch existing history
-    const existing = await this.portfolioRepo.getHistory(userId);
-    const existingMonths = new Set(existing.map((h) => h.month));
-    // If we have market prices, we should recompute all months to use them
-    const hasMarketPrices = Object.keys(marketPrices).length > 0;
-
     // For each month, replay entries up to end of that month and compute state per asset
+    // Always recompute all months — skipping stale snapshots causes the chart to show
+    // incorrect history after asset mutations (delete/re-add). The replay is CPU-cheap
+    // and Firestore writes are capped by ~60 months max, safe within free-tier limits.
     for (const month of allMonths) {
-      // Skip past months unless we now have market data that can improve them
-      if (existingMonths.has(month) && month !== currentMonth && !hasMarketPrices) continue;
 
       const endOfMonth = new Date(`${month}-01`);
       endOfMonth.setMonth(endOfMonth.getMonth() + 1);
@@ -134,10 +129,11 @@ export class BackfillPortfolioHistory {
 
         if (!closed) {
           let priceIDR = latestPrice;
-          // For saham: prefer Yahoo Finance month-end price over stale purchase price
-          if (priceIDR <= 0 || true) {
-            const ticker = assetTickerById[assetId];
-            const mktPrice = ticker ? (marketPrices[ticker]?.[month] ?? marketPrices[ticker.toUpperCase()]?.[month]) : undefined;
+          // For saham with ticker: always prefer Yahoo Finance monthly close (more accurate
+          // than manual price_update entries for historical months)
+          const ticker = assetTickerById[assetId];
+          if (ticker) {
+            const mktPrice = marketPrices[ticker]?.[month] ?? marketPrices[ticker.toUpperCase()]?.[month];
             if (mktPrice != null && mktPrice > 0) priceIDR = mktPrice;
           }
           // Final fallback: current price stored in Asset projection
