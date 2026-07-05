@@ -373,6 +373,25 @@
     "moderate": "Moderate",
     "aggressive": "Aggressive"
   },
+  "income": {
+    "rotation": {
+      "title": "Dividend Rotation Roadmap",
+      "subtitle": "Estimated order of stock rotation based on historical dividend & price patterns in your watchlist",
+      "disclaimer": "Estimated dates and returns are based on historical payment and price patterns (not exact cum-dates, since that data isn't available). Not financial advice — always verify the official schedule before trading.",
+      "emptyState": "Add at least 2 stocks to your watchlist to see the rotation roadmap.",
+      "moveNumber": "Step {{n}}",
+      "period": "Estimated period",
+      "expectedYield": "Estimated dividend yield",
+      "expectedPriceReturn": "Estimated price return",
+      "expectedTotalReturn": "Estimated total return",
+      "totalRoadmapReturn": "Total estimated return for this roadmap",
+      "confidence": "Pattern confidence",
+      "confidenceHigh": "High",
+      "confidenceMedium": "Medium",
+      "confidenceLow": "Low",
+      "occurrences": "Appeared {{n}} of last {{total}} years"
+    }
+  },
   "help": {
     "title": "User Guide",
     "subtitle": "Everything you need to know to get the most out of Trajectory.",

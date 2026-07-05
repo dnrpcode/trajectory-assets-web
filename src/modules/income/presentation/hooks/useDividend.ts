@@ -1,12 +1,15 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getDividendInfo,
   getDividendWatchlist,
   addToDividendWatchlist,
   removeFromDividendWatchlist,
+  buildDividendRotationRoadmap,
 } from '@/infrastructure/di/container';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import type { DividendInfo } from '../../domain/entities/Dividend';
+import type { RotationRoadmap } from '../../domain/entities/DividendRotation';
 import { DividendError } from '../../data/YahooDividendRepository';
 
 function divRetry(failureCount: number, error: unknown): boolean {
@@ -52,6 +55,13 @@ export function useWatchlistDividends(tickers: string[]) {
     gcTime: 10 * 60_000,
     retry: 0,
   });
+}
+
+export function useDividendRotationRoadmap(infos: DividendInfo[]): RotationRoadmap | null {
+  return useMemo(() => {
+    if (infos.length < 2) return null;
+    return buildDividendRotationRoadmap.execute(infos);
+  }, [infos]);
 }
 
 export function useAddToDividendWatchlist() {

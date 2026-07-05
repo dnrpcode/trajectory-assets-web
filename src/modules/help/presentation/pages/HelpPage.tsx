@@ -1061,6 +1061,7 @@ const PRO_TIPS = [
   { icon: <Zap size={14} />, text: 'Untuk saham IDX, tombol Sync di tab Pasar langsung membuat entri Update Harga dengan harga terkini — tidak perlu input manual.' },
   { icon: <ShieldCheck size={14} />, text: 'Kas (tabungan, deposito) tidak perlu update harga bulanan — sistem tidak menandainya sebagai stale.' },
   { icon: <MessageSquare size={14} />, text: 'Aktifkan "Konteks Portofolio untuk AI" di Pengaturan agar Robo Advisor bisa menganalisis data aktualmu.' },
+  { icon: <RefreshCw size={14} />, text: 'Tambahkan minimal 2 saham ke watchlist Dividen & Kupon untuk melihat Roadmap Rotasi Dividen — urutan pindah saham berdasarkan pola dividen & harga historis.' },
 ];
 
 // ── Glossary ──────────────────────────────────────────────────────────────────
@@ -1079,6 +1080,7 @@ const GLOSSARY = [
   { term: 'Stale', def: 'Aset belum diupdate harganya di bulan berjalan — perlu Update Harga / Sync.' },
   { term: 'Ledger', def: 'Catatan transaksi immutable — entri tidak pernah dihapus, hanya dikoreksi.' },
   { term: 'Paper Trading', def: 'Simulasi trading kripto dengan saldo virtual, tanpa uang nyata.' },
+  { term: 'Dividend Capture', def: 'Strategi memegang saham hanya di sekitar periode pembagian dividen untuk mengejar yield, lalu rotasi ke saham lain.' },
 ];
 
 // ── FAQ ───────────────────────────────────────────────────────────────────────
@@ -1116,6 +1118,14 @@ const FAQS = [
       { q: 'Apa yang bisa dilakukan Robo Advisor?', a: 'Robo Advisor adalah AI yang memiliki akses ke data portofoliomu secara real-time: semua aset, nilai, alokasi, profil risiko, unrealized gain/loss, dll. Kamu bisa tanya analisis, rekomendasi rebalancing, saran aset, proyeksi, atau pertanyaan keuangan umum.' },
       { q: 'Apakah AI bisa mengubah data portofolio saya?', a: 'Tidak langsung. AI hanya bisa merekomendasikan perubahan profil risiko atau target alokasi — jika disetujui, Robo Advisor akan memperbarui pengaturanmu. AI tidak bisa membuat atau menghapus entri transaksi.' },
       { q: 'Bagaimana cara mengaktifkan konteks portofolio untuk AI?', a: 'Buka Pengaturan → aktifkan "Sertakan data portofolio untuk AI". Jika diaktifkan, setiap percakapan akan menyertakan snapshot data asetmu sebagai konteks. Jika dinonaktifkan, AI hanya menjawab pertanyaan umum tanpa data personal.' },
+    ],
+  },
+  {
+    section: 'Dividen & Kalender', icon: <CalendarDays size={15} strokeWidth={1.75} />, color: 'var(--gain-400)',
+    items: [
+      { q: 'Apa itu Roadmap Rotasi Dividen?', a: 'Fitur di halaman Dividen & Kupon yang menyusun urutan estimasi "pindah dari saham A ke B" sepanjang tahun, berdasarkan pola historis bulan pembayaran dividen dan pergerakan harga di sekitar periode itu. Muncul otomatis setelah kamu punya minimal 2 saham di watchlist.' },
+      { q: 'Apakah tanggal di Roadmap Rotasi Dividen itu pasti?', a: 'Tidak. Yahoo Finance (sumber data kami) hanya menyediakan tanggal pembayaran historis, bukan cum-date/ex-date resmi. Jadi rentang bulan di roadmap adalah estimasi dari pola tahun-tahun sebelumnya — selalu cek jadwal resmi emiten (IDX/RUPS) sebelum bertransaksi.' },
+      { q: 'Bagaimana skor keyakinan (confidence) dihitung?', a: 'Berdasarkan seberapa konsisten saham tersebut membayar dividen di bulan yang sama selama 5 tahun terakhir. Tinggi = pola sangat konsisten, Rendah = pola tidak stabil sehingga estimasi tanggal & return kurang bisa diandalkan.' },
     ],
   },
   {

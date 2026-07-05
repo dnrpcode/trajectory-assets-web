@@ -373,6 +373,25 @@
     "moderate": "Moderat",
     "aggressive": "Agresif"
   },
+  "income": {
+    "rotation": {
+      "title": "Roadmap Rotasi Dividen",
+      "subtitle": "Estimasi urutan pindah saham berdasarkan pola dividen & harga historis di watchlist kamu",
+      "disclaimer": "Perkiraan tanggal & imbal hasil berdasarkan pola pembayaran dan pergerakan harga historis (bukan tanggal cum date pasti, karena data tersebut tidak tersedia). Bukan saran keuangan — selalu verifikasi jadwal resmi emiten sebelum bertransaksi.",
+      "emptyState": "Tambahkan minimal 2 saham ke watchlist untuk melihat roadmap rotasi.",
+      "moveNumber": "Langkah {{n}}",
+      "period": "Estimasi periode",
+      "expectedYield": "Estimasi yield dividen",
+      "expectedPriceReturn": "Estimasi return harga",
+      "expectedTotalReturn": "Estimasi total return",
+      "totalRoadmapReturn": "Total estimasi return roadmap ini",
+      "confidence": "Keyakinan pola",
+      "confidenceHigh": "Tinggi",
+      "confidenceMedium": "Sedang",
+      "confidenceLow": "Rendah",
+      "occurrences": "Muncul {{n}} dari {{total}} tahun terakhir"
+    }
+  },
   "help": {
     "title": "Panduan Penggunaan",
     "subtitle": "Semua yang perlu kamu tahu untuk menggunakan Trajectory secara optimal.",

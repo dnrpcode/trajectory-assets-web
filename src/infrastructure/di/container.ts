@@ -44,6 +44,7 @@ import { FirebaseDividendWatchlistRepository } from '@/modules/income/data/Fireb
 import { GetDividendInfo } from '@/modules/income/domain/use-cases/GetDividendInfo';
 import { SearchTicker } from '@/modules/income/domain/use-cases/SearchTicker';
 import { GetDividendWatchlist, AddToDividendWatchlist, RemoveFromDividendWatchlist } from '@/modules/income/domain/use-cases/ManageDividendWatchlist';
+import { BuildDividendRotationRoadmap } from '@/modules/income/domain/use-cases/BuildDividendRotationRoadmap';
 
 
 // ── Infrastructure ────────────────────────────────────────────────────────────
@@ -97,6 +98,7 @@ export const searchDividendTicker         = new SearchTicker(yahooDividendReposi
 export const getDividendWatchlist         = new GetDividendWatchlist(dividendWatchlistRepository);
 export const addToDividendWatchlist       = new AddToDividendWatchlist(dividendWatchlistRepository);
 export const removeFromDividendWatchlist  = new RemoveFromDividendWatchlist(dividendWatchlistRepository);
+export const buildDividendRotationRoadmap = new BuildDividendRotationRoadmap();
 
 // ── Trading ───────────────────────────────────────────────────────────────────
 export const watchlistRepository   = new FirebaseWatchlistRepository();

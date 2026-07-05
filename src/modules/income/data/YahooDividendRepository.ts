@@ -1,5 +1,5 @@
 import type { IDividendRepository } from '../domain/repositories/IDividendRepository';
-import type { DividendInfo, DividendEvent, TickerSuggestion } from '../domain/entities/Dividend';
+import type { DividendInfo, DividendEvent, PricePoint, TickerSuggestion } from '../domain/entities/Dividend';
 
 export class DividendError extends Error {
   constructor(
@@ -29,6 +29,8 @@ const SEARCH = '/api/dividend/search';
 type RawDividend = { amount: number; date: number };
 type ChartResult = {
   meta: { regularMarketPrice: number; shortName?: string; currency?: string };
+  timestamp?: number[];
+  indicators?: { quote?: { close?: (number | null)[] }[] };
   events?: { dividends?: Record<string, RawDividend> };
 };
 type ChartResponse = { chart: { result: ChartResult[] | null; error?: { description: string } } };
@@ -68,6 +70,13 @@ class YahooDividendRepositoryImpl implements IDividendRepository {
       .map((d) => ({ date: new Date(d.date * 1000), amount: d.amount }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
+    const timestamps = result.timestamp ?? [];
+    const closes = result.indicators?.quote?.[0]?.close ?? [];
+    const priceHistory: PricePoint[] = timestamps
+      .map((ts, i) => ({ date: new Date(ts * 1000), close: closes[i] ?? null }))
+      .filter((p): p is PricePoint => p.close != null)
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     const trailing12m = events
@@ -87,6 +96,7 @@ class YahooDividendRepositoryImpl implements IDividendRepository {
       currentPrice,
       currency,
       events,
+      priceHistory,
       trailingYield: currentPrice > 0 ? (trailing12m / currentPrice) * 100 : 0,
       lastDividend: events[events.length - 1] ?? null,
       consistentYears: yearsWithDiv.size,

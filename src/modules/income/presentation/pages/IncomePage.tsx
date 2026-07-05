@@ -13,7 +13,9 @@ import {
   useWatchlistDividends,
   useAddToDividendWatchlist,
   useRemoveFromDividendWatchlist,
+  useDividendRotationRoadmap,
 } from '../hooks/useDividend';
+import { DividendRotationRoadmap } from '../components/DividendRotationRoadmap';
 import { searchDividendTicker } from '@/infrastructure/di/container';
 import type { DividendInfo, DividendEvent } from '../../domain/entities/Dividend';
 
@@ -407,6 +409,7 @@ export function IncomePage() {
   }, [tickers]);
 
   const loadingTickers = watchlistLoading ? [] : tickers.filter((t) => !infos.some((i) => i.ticker === t));
+  const rotationRoadmap = useDividendRotationRoadmap(infos);
 
   return (
     <Layout>
@@ -615,6 +618,12 @@ export function IncomePage() {
             </div>
           </div>
 
+        </div>
+      )}
+
+      {tickers.length >= 2 && (
+        <div className="mt-5">
+          <DividendRotationRoadmap roadmap={rotationRoadmap} />
         </div>
       )}
     </Layout>
