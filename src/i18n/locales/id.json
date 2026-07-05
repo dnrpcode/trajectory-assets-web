@@ -119,7 +119,8 @@
     "stepRiskProfile": "Profil Risiko",
     "stepHorizon": "Horizon",
     "stepTarget": "Target",
-    "stepPortfolio": "Portofolio"
+    "stepPortfolio": "Portofolio",
+    "saveError": "Gagal menyimpan data onboarding. Periksa koneksi Anda dan coba lagi."
   },
   "dashboard": {
     "title": "Dashboard",

@@ -13,6 +13,7 @@ import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '@/shared/const
 import { EntryForm } from '@/shared/ui/EntryForm';
 import { completeOnboarding } from '@/infrastructure/di/container';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
+import { useToast } from '@/shared/ui/Toast';
 import { RiskProfile, InvestmentHorizon, AssetCategory } from '@/shared/types';
 
 const goalSchema = z.object({
@@ -41,6 +42,7 @@ export function OnboardingPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { authUser, setUser } = useAuthStore();
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [riskProfile, setRiskProfile] = useState<RiskProfile>('moderate');
   const [horizon, setHorizon] = useState<InvestmentHorizon>('medium');
@@ -92,7 +94,7 @@ export function OnboardingPage() {
         updatedAt: now,
       });
     } catch (e) {
-      console.error('Onboarding save error:', e);
+      toast(t('onboarding.saveError'), 'error');
     } finally {
       setSaving(false);
     }

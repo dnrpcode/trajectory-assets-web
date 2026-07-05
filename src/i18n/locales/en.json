@@ -119,7 +119,8 @@
     "stepRiskProfile": "Risk Profile",
     "stepHorizon": "Horizon",
     "stepTarget": "Target",
-    "stepPortfolio": "Portfolio"
+    "stepPortfolio": "Portfolio",
+    "saveError": "Failed to save onboarding data. Check your connection and try again."
   },
   "dashboard": {
     "title": "Dashboard",

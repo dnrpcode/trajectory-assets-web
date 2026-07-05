@@ -42,12 +42,7 @@ export function RegisterPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
   });
-
-  // Tidak ada navigate() manual — begitu authUser ter-set lewat listener pusat
-  // (useAuthBootstrap di App.tsx), route "/register" otomatis redirect ke
-  // /dashboard, lalu OnboardingGuard melihat onboardingComplete=false (selalu
-  // false untuk akun baru) dan redirect lagi ke /onboarding. Satu jalur
-  // reaktif, tidak ada race dengan navigate() manual.
+  
   const onSubmit = async ({ email, password, displayName }: FormValues) => {
     try {
       setError('');

@@ -33,18 +33,19 @@ const queryClient = new QueryClient({
   },
 });
 
-function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { authUser, loading } = useAuth();
-  if (loading) return <FullPageSpinner />;
-  if (!authUser) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
-
 function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { user, authUser, loading } = useAuth();
   if (loading) return <FullPageSpinner />;
   if (!authUser) return <Navigate to="/login" replace />;
   if (authUser && !user?.onboardingComplete) return <Navigate to="/onboarding" replace />;
+  return <>{children}</>;
+}
+
+function OnboardingPageGuard({ children }: { children: React.ReactNode }) {
+  const { user, authUser, loading } = useAuth();
+  if (loading) return <FullPageSpinner />;
+  if (!authUser) return <Navigate to="/login" replace />;
+  if (authUser && user?.onboardingComplete) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
 
@@ -61,9 +62,9 @@ function AppRoutes() {
       <Route
         path="/onboarding"
         element={
-          <AuthGuard>
+          <OnboardingPageGuard>
             <OnboardingPage />
-          </AuthGuard>
+          </OnboardingPageGuard>
         }
       />
       <Route

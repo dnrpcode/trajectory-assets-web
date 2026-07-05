@@ -4,12 +4,13 @@ import { getAllocationTarget } from '@/shared/constants/allocationTargets';
 
 export class LoginWithGoogle {
   constructor(
-    private authService: IAuthService,
-    private userRepo: IUserRepository,
+    readonly authService: IAuthService,
+    readonly userRepo: IUserRepository,
   ) {}
 
-  private async createIfNew(user: AuthUser, isNew: boolean): Promise<AuthUser> {
-    if (isNew) {
+  private async createIfNew(user: AuthUser): Promise<AuthUser> {
+    const existing = await this.userRepo.getById(user.uid);
+    if (!existing) {
       const now = new Date();
       await this.userRepo.create({
         id: user.uid,
@@ -32,13 +33,13 @@ export class LoginWithGoogle {
   async execute(): Promise<AuthUser | null> {
     const result = await this.authService.signInWithGoogle();
     if (!result) return null;
-    return this.createIfNew(result.user, result.isNew);
+    return this.createIfNew(result.user);
   }
 
   /** Call on app load to complete a signInWithRedirect() that navigated back. Null if none was pending. */
   async completeRedirect(): Promise<AuthUser | null> {
     const result = await this.authService.getGoogleRedirectResult();
     if (!result) return null;
-    return this.createIfNew(result.user, result.isNew);
+    return this.createIfNew(result.user);
   }
 }
