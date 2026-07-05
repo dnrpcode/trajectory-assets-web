@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { registerWithEmail, loginWithGoogle, getUserById } from '@/infrastructure/di/container';
+import { registerWithEmail, loginWithGoogle } from '@/infrastructure/di/container';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 
@@ -36,18 +36,22 @@ function LogoMark() {
 }
 
 export function RegisterPage() {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const [error, setError] = useState('');
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
   });
 
+  // Tidak ada navigate() manual — begitu authUser ter-set lewat listener pusat
+  // (useAuthBootstrap di App.tsx), route "/register" otomatis redirect ke
+  // /dashboard, lalu OnboardingGuard melihat onboardingComplete=false (selalu
+  // false untuk akun baru) dan redirect lagi ke /onboarding. Satu jalur
+  // reaktif, tidak ada race dengan navigate() manual.
   const onSubmit = async ({ email, password, displayName }: FormValues) => {
     try {
       setError('');
       await registerWithEmail.execute(email, password, displayName);
-      navigate('/onboarding');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t('auth.registerFailed'));
     }
@@ -56,11 +60,14 @@ export function RegisterPage() {
   const handleGoogle = async () => {
     try {
       setError('');
-      const authUser = await loginWithGoogle.execute();
-      if (!authUser) return; // redirect flow — page is navigating to Google now
-      const user = await getUserById.execute(authUser.uid);
-      navigate(user?.onboardingComplete ? '/dashboard' : '/onboarding');
+      setGoogleLoading(true);
+      const slowNotice = setTimeout(() => {
+        setError(t('auth.googleSlowNotice'));
+      }, 6000);
+      await loginWithGoogle.execute(); // redirect flow — browser navigasi ke Google
+      clearTimeout(slowNotice);
     } catch (e: unknown) {
+      setGoogleLoading(false);
       setError(e instanceof Error ? e.message : t('auth.loginFailed'));
     }
   };
@@ -141,6 +148,7 @@ export function RegisterPage() {
           <Button
             variant="secondary"
             onClick={handleGoogle}
+            loading={googleLoading}
             fullWidth
             size="lg"
             icon={

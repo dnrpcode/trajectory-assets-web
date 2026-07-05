@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { loginWithEmail, loginWithGoogle, getUserById } from '@/infrastructure/di/container';
+import { loginWithEmail, loginWithGoogle } from '@/infrastructure/di/container';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 
@@ -31,19 +31,23 @@ function LogoMark() {
 }
 
 export function LoginPage() {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const [error, setError] = useState('');
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
   });
 
+  // Tidak ada navigate() manual di sini — begitu login berhasil, authUser di
+  // store ter-update lewat listener pusat (useAuthBootstrap di App.tsx), dan
+  // route "/login" (authUser ? <Navigate to="/dashboard"/> : <LoginPage/>)
+  // otomatis pindah. Dulu ada navigate() manual + getUserById terpisah di sini
+  // yang balapan dengan listener pusat — kadang salah satu menang duluan,
+  // menyebabkan halaman terlihat "stuck" sebelum akhirnya konsisten.
   const onSubmit = async ({ email, password }: FormValues) => {
     try {
       setError('');
-      const authUser = await loginWithEmail.execute(email, password);
-      const user = await getUserById.execute(authUser.uid);
-      navigate(user?.onboardingComplete ? '/dashboard' : '/onboarding');
+      await loginWithEmail.execute(email, password);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t('auth.loginFailed'));
     }
@@ -52,11 +56,18 @@ export function LoginPage() {
   const handleGoogle = async () => {
     try {
       setError('');
-      const authUser = await loginWithGoogle.execute();
-      if (!authUser) return; // redirect flow — page is navigating to Google now
-      const user = await getUserById.execute(authUser.uid);
-      navigate(user?.onboardingComplete ? '/dashboard' : '/onboarding');
+      setGoogleLoading(true);
+      // Redirect flow — normalnya browser langsung navigasi ke Google dalam
+      // sekejap. Kalau ini butuh lebih dari beberapa detik, sesuatu di jalur
+      // auth Google sedang bermasalah — tampilkan pesan supaya user tidak
+      // mengira tombolnya tidak bereaksi sama sekali.
+      const slowNotice = setTimeout(() => {
+        setError(t('auth.googleSlowNotice'));
+      }, 6000);
+      await loginWithGoogle.execute();
+      clearTimeout(slowNotice);
     } catch (e: unknown) {
+      setGoogleLoading(false);
       setError(e instanceof Error ? e.message : t('auth.loginFailed'));
     }
   };
@@ -125,6 +136,7 @@ export function LoginPage() {
           <Button
             variant="secondary"
             onClick={handleGoogle}
+            loading={googleLoading}
             fullWidth
             size="lg"
             icon={

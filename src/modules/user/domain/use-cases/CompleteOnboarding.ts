@@ -27,6 +27,14 @@ export class CompleteOnboarding {
     const now = new Date();
 
     await this.userRepo.update(input.userId, {
+      // email + displayName disertakan supaya kalau user-doc belum ada dan
+      // ditulis via setDoc merge, Firestore rules (yang mewajibkan email
+      // string) tetap lolos. baseCurrency + aiHistoryEnabled melengkapi
+      // dokumen kalau ini penulisan pertama.
+      email: input.email,
+      displayName: input.displayName,
+      baseCurrency: 'IDR',
+      aiHistoryEnabled: false,
       riskProfile: input.riskProfile,
       investmentHorizon: input.investmentHorizon,
       targetAllocation,

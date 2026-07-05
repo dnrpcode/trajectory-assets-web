@@ -42,6 +42,7 @@
     "hasAccount": "Already have an account?",
     "loginWithGoogle": "Sign in with Google",
     "registerWithGoogle": "Sign up with Google",
+    "googleSlowNotice": "This is taking longer than usual. Please wait, or try again if the page doesn't move on.",
     "loginError": "Incorrect email or password",
     "registerError": "Failed to create account",
     "loginTitle": "Sign in to your account",

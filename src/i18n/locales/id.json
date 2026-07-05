@@ -42,6 +42,7 @@
     "hasAccount": "Sudah punya akun?",
     "loginWithGoogle": "Masuk dengan Google",
     "registerWithGoogle": "Daftar dengan Google",
+    "googleSlowNotice": "Ini butuh waktu lebih lama dari biasanya. Mohon tunggu, atau coba lagi jika halaman tidak berpindah.",
     "loginError": "Email atau kata sandi salah",
     "registerError": "Gagal membuat akun",
     "loginTitle": "Masuk ke akun Anda",

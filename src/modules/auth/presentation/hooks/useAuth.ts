@@ -4,44 +4,40 @@ import { useAuthStore } from '@/shared/hooks/useAuthStore';
 
 export { useAuthStore } from '@/shared/hooks/useAuthStore';
 
-// useAuth mounts in several components (AppRoutes + guards). This module-level
-// flag makes sure the pending redirect is resolved exactly once, not once per
-// mount — concurrent getRedirectResult() calls can race and duplicate work.
-let redirectCompletionStarted = false;
-
-export function useAuth() {
-  const { user, authUser, loading, setUser, setAuthUser, setLoading } = useAuthStore();
+/**
+ * Subscribes to Firebase auth state ONCE for the whole app. Call this exactly
+ * once, at the top of AppRoutes (which itself only ever renders once — unlike
+ * AuthGuard/OnboardingGuard, which mount per-route). Previously every guard
+ * called what is now useAuth() and each one independently subscribed its own
+ * onAuthStateChanged + ran its own getUserById(uid) read for the same user,
+ * racing each other into the shared store. That's what caused email login to
+ * sometimes hang on a spinner instead of reaching the dashboard.
+ */
+export function useAuthBootstrap() {
+  const { setUser, setAuthUser, setLoading } = useAuthStore();
 
   useEffect(() => {
     let settled = false;
 
-    // Selesaikan pending Google signInWithRedirect() di sini — di root — bukan di
-    // LoginPage. AppRoutes hanya render <FullPageSpinner/> selama loading, jadi
-    // LoginPage tidak pernah ter-mount untuk memanggil getRedirectResult(); tanpa
-    // itu, onAuthStateChanged iOS bisa tertunda selamanya → stuck loading.
-    // Fire-and-forget: onAuthStateChanged di bawah yang menyelesaikan loading state.
-    if (!redirectCompletionStarted) {
-      redirectCompletionStarted = true;
-      loginWithGoogle.completeRedirect().catch(() => { /* ditangani oleh onAuthStateChanged */ });
-    }
+    // Selesaikan pending Google signInWithRedirect() — fire-and-forget, hasil
+    // akhirnya tetap lewat onAuthStateChanged di bawah.
+    loginWithGoogle.completeRedirect().catch(() => { /* diselesaikan oleh onAuthStateChanged */ });
 
-    // Fail-safe: apa pun yang terjadi, jangan biarkan app terjebak di spinner
-    // selamanya. Kalau onAuthStateChanged tak kunjung fire (mis. SDK auth hang
-    // di iOS Safari), lepas loading setelah 8 detik supaya user tidak stuck.
+    // Fail-safe murni anti-infinite-spinner. TIDAK menebak status onboarding —
+    // kalau ini benar-benar terpicu (Firestore total tidak bisa dihubungi),
+    // guard akan melihat user=null dan authUser sesuai apa adanya, bukan
+    // dipaksa "belum onboarding". Ini beda dari fix sebelumnya yang me-race
+    // getUserById dengan timeout 6 detik dan salah menandai user existing
+    // sebagai belum onboarding setiap kali Firestore lambat (bug nyata).
     const failsafe = setTimeout(() => {
       if (!settled) { settled = true; setLoading(false); }
-    }, 8000);
+    }, 15000);
 
     const unsubscribe = authService.onAuthStateChanged(async (au) => {
       setAuthUser(au);
       if (au) {
         try {
-          // Race getUserById dengan timeout — kalau baca Firestore menggantung,
-          // jangan sampai loading ikut menggantung selamanya.
-          const domainUser = await Promise.race([
-            getUserById.execute(au.uid),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
-          ]);
+          const domainUser = await getUserById.execute(au.uid);
           setUser(domainUser);
         } catch {
           setUser(null);
@@ -56,6 +52,11 @@ export function useAuth() {
 
     return () => { clearTimeout(failsafe); unsubscribe(); };
   }, [setUser, setAuthUser, setLoading]);
+}
+
+/** Pure reader — safe to call from as many components as needed (no subscriptions). */
+export function useAuth() {
+  const { user, authUser, loading, setUser, setAuthUser } = useAuthStore();
 
   const doLogout = async () => {
     await logoutUseCase.execute();

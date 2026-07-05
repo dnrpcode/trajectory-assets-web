@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TourProvider } from '@/shared/ui/TourContext';
 import { TourOverlay } from '@/shared/ui/TourOverlay';
 import { ToastProvider } from '@/shared/ui/Toast';
-import { useAuth } from '@/modules/auth/presentation/hooks/useAuth';
+import { useAuth, useAuthBootstrap } from '@/modules/auth/presentation/hooks/useAuth';
 import { FullPageSpinner } from '@/shared/ui/Spinner';
 import { LoginPage } from '@/modules/auth/presentation/pages/LoginPage';
 import { RegisterPage } from '@/modules/auth/presentation/pages/RegisterPage';
@@ -49,6 +49,7 @@ function OnboardingGuard({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
+  useAuthBootstrap(); // single onAuthStateChanged subscription for the whole app
   const { authUser, loading } = useAuth();
   if (loading) return <FullPageSpinner />;
 
