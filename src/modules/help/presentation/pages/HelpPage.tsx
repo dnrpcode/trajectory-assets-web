@@ -792,7 +792,7 @@ function DemoTrading2() {
     <div style={{ padding: '12px 14px', height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <Activity size={14} color="var(--warn-400)" strokeWidth={1.75} />
-        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>Scanner RSI</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>Scanner Sinyal Multi-Indikator</span>
       </div>
       {signals.map(s => (
         <DCard key={s.t} style={{ animation: `demo-fadein 0.35s ease ${s.d}s both` }}>
@@ -808,7 +808,7 @@ function DemoTrading2() {
       ))}
       <DCard style={{ animation: 'demo-fadein 0.4s ease 0.4s both' }}>
         <span style={{ fontSize: 10, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-          <span style={{ color: 'var(--gain-400)', fontWeight: 700 }}>RSI &lt;30</span> = potensi rebound · <span style={{ color: 'var(--loss-400)', fontWeight: 700 }}>RSI &gt;70</span> = potensi koreksi
+          RSI + MA + MACD + support/resistance digabung jadi <span style={{ color: 'var(--gain-400)', fontWeight: 700 }}>skor −100…+100</span> · skor ≥ +30 = sinyal beli, ≤ −30 = sinyal jual
         </span>
       </DCard>
     </div>
@@ -913,7 +913,7 @@ const DEMOS: DemoConfig[] = [
     icon: <BarChart2 size={13} strokeWidth={2} />, color: 'var(--warn-400)',
     steps: [
       { label: 'Watchlist kripto real-time dari CoinGecko — harga, volume, market cap', Component: DemoTrading1 },
-      { label: 'Scanner RSI otomatis mendeteksi sinyal oversold/overbought di watchlistmu', Component: DemoTrading2 },
+      { label: 'Scanner multi-indikator (RSI, MA, MACD, support/resistance) memberi skor sinyal beli/jual lengkap dengan alasan per faktor', Component: DemoTrading2 },
       { label: 'Paper trading: simulasi beli/jual kripto tanpa menggunakan uang nyata', Component: DemoTrading3 },
     ],
   },
@@ -1072,6 +1072,7 @@ const GLOSSARY = [
   { term: 'Cost Basis', def: 'Total modal yang diinvestasikan untuk suatu aset (unit × avg cost × kurs).' },
   { term: 'Rebalancing', def: 'Penyesuaian ulang proporsi aset agar sesuai target alokasi.' },
   { term: 'RSI', def: 'Relative Strength Index — indikator momentum 0–100; <30 oversold, >70 overbought.' },
+  { term: 'MACD', def: 'Moving Average Convergence Divergence — selisih EMA12 dan EMA26; histogram positif yang menguat menandakan momentum beli bertambah.' },
   { term: 'Monte Carlo', def: 'Simulasi probabilistik dengan ribuan skenario acak untuk estimasi harga.' },
   { term: 'Support / Resistance', def: 'Level harga historis tempat harga sering berbalik arah.' },
   { term: 'Yield', def: 'Imbal hasil dividen: total dividen 12 bulan ÷ harga saham × 100%.' },

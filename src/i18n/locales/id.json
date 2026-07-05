@@ -11,6 +11,48 @@
     "income": "Dividen & Kupon",
     "help": "Panduan"
   },
+  "trading": {
+    "analysis": {
+      "title": "Analisa Detail",
+      "score": "Skor Komposit",
+      "confidence": "Keyakinan",
+      "confidenceWeak": "Lemah",
+      "confidenceModerate": "Moderat",
+      "confidenceStrong": "Kuat",
+      "bullish": "Bullish",
+      "bearish": "Bearish",
+      "neutral": "Netral",
+      "summaryBuy": "Mayoritas faktor mendukung beli (skor {{score}}). Pertimbangkan entry dengan manajemen risiko sesuai panel Setup Trade.",
+      "summarySell": "Mayoritas faktor menekan harga (skor {{score}}). Hindari entry beli — pertimbangkan ambil untung atau tunggu harga stabil.",
+      "summaryHold": "Faktor bullish dan bearish masih seimbang (skor {{score}}). Tunggu konfirmasi lebih kuat sebelum entry."
+    },
+    "factors": {
+      "insufficientData": "Data candle belum cukup ({{candles}} titik) untuk analisa lengkap.",
+      "rsiOversold": "RSI {{rsi}} di zona oversold (<30) — tekanan jual sudah berlebihan, peluang pantulan naik.",
+      "rsiOverbought": "RSI {{rsi}} di zona overbought (>70) — reli sudah panas, rawan koreksi turun.",
+      "rsiRecovering": "RSI {{rsi}} mulai naik dari area bawah — tekanan jual mereda.",
+      "rsiWeakening": "RSI {{rsi}} mulai turun dari area atas — tekanan beli melemah.",
+      "rsiNeutral": "RSI {{rsi}} di zona netral — tidak ada tekanan ekstrem ke dua arah.",
+      "maGoldenCross": "MA7 baru memotong MA25 ke atas (golden cross) — awal momentum naik.",
+      "maDeathCross": "MA7 baru memotong MA25 ke bawah (death cross) — awal momentum turun.",
+      "maBullish": "MA7 berada {{gap}}% di atas MA25 — tren jangka pendek naik.",
+      "maBearish": "MA7 berada {{gap}}% di bawah MA25 — tren jangka pendek turun.",
+      "maFlat": "MA7 dan MA25 berimpit — tren jangka pendek datar.",
+      "priceAboveMa25": "Harga {{gap}}% di atas MA25 — bias tren menengah positif.",
+      "priceBelowMa25": "Harga {{gap}}% di bawah MA25 — bias tren menengah negatif.",
+      "priceAtMa25": "Harga menempel di MA25 — pasar sedang mencari arah.",
+      "macdBullishRising": "Histogram MACD positif dan menguat — momentum beli sedang bertambah.",
+      "macdBullishFading": "Histogram MACD positif tapi mengecil — momentum beli mulai kehabisan tenaga.",
+      "macdBearishFalling": "Histogram MACD negatif dan melebar — momentum jual sedang bertambah.",
+      "macdBearishFading": "Histogram MACD negatif tapi menyempit — tekanan jual mulai mereda.",
+      "momentumUp": "Harga naik {{roc}}% dalam 7 candle terakhir — momentum jangka pendek positif.",
+      "momentumDown": "Harga bergerak {{roc}}% dalam 7 candle terakhir — momentum jangka pendek negatif.",
+      "momentumFlat": "Harga hanya bergerak {{roc}}% dalam 7 candle terakhir — momentum datar.",
+      "nearSupport": "Harga hanya {{dist}}% di atas titik terendah 20 candle — dekat support, ruang turun terbatas.",
+      "nearResistance": "Harga hanya {{dist}}% di bawah titik tertinggi 20 candle — dekat resistance, ruang naik terbatas.",
+      "midRange": "Harga di tengah range 20 candle ({{low}}% dari support, {{high}}% ke resistance) — jauh dari kedua batas."
+    }
+  },
   "common": {
     "save": "Simpan",
     "cancel": "Batal",

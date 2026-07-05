@@ -64,7 +64,17 @@ export function CoinCard({ coin, market }: Props) {
           <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{coin.name}</p>
           <p style={{ margin: 0, fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{coin.symbol}</p>
         </div>
-        {detail && <SignalBadge signal={detail.signal.signal} size="sm" />}
+        {detail && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <SignalBadge signal={detail.signal.signal} size="sm" />
+            <span style={{
+              fontSize: '10px', fontWeight: 700, fontFamily: 'var(--font-mono)',
+              color: detail.signal.score >= 30 ? 'var(--gain-500)' : detail.signal.score <= -30 ? 'var(--loss-500)' : 'var(--text-muted)',
+            }}>
+              {detail.signal.score >= 0 ? '+' : ''}{detail.signal.score}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Price */}

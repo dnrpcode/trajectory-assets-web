@@ -11,6 +11,48 @@
     "income": "Dividends & Coupons",
     "help": "Guide"
   },
+  "trading": {
+    "analysis": {
+      "title": "Detailed Analysis",
+      "score": "Composite Score",
+      "confidence": "Confidence",
+      "confidenceWeak": "Weak",
+      "confidenceModerate": "Moderate",
+      "confidenceStrong": "Strong",
+      "bullish": "Bullish",
+      "bearish": "Bearish",
+      "neutral": "Neutral",
+      "summaryBuy": "Most factors support buying (score {{score}}). Consider an entry with the risk management from the Trade Setup panel.",
+      "summarySell": "Most factors are pressuring the price (score {{score}}). Avoid new long entries — consider taking profit or waiting for stabilization.",
+      "summaryHold": "Bullish and bearish factors are still balanced (score {{score}}). Wait for stronger confirmation before entering."
+    },
+    "factors": {
+      "insufficientData": "Not enough candle data ({{candles}} points) for a full analysis.",
+      "rsiOversold": "RSI {{rsi}} is in the oversold zone (<30) — selling pressure is overdone, bounce potential.",
+      "rsiOverbought": "RSI {{rsi}} is in the overbought zone (>70) — the rally is overheated, correction risk.",
+      "rsiRecovering": "RSI {{rsi}} is turning up from the lower area — selling pressure is easing.",
+      "rsiWeakening": "RSI {{rsi}} is turning down from the upper area — buying pressure is fading.",
+      "rsiNeutral": "RSI {{rsi}} is in the neutral zone — no extreme pressure either way.",
+      "maGoldenCross": "MA7 just crossed above MA25 (golden cross) — start of upward momentum.",
+      "maDeathCross": "MA7 just crossed below MA25 (death cross) — start of downward momentum.",
+      "maBullish": "MA7 is {{gap}}% above MA25 — short-term trend is up.",
+      "maBearish": "MA7 is {{gap}}% below MA25 — short-term trend is down.",
+      "maFlat": "MA7 and MA25 are overlapping — short-term trend is flat.",
+      "priceAboveMa25": "Price is {{gap}}% above MA25 — medium-term bias is positive.",
+      "priceBelowMa25": "Price is {{gap}}% below MA25 — medium-term bias is negative.",
+      "priceAtMa25": "Price is hugging MA25 — the market is undecided.",
+      "macdBullishRising": "MACD histogram is positive and expanding — buying momentum is building.",
+      "macdBullishFading": "MACD histogram is positive but shrinking — buying momentum is running out of steam.",
+      "macdBearishFalling": "MACD histogram is negative and expanding — selling momentum is building.",
+      "macdBearishFading": "MACD histogram is negative but narrowing — selling pressure is easing.",
+      "momentumUp": "Price rose {{roc}}% over the last 7 candles — short-term momentum is positive.",
+      "momentumDown": "Price moved {{roc}}% over the last 7 candles — short-term momentum is negative.",
+      "momentumFlat": "Price only moved {{roc}}% over the last 7 candles — momentum is flat.",
+      "nearSupport": "Price is only {{dist}}% above the 20-candle low — near support, limited downside room.",
+      "nearResistance": "Price is only {{dist}}% below the 20-candle high — near resistance, limited upside room.",
+      "midRange": "Price is mid-range over 20 candles ({{low}}% from support, {{high}}% to resistance) — far from both bounds."
+    }
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

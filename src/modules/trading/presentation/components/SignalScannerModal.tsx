@@ -22,8 +22,9 @@ export function SignalScannerModal({ open, onClose }: Props) {
     qc.fetchQuery({ queryKey: ['signalScanner'] });
   };
 
-  const strong = results?.filter((r) => r.signal.signal !== 'HOLD') ?? [];
-  const hold = results?.filter((r) => r.signal.signal === 'HOLD') ?? [];
+  const byScoreStrength = (a: ScanResult, b: ScanResult) => Math.abs(b.signal.score) - Math.abs(a.signal.score);
+  const strong = (results?.filter((r) => r.signal.signal !== 'HOLD') ?? []).sort(byScoreStrength);
+  const hold = (results?.filter((r) => r.signal.signal === 'HOLD') ?? []).sort(byScoreStrength);
 
   const renderRow = (r: ScanResult) => (
     <div key={r.id} style={{
@@ -36,6 +37,12 @@ export function SignalScannerModal({ open, onClose }: Props) {
           <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{r.name}</span>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{r.symbol}</span>
           <SignalBadge signal={r.signal.signal} size="sm" />
+          <span style={{
+            fontSize: '10px', fontWeight: 700, fontFamily: 'var(--font-mono)',
+            color: r.signal.score >= 30 ? 'var(--gain-500)' : r.signal.score <= -30 ? 'var(--loss-500)' : 'var(--text-muted)',
+          }}>
+            {r.signal.score >= 0 ? '+' : ''}{r.signal.score}
+          </span>
         </div>
         <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--text-muted)' }}>{r.signal.reason}</p>
       </div>

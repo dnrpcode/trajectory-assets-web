@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Copy, Check, Info, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
-import { SignalResult, TradingSignal } from '@/shared/utils/indicators';
+import { SignalResult } from '@/shared/utils/indicators';
 
 interface Props {
   signal: SignalResult;
@@ -11,13 +11,16 @@ interface Props {
 
 const LEVERAGE_OPTIONS = [1, 2, 3, 5, 10, 20, 50];
 
-function suggestLeverage(signal: TradingSignal, rsi: number): { value: number; reason: string } {
-  if (signal === 'HOLD') return { value: 1, reason: 'Sinyal belum jelas — hindari leverage' };
-  const strength = signal === 'BUY' ? Math.max(0, 30 - rsi) : Math.max(0, rsi - 70);
-  if (strength > 15) return { value: 5, reason: `RSI sangat ekstrem (${rsi.toFixed(0)}) — sinyal kuat` };
-  if (strength > 8)  return { value: 3, reason: `RSI cukup ekstrem — sinyal moderat` };
-  if (strength > 0)  return { value: 2, reason: `RSI mendekati zona ekstrem — sinyal lemah` };
-  return { value: 2, reason: 'MA crossover — tanpa konfirmasi RSI' };
+function suggestLeverage(signal: SignalResult): { value: number; reason: string } {
+  if (signal.signal === 'HOLD') return { value: 1, reason: 'Sinyal belum jelas — hindari leverage' };
+  const aligned = signal.factors.filter((f) =>
+    signal.signal === 'BUY' ? f.verdict === 'bullish' : f.verdict === 'bearish',
+  ).length;
+  const scoreLabel = `${signal.score >= 0 ? '+' : ''}${signal.score}`;
+  if (signal.confidence === 'strong') {
+    return { value: 5, reason: `Skor ${scoreLabel}, ${aligned} faktor searah — sinyal kuat` };
+  }
+  return { value: 3, reason: `Skor ${scoreLabel}, ${aligned} faktor searah — sinyal moderat, jaga ukuran posisi` };
 }
 
 // Swing SL: pakai low/high 20 candle terakhir
@@ -95,7 +98,7 @@ function SummaryChip({ label, value, color }: { label: string; value: string; co
 }
 
 export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Props) {
-  const suggested = suggestLeverage(signal.signal, signal.rsi);
+  const suggested = suggestLeverage(signal);
   const [leverage, setLeverage] = useState(suggested.value);
   const [showLimit, setShowLimit] = useState(false);
 
@@ -179,7 +182,7 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
             <div>
               <p style={{ margin: '0 0 4px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Tunggu sinyal lebih kuat</p>
               <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                RSI {signal.rsi.toFixed(0)} — belum oversold (&lt;30) atau overbought (&gt;70). Tunggu konfirmasi sebelum entry.
+                Skor komposit {signal.score >= 0 ? '+' : ''}{signal.score} — faktor bullish dan bearish masih seimbang (butuh ±30 untuk sinyal). Detail per faktor ada di panel Analisa Detail.
               </p>
             </div>
           </div>

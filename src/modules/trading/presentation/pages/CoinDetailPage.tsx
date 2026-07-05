@@ -6,6 +6,7 @@ import { Layout } from '@/shared/ui/Layout';
 import { Card } from '@/shared/ui/Card';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import { SignalBadge } from '../components/SignalBadge';
+import { SignalAnalysisCard } from '../components/SignalAnalysisCard';
 import { TradeSetupCard } from '../components/TradeSetupCard';
 import { useCoinDetail, useCoinMarkets, useWatchlist } from '../hooks/useTrading';
 import { computeMA, computeRSI } from '@/shared/utils/indicators';
@@ -251,6 +252,9 @@ export function CoinDetailPage() {
               ))}
             </div>
           </div>
+
+          {/* Detailed analysis */}
+          <SignalAnalysisCard signal={signal} />
 
           {/* Trade setup */}
           <TradeSetupCard
