@@ -53,6 +53,9 @@ export default defineConfig({
         // Cache app shell + static assets; skip Firestore/API calls
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallback: '/index.html',
+        // /__/* (Firebase auth handler via Vercel proxy) dan /api/* harus selalu
+        // ke network — kalau di-serve app shell dari cache, login redirect putus.
+        navigateFallbackDenylist: [/^\/__\//, /^\/api\//],
         runtimeCaching: [
           {
             // Vercel Edge API — network-first, fall back to cache
