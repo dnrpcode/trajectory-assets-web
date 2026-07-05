@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { authService, getUserById, loginWithGoogle, logout as logoutUseCase } from '@/infrastructure/di/container';
+import { authService, getUserById, logout as logoutUseCase } from '@/infrastructure/di/container';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
 export { useAuthStore } from '@/shared/hooks/useAuthStore';
 
@@ -9,9 +9,6 @@ export function useAuthBootstrap() {
   useEffect(() => {
     let settled = false;
 
-    loginWithGoogle.completeRedirect().catch((e) => { 
-      console.error('Error completing Google redirect',e);
-    });
     const failsafe = setTimeout(() => {
       if (!settled) { settled = true; setLoading(false); }
     }, 15000);

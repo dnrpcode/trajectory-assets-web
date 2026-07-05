@@ -1,7 +1,6 @@
 import {
   signInWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   type UserCredential,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -27,14 +26,9 @@ export class FirebaseAuthService implements IAuthService {
     return toAuthUser(user);
   }
 
-  async signInWithGoogle(): Promise<{ user: AuthUser; isNew: boolean } | null> {
-    await signInWithRedirect(auth, googleProvider);
-    return null; // browser navigates away; result is read back via getGoogleRedirectResult()
-  }
-
-  async getGoogleRedirectResult(): Promise<{ user: AuthUser; isNew: boolean } | null> {
-    const credential = await getRedirectResult(auth);
-    return credential ? toResult(credential) : null;
+  async signInWithGoogle(): Promise<{ user: AuthUser; isNew: boolean }> {
+    const credential = await signInWithPopup(auth, googleProvider);
+    return toResult(credential);
   }
 
   async registerWithEmail(email: string, password: string, displayName: string): Promise<AuthUser> {

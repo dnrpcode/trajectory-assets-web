@@ -57,14 +57,11 @@ export function LoginPage() {
     try {
       setError('');
       setGoogleLoading(true);
-      const slowNotice = setTimeout(() => {
-        setError(t('auth.googleSlowNotice'));
-      }, 6000);
       await loginWithGoogle.execute();
-      clearTimeout(slowNotice);
     } catch (e: unknown) {
-      setGoogleLoading(false);
       setError(e instanceof Error ? e.message : t('auth.loginFailed'));
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
