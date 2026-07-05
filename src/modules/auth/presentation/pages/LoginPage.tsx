@@ -57,10 +57,6 @@ export function LoginPage() {
     try {
       setError('');
       setGoogleLoading(true);
-      // Redirect flow — normalnya browser langsung navigasi ke Google dalam
-      // sekejap. Kalau ini butuh lebih dari beberapa detik, sesuatu di jalur
-      // auth Google sedang bermasalah — tampilkan pesan supaya user tidak
-      // mengira tombolnya tidak bereaksi sama sekali.
       const slowNotice = setTimeout(() => {
         setError(t('auth.googleSlowNotice'));
       }, 6000);

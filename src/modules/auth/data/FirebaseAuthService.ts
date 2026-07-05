@@ -27,10 +27,6 @@ export class FirebaseAuthService implements IAuthService {
     return toAuthUser(user);
   }
 
-  // Redirect-based sign-in for ALL platforms. signInWithPopup is unreliable:
-  // it breaks on iOS Safari and in-app browsers (blocked window.open / third-party
-  // cookies), and mixing popup+redirect caused auth/cancelled-popup-request.
-  // Redirect always works; the tradeoff (full-page navigation on desktop) is fine.
   async signInWithGoogle(): Promise<{ user: AuthUser; isNew: boolean } | null> {
     await signInWithRedirect(auth, googleProvider);
     return null; // browser navigates away; result is read back via getGoogleRedirectResult()

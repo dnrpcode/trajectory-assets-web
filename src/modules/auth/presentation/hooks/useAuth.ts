@@ -9,7 +9,9 @@ export function useAuthBootstrap() {
   useEffect(() => {
     let settled = false;
 
-    loginWithGoogle.completeRedirect().catch(() => { /* diselesaikan oleh onAuthStateChanged */ });
+    loginWithGoogle.completeRedirect().catch((e) => { 
+      console.error('Error completing Google redirect',e);
+    });
     const failsafe = setTimeout(() => {
       if (!settled) { settled = true; setLoading(false); }
     }, 15000);
