@@ -423,6 +423,28 @@
       "descriptionPlaceholder": "cth. Target sebelum umur 40",
       "create": "Buat Target",
       "saveChanges": "Simpan Perubahan"
+    },
+    "basisMulti": "Target diurutkan dari tenggat terdekat — nilai portofolio saat ini ({{value}}) dialokasikan berurutan (waterfall) dengan asumsi CAGR {{rate}}% per tahun, sehingga satu rupiah tidak dihitung dua kali.",
+    "roadmap": {
+      "title": "Roadmap Pencapaian",
+      "subtitle": "Urutan pencapaian target berdasarkan prioritas tenggat. Goal #1 diisi lebih dulu; setoran dan pertumbuhan berikutnya mengalir ke goal selanjutnya.",
+      "totalTarget": "Total Target",
+      "plannedMonthly": "Setoran Direncanakan",
+      "requiredMonthly": "Setoran Dibutuhkan",
+      "perMonth": "/bln",
+      "cumulative": "Akumulasi {{amount}}",
+      "estReached": "Estimasi tercapai",
+      "notReachable": "Belum terjangkau",
+      "aheadBy": "{{count}} bln lebih cepat",
+      "lateBy": "± {{count}} bln terlambat",
+      "adviceTitle": "Saran"
+    },
+    "advice": {
+      "increaseTotal": "Naikkan total setoran bulanan ke {{amount}} (saat ini {{current}}) supaya semua tenggat terkejar. Target yang paling menekan kebutuhan ini: {{name}}.",
+      "allOnTrack": "Dengan setoran dan pertumbuhan saat ini, semua target ber-tenggat on track. Pertahankan ritme setoranmu.",
+      "focusNext": "Target dengan prioritas lebih awal sudah tertutup nilai portofolio — setoranmu sekarang efektif mengejar “{{name}}”.",
+      "addContribution": "Tanpa setoran bulanan, sebagian target tidak akan terjangkau dari pertumbuhan portofolio saja. Isi rencana kontribusi bulanan di masing-masing target.",
+      "deadlinePassed": "Tenggat “{{name}}” sudah lewat tapi belum tercapai — perbarui tanggalnya atau sesuaikan nominal targetnya."
     }
   },
   "income": {

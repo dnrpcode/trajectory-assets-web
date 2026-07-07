@@ -11,12 +11,13 @@ import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { usePortfolioSummary, usePortfolioHistory } from '@/modules/dashboard';
 import { computeSmartCAGR } from '@/shared/utils/portfolioProjections';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
-import { computeGoalProgress } from '@/infrastructure/di/container';
+import { buildGoalRoadmap } from '@/infrastructure/di/container';
 import type { RiskProfile } from '@/shared/types';
 import type { Goal } from '../../domain/entities/Goal';
 import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal, type GoalFormInput } from '../hooks/useGoals';
 import { GoalCard } from '../components/GoalCard';
 import { GoalFormModal } from '../components/GoalFormModal';
+import { GoalRoadmapSection } from '../components/GoalRoadmapSection';
 
 export function GoalsPage() {
   const { t } = useTranslation();
@@ -39,10 +40,11 @@ export function GoalsPage() {
   const riskProfile: RiskProfile = user?.riskProfile ?? 'moderate';
   const { rate: cagrRate } = computeSmartCAGR(history, summary?.allocationActual, riskProfile);
 
-  const progresses = useMemo(
-    () => goals.map((g) => computeGoalProgress.execute(g, currentValue, cagrRate)),
+  const roadmap = useMemo(
+    () => buildGoalRoadmap.execute(goals, currentValue, cagrRate),
     [goals, currentValue, cagrRate],
   );
+  const isMulti = roadmap.items.length > 1;
 
   const openCreate = () => { setEditingGoal(null); setFormOpen(true); };
   const openEdit = (goal: Goal) => { setEditingGoal(goal); setFormOpen(true); };
@@ -98,7 +100,7 @@ export function GoalsPage() {
         >
           <Info size={14} style={{ color: 'var(--blue-400)', flexShrink: 0 }} />
           <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
-            {t('goals.basis', { value: formatCurrency(currentValue), rate: cagrRate })}
+            {t(isMulti ? 'goals.basisMulti' : 'goals.basis', { value: formatCurrency(currentValue), rate: cagrRate })}
           </p>
         </div>
       )}
@@ -126,16 +128,20 @@ export function GoalsPage() {
           </div>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {progresses.map((p) => (
-            <GoalCard
-              key={p.goal.id}
-              progress={p}
-              onEdit={() => openEdit(p.goal)}
-              onDelete={() => setDeletingGoal(p.goal)}
-            />
-          ))}
-        </div>
+        <>
+          {isMulti && <GoalRoadmapSection roadmap={roadmap} />}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {roadmap.items.map((item) => (
+              <GoalCard
+                key={item.progress.goal.id}
+                progress={item.progress}
+                order={isMulti ? item.order : undefined}
+                onEdit={() => openEdit(item.progress.goal)}
+                onDelete={() => setDeletingGoal(item.progress.goal)}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       <GoalFormModal

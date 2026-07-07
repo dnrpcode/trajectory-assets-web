@@ -78,7 +78,7 @@ src/
 │   ├── trading/       Crypto watchlist, sinyal RSI+MA, paper trading, CoinGecko
 │   ├── advisor/       AI chat (Robo Advisor) — OpenAI-compatible API
 │   ├── income/        Kalender dividen IDX — Yahoo Finance via Vercel proxy
-│   ├── goals/         Target finansial — GoalsPage, progress vs portofolio + proyeksi CAGR
+│   ├── goals/         Target finansial — waterfall roadmap multi-goal + proyeksi CAGR
 │   └── help/          HelpPage + guided tour
 ├── shared/
 │   ├── ui/            Layout, Navbar, Button, Input, Modal, Spinner, Toast, dll
@@ -220,7 +220,7 @@ getActiveAssets, getAllAssets, deleteAsset
 
 // Goals
 getGoals, createGoal, updateGoal, deleteGoal
-computeGoalProgress   // pure — progress %, proyeksi on-track, kebutuhan setoran/bln
+buildGoalRoadmap   // pure — waterfall berprioritas tenggat: alokasi, proyeksi kumulatif, saran
 
 // Dashboard
 portfolioRepository

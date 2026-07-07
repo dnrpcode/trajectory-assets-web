@@ -47,7 +47,7 @@ import { GetDividendWatchlist, AddToDividendWatchlist, RemoveFromDividendWatchli
 import { BuildDividendRotationRoadmap } from '@/modules/income/domain/use-cases/BuildDividendRotationRoadmap';
 
 import { GetGoals, CreateGoal, UpdateGoal, DeleteGoal } from '@/modules/goals/domain/use-cases/ManageGoals';
-import { ComputeGoalProgress } from '@/modules/goals/domain/use-cases/ComputeGoalProgress';
+import { BuildGoalRoadmap } from '@/modules/goals/domain/use-cases/BuildGoalRoadmap';
 
 
 // ── Infrastructure ────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ export const getGoals            = new GetGoals(goalRepository);
 export const createGoal          = new CreateGoal(goalRepository);
 export const updateGoal          = new UpdateGoal(goalRepository);
 export const deleteGoal          = new DeleteGoal(goalRepository);
-export const computeGoalProgress = new ComputeGoalProgress();
+export const buildGoalRoadmap    = new BuildGoalRoadmap();
 
 // ── AI Advisor ────────────────────────────────────────────────────────────────
 export const aiAdvisorRepository = new AIAdvisorRepository();

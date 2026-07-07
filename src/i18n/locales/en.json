@@ -423,6 +423,28 @@
       "descriptionPlaceholder": "e.g. Target before turning 40",
       "create": "Create Goal",
       "saveChanges": "Save Changes"
+    },
+    "basisMulti": "Goals are ordered by nearest deadline — your current portfolio value ({{value}}) is allocated sequentially (waterfall) assuming {{rate}}% CAGR per year, so no rupiah is counted twice.",
+    "roadmap": {
+      "title": "Achievement Roadmap",
+      "subtitle": "Order of goal completion by deadline priority. Goal #1 is funded first; further contributions and growth flow to the next goal.",
+      "totalTarget": "Total Target",
+      "plannedMonthly": "Planned Contribution",
+      "requiredMonthly": "Required Contribution",
+      "perMonth": "/mo",
+      "cumulative": "Cumulative {{amount}}",
+      "estReached": "Est. reached",
+      "notReachable": "Out of reach",
+      "aheadBy": "{{count}} mo ahead",
+      "lateBy": "± {{count}} mo late",
+      "adviceTitle": "Suggestions"
+    },
+    "advice": {
+      "increaseTotal": "Raise your total monthly contribution to {{amount}} (currently {{current}}) to hit every deadline. The most demanding goal: {{name}}.",
+      "allOnTrack": "With your current contributions and growth, every goal with a deadline is on track. Keep the rhythm going.",
+      "focusNext": "Earlier goals are already covered by your portfolio value — your contributions are now effectively working toward “{{name}}”.",
+      "addContribution": "Without monthly contributions, some goals will stay out of reach from portfolio growth alone. Set a planned monthly contribution on each goal.",
+      "deadlinePassed": "The deadline for “{{name}}” has passed without being reached — update its date or adjust the target amount."
     }
   },
   "income": {

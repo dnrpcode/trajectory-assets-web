@@ -1,12 +1,12 @@
 // Domain entities
-export type { Goal, GoalProgress } from './domain/entities/Goal';
+export type { Goal, GoalProgress, GoalRoadmap, GoalRoadmapItem, RoadmapAdvice, RoadmapAdviceType } from './domain/entities/Goal';
 
 // Domain repositories
 export type { IGoalRepository, CreateGoalInput, UpdateGoalInput } from './domain/repositories/IGoalRepository';
 
 // Domain use-cases
 export { GetGoals, CreateGoal, UpdateGoal, DeleteGoal } from './domain/use-cases/ManageGoals';
-export { ComputeGoalProgress } from './domain/use-cases/ComputeGoalProgress';
+export { BuildGoalRoadmap } from './domain/use-cases/BuildGoalRoadmap';
 
 // Data
 export { FirebaseGoalRepository } from './data/FirebaseGoalRepository';

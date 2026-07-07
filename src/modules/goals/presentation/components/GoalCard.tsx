@@ -8,6 +8,8 @@ import type { GoalProgress } from '../../domain/entities/Goal';
 
 interface GoalCardProps {
   progress: GoalProgress;
+  /** Urutan prioritas waterfall — hanya tampil saat goal lebih dari satu */
+  order?: number;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -28,7 +30,7 @@ function goalStatus(p: GoalProgress): GoalStatus {
   return 'noDeadline';
 }
 
-export function GoalCard({ progress: p, onEdit, onDelete }: GoalCardProps) {
+export function GoalCard({ progress: p, order, onEdit, onDelete }: GoalCardProps) {
   const { t } = useTranslation();
   const status = goalStatus(p);
   const badge = STATUS_STYLE[status];
@@ -48,9 +50,17 @@ export function GoalCard({ progress: p, onEdit, onDelete }: GoalCardProps) {
       <div className="flex items-start justify-between gap-3 mb-1">
         <div className="min-w-0">
           <h3
-            className="truncate"
+            className="truncate flex items-center gap-2"
             style={{ color: 'var(--text-primary)', fontSize: 'var(--text-sm)', fontWeight: 700, letterSpacing: 'var(--tracking-snug)' }}
           >
+            {order !== undefined && (
+              <span
+                className="px-1.5 py-0.5 rounded shrink-0"
+                style={{ fontSize: '10px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--blue-400)', background: 'var(--blue-tint)' }}
+              >
+                #{order}
+              </span>
+            )}
             {p.goal.name || t('goals.defaultName')}
           </h3>
           {p.goal.description && (
