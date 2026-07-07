@@ -9,7 +9,8 @@
     "chat": "Robo Advisor",
     "settings": "Settings",
     "income": "Dividends & Coupons",
-    "help": "Guide"
+    "help": "Guide",
+    "goals": "Financial Goals"
   },
   "trading": {
     "analysis": {
@@ -372,6 +373,57 @@
     "conservative": "Conservative",
     "moderate": "Moderate",
     "aggressive": "Aggressive"
+  },
+  "goals": {
+    "title": "Financial Goals",
+    "subtitle": "Set target amounts and track their progress against your portfolio value.",
+    "addGoal": "Add Goal",
+    "defaultName": "Savings Goal",
+    "basis": "Progress is measured against your current total portfolio value ({{value}}) assuming {{rate}}% CAGR per year.",
+    "emptyTitle": "No financial goals yet",
+    "emptyDesc": "Create your first goal — retirement fund, house down payment, or emergency fund — and see whether your portfolio is on track to reach it.",
+    "emptyCta": "Create First Goal",
+    "deleteTitle": "Delete Goal",
+    "deleteDesc": "Delete “{{name}}”? This action cannot be undone.",
+    "toast": {
+      "created": "Goal created",
+      "updated": "Goal updated",
+      "deleted": "Goal deleted"
+    },
+    "status": {
+      "achieved": "Achieved",
+      "onTrack": "On Track",
+      "behind": "Falling Behind",
+      "noDeadline": "No Deadline"
+    },
+    "card": {
+      "ofTarget": "of {{target}} target",
+      "remaining": "{{amount}} to go",
+      "deadline": "Deadline",
+      "monthsLeft": "{{count}} months left",
+      "projected": "Projected at deadline",
+      "requiredMonthly": "Required per month",
+      "plannedMonthly": "planned {{amount}}"
+    },
+    "form": {
+      "addTitle": "Add Financial Goal",
+      "editTitle": "Edit Financial Goal",
+      "name": "Goal Name",
+      "namePlaceholder": "e.g. Retirement Fund, House Down Payment",
+      "nameRequired": "Goal name is required",
+      "targetAmount": "Target Amount (IDR)",
+      "targetAmountPlaceholder": "500.000.000",
+      "targetRequired": "Enter a target amount",
+      "targetDate": "Target Date (optional)",
+      "targetDateHint": "Used to project whether you are on track.",
+      "monthlyContribution": "Monthly Contribution (optional)",
+      "monthlyContributionPlaceholder": "2.500.000",
+      "monthlyContributionHint": "Planned recurring monthly deposit for this goal.",
+      "description": "Notes (optional)",
+      "descriptionPlaceholder": "e.g. Target before turning 40",
+      "create": "Create Goal",
+      "saveChanges": "Save Changes"
+    }
   },
   "income": {
     "rotation": {

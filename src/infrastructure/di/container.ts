@@ -46,6 +46,9 @@ import { SearchTicker } from '@/modules/income/domain/use-cases/SearchTicker';
 import { GetDividendWatchlist, AddToDividendWatchlist, RemoveFromDividendWatchlist } from '@/modules/income/domain/use-cases/ManageDividendWatchlist';
 import { BuildDividendRotationRoadmap } from '@/modules/income/domain/use-cases/BuildDividendRotationRoadmap';
 
+import { GetGoals, CreateGoal, UpdateGoal, DeleteGoal } from '@/modules/goals/domain/use-cases/ManageGoals';
+import { ComputeGoalProgress } from '@/modules/goals/domain/use-cases/ComputeGoalProgress';
+
 
 // ── Infrastructure ────────────────────────────────────────────────────────────
 export const authService      = new FirebaseAuthService();
@@ -85,6 +88,13 @@ export const updateAssetMeta  = new UpdateAssetMeta(projectionRepository, entryR
 export const getPortfolioSummary = new GetPortfolioSummary(projectionRepository, portfolioRepository);
 export const getPortfolioHistory = new GetPortfolioHistory(portfolioRepository);
 export const backfillPortfolioHistory = new BackfillPortfolioHistory(entryRepository, projectionRepository, portfolioRepository);
+
+// ── Goals ─────────────────────────────────────────────────────────────────────
+export const getGoals            = new GetGoals(goalRepository);
+export const createGoal          = new CreateGoal(goalRepository);
+export const updateGoal          = new UpdateGoal(goalRepository);
+export const deleteGoal          = new DeleteGoal(goalRepository);
+export const computeGoalProgress = new ComputeGoalProgress();
 
 // ── AI Advisor ────────────────────────────────────────────────────────────────
 export const aiAdvisorRepository = new AIAdvisorRepository();

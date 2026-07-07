@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut, BookOpen, BarChart2, CalendarDays, X } from 'lucide-react';
+import { LayoutGrid, Activity, FileText, ShieldCheck, TrendingUp, MessageSquare, Settings, LogOut, BookOpen, BarChart2, CalendarDays, Target, X } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { useTour } from './TourContext';
@@ -14,6 +14,7 @@ const navItems = [
   { to: '/income', labelKey: 'nav.income', icon: <CalendarDays size={18} strokeWidth={1.75} />, dataTour: 'nav-income' },
   { to: '/advisory', labelKey: 'nav.advisory', icon: <ShieldCheck size={18} strokeWidth={1.75} />, dataTour: 'nav-advisory' },
   { to: '/projections', labelKey: 'nav.projections', icon: <TrendingUp size={18} strokeWidth={1.75} />, dataTour: 'nav-projections' },
+  { to: '/goals', labelKey: 'nav.goals', icon: <Target size={18} strokeWidth={1.75} />, dataTour: 'nav-goals' },
   { to: '/chat', labelKey: 'nav.chat', icon: <MessageSquare size={18} strokeWidth={1.75} />, dataTour: 'nav-chat' },
   { to: '/journal', labelKey: 'nav.journal', icon: <FileText size={18} strokeWidth={1.75} />, dataTour: 'nav-journal' },
   { to: '/settings', labelKey: 'nav.settings', icon: <Settings size={18} strokeWidth={1.75} />, dataTour: 'nav-settings' },

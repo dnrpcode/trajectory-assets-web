@@ -9,7 +9,8 @@
     "chat": "Robo Advisor",
     "settings": "Pengaturan",
     "income": "Dividen & Kupon",
-    "help": "Panduan"
+    "help": "Panduan",
+    "goals": "Target Finansial"
   },
   "trading": {
     "analysis": {
@@ -372,6 +373,57 @@
     "conservative": "Konservatif",
     "moderate": "Moderat",
     "aggressive": "Agresif"
+  },
+  "goals": {
+    "title": "Target Finansial",
+    "subtitle": "Tetapkan target dana dan pantau progresnya terhadap nilai portofolio Anda.",
+    "addGoal": "Tambah Target",
+    "defaultName": "Target Dana",
+    "basis": "Progres dihitung dari total nilai portofolio saat ini ({{value}}) dengan asumsi pertumbuhan CAGR {{rate}}% per tahun.",
+    "emptyTitle": "Belum ada target finansial",
+    "emptyDesc": "Buat target pertama Anda — dana pensiun, DP rumah, atau dana darurat — dan lihat apakah portofolio Anda on track untuk mencapainya.",
+    "emptyCta": "Buat Target Pertama",
+    "deleteTitle": "Hapus Target",
+    "deleteDesc": "Yakin ingin menghapus “{{name}}”? Tindakan ini tidak bisa dibatalkan.",
+    "toast": {
+      "created": "Target berhasil dibuat",
+      "updated": "Target berhasil diperbarui",
+      "deleted": "Target dihapus"
+    },
+    "status": {
+      "achieved": "Tercapai",
+      "onTrack": "On Track",
+      "behind": "Perlu Dikejar",
+      "noDeadline": "Tanpa Tenggat"
+    },
+    "card": {
+      "ofTarget": "dari target {{target}}",
+      "remaining": "Kurang {{amount}} lagi",
+      "deadline": "Tenggat",
+      "monthsLeft": "{{count}} bulan lagi",
+      "projected": "Proyeksi di tenggat",
+      "requiredMonthly": "Butuh per bulan",
+      "plannedMonthly": "rencana {{amount}}"
+    },
+    "form": {
+      "addTitle": "Tambah Target Finansial",
+      "editTitle": "Edit Target Finansial",
+      "name": "Nama Target",
+      "namePlaceholder": "cth. Dana Pensiun, DP Rumah",
+      "nameRequired": "Nama target wajib diisi",
+      "targetAmount": "Target Dana (IDR)",
+      "targetAmountPlaceholder": "500.000.000",
+      "targetRequired": "Masukkan target dana",
+      "targetDate": "Tanggal Target (opsional)",
+      "targetDateHint": "Dipakai untuk menghitung proyeksi on track / tidak.",
+      "monthlyContribution": "Kontribusi Bulanan (opsional)",
+      "monthlyContributionPlaceholder": "2.500.000",
+      "monthlyContributionHint": "Rencana setoran rutin per bulan untuk target ini.",
+      "description": "Catatan (opsional)",
+      "descriptionPlaceholder": "cth. Target sebelum umur 40",
+      "create": "Buat Target",
+      "saveChanges": "Simpan Perubahan"
+    }
   },
   "income": {
     "rotation": {

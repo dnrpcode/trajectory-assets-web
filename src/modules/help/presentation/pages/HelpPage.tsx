@@ -3,7 +3,7 @@ import {
   ChevronDown, LayoutGrid, Activity, ShieldCheck, TrendingUp,
   MessageSquare, FileText, Settings, Play, BarChart2,
   CalendarDays, PlusCircle, RefreshCw, Download,
-  Pencil, Zap, ArrowRight, Bot, Search, CheckCircle2,
+  Pencil, Zap, ArrowRight, Bot, Search, CheckCircle2, Target,
 } from 'lucide-react';
 import { Layout } from '@/shared/ui/Layout';
 import { useTour } from '@/shared/ui/TourContext';
@@ -1062,6 +1062,7 @@ const PRO_TIPS = [
   { icon: <ShieldCheck size={14} />, text: 'Kas (tabungan, deposito) tidak perlu update harga bulanan — sistem tidak menandainya sebagai stale.' },
   { icon: <MessageSquare size={14} />, text: 'Aktifkan "Konteks Portofolio untuk AI" di Pengaturan agar Robo Advisor bisa menganalisis data aktualmu.' },
   { icon: <RefreshCw size={14} />, text: 'Tambahkan minimal 2 saham ke watchlist Dividen & Kupon untuk melihat Roadmap Rotasi Dividen — urutan pindah saham berdasarkan pola dividen & harga historis.' },
+  { icon: <Target size={14} />, text: 'Buat target di halaman Target Finansial dengan tanggal & kontribusi bulanan — sistem menghitung apakah portofoliomu on track dan berapa setoran bulanan yang dibutuhkan.' },
 ];
 
 // ── Glossary ──────────────────────────────────────────────────────────────────
@@ -1126,6 +1127,15 @@ const FAQS = [
       { q: 'Apa itu Roadmap Rotasi Dividen?', a: 'Fitur di halaman Dividen & Kupon yang menyusun urutan estimasi "pindah dari saham A ke B" sepanjang tahun, berdasarkan pola historis bulan pembayaran dividen dan pergerakan harga di sekitar periode itu. Muncul otomatis setelah kamu punya minimal 2 saham di watchlist.' },
       { q: 'Apakah tanggal di Roadmap Rotasi Dividen itu pasti?', a: 'Tidak. Yahoo Finance (sumber data kami) hanya menyediakan tanggal pembayaran historis, bukan cum-date/ex-date resmi. Jadi rentang bulan di roadmap adalah estimasi dari pola tahun-tahun sebelumnya — selalu cek jadwal resmi emiten (IDX/RUPS) sebelum bertransaksi.' },
       { q: 'Bagaimana skor keyakinan (confidence) dihitung?', a: 'Berdasarkan seberapa konsisten saham tersebut membayar dividen di bulan yang sama selama 5 tahun terakhir. Tinggi = pola sangat konsisten, Rendah = pola tidak stabil sehingga estimasi tanggal & return kurang bisa diandalkan.' },
+    ],
+  },
+  {
+    section: 'Target Finansial', icon: <Target size={15} strokeWidth={1.75} />, color: 'var(--warn-400)',
+    items: [
+      { q: 'Bagaimana progres target finansial dihitung?', a: 'Progres = total nilai portofolio aktif saat ini ÷ target dana × 100%. Semua target diukur terhadap portofolio yang sama — jadi kalau kamu punya beberapa target, anggap masing-masing sebagai milestone dari total kekayaan, bukan pot dana terpisah.' },
+      { q: 'Apa arti status On Track / Perlu Dikejar?', a: 'Kalau target punya tanggal tenggat, sistem memproyeksikan nilai portofolio di tanggal itu memakai asumsi CAGR (sama seperti halaman Simulasi CAGR) plus kontribusi bulanan yang kamu rencanakan. Proyeksi ≥ target = On Track; di bawahnya = Perlu Dikejar. Target tanpa tanggal hanya menampilkan progres.' },
+      { q: 'Apa bedanya "Butuh per bulan" dengan kontribusi bulanan yang saya isi?', a: 'Kontribusi bulanan adalah rencana setoranmu. "Butuh per bulan" adalah hitungan sistem: setoran bulanan minimum agar tepat mencapai target di tanggal tenggat dengan asumsi CAGR saat ini. Kalau angka kebutuhan jauh di atas rencanamu, artinya perlu menambah setoran, memundurkan tenggat, atau menurunkan target.' },
+      { q: 'Kenapa target yang saya buat saat onboarding muncul di sini?', a: 'Target dana yang diisi saat onboarding tersimpan sebagai target finansial pertamamu. Kamu bisa mengubah nama, nominal, tenggat, dan kontribusinya kapan saja dari halaman Target Finansial.' },
     ],
   },
   {

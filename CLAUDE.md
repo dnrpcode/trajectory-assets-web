@@ -78,7 +78,7 @@ src/
 │   ├── trading/       Crypto watchlist, sinyal RSI+MA, paper trading, CoinGecko
 │   ├── advisor/       AI chat (Robo Advisor) — OpenAI-compatible API
 │   ├── income/        Kalender dividen IDX — Yahoo Finance via Vercel proxy
-│   ├── goals/         Financial goals
+│   ├── goals/         Target finansial — GoalsPage, progress vs portofolio + proyeksi CAGR
 │   └── help/          HelpPage + guided tour
 ├── shared/
 │   ├── ui/            Layout, Navbar, Button, Input, Modal, Spinner, Toast, dll
@@ -218,6 +218,10 @@ entryRepository, projectionRepository, goalRepository
 createEntry, recomputeAssetProjection, getAssetEntries, deleteEntry
 getActiveAssets, getAllAssets, deleteAsset
 
+// Goals
+getGoals, createGoal, updateGoal, deleteGoal
+computeGoalProgress   // pure — progress %, proyeksi on-track, kebutuhan setoran/bln
+
 // Dashboard
 portfolioRepository
 getPortfolioSummary, getPortfolioHistory, backfillPortfolioHistory
@@ -251,6 +255,7 @@ getDividendWatchlist, addToDividendWatchlist, removeFromDividendWatchlist
 ['paperTrades', userId]          // usePaperTrades()
 ['coinMarkets', ...ids]          // useCoinMarkets()
 ['coinDetail', coinId]           // useCoinDetail()
+['goals', userId]                // useGoals()
 ['dividendWatchlist', userId]    // useDividendWatchlist()
 ['dividendInfo', ticker]         // useDividendInfo(ticker)
 ['dividendInfoBulk', tickers]    // useWatchlistDividends(tickers)
@@ -276,6 +281,7 @@ After any portfolio mutation: invalidate `activeAssets`, `allAssets`, `portfolio
 /trading            TradingPage         (OnboardingGuard)
 /trading/:coinId    CoinDetailPage      (OnboardingGuard)
 /income             IncomePage          (OnboardingGuard)
+/goals              GoalsPage           (OnboardingGuard)
 /settings           SettingsPage        (OnboardingGuard)
 /help               HelpPage            (OnboardingGuard)
 *                   NotFoundPage
@@ -364,7 +370,7 @@ Watchlist disimpan Firestore `dividendWatchlist/{ticker}` — document ID = tick
 - Locale files: `src/i18n/locales/id.json` dan `en.json`
 - Persisted ke `localStorage` key `'lang'`. Default `'id'`.
 - Di komponen: `const { t, i18n } = useTranslation()`
-- Key namespaces: `nav.*`, `common.*`, `auth.*`, `onboarding.*`, `dashboard.*`, `portfolio.*`, `assetDetail.*`, `journal.*`, `entry.*`, `category.*`, `settings.*`
+- Key namespaces: `nav.*`, `common.*`, `auth.*`, `onboarding.*`, `dashboard.*`, `portfolio.*`, `assetDetail.*`, `journal.*`, `entry.*`, `category.*`, `settings.*`, `goals.*`
 - `nav.income` = "Dividen & Kupon" (id) / "Dividends & Coupons" (en)
 
 ---

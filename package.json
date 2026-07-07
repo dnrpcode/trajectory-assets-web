@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "deploy": "vercel --prod",
     "seed": "node scripts/seed-firebase.mjs",
     "seed:custom": "node scripts/seed-custom.mjs",
     "add-data": "node scripts/add-more-data.mjs",
