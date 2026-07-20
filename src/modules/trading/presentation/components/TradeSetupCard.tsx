@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Copy, Check, Info, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { SignalResult } from '@/shared/utils/indicators';
 
@@ -11,16 +12,20 @@ interface Props {
 
 const LEVERAGE_OPTIONS = [1, 2, 3, 5, 10, 20, 50];
 
-function suggestLeverage(signal: SignalResult): { value: number; reason: string } {
-  if (signal.signal === 'HOLD') return { value: 1, reason: 'Sinyal belum jelas — hindari leverage' };
+type LeverageSuggestion =
+  | { value: 1; reasonKey: 'unclear' }
+  | { value: 5 | 3; reasonKey: 'strong' | 'moderate'; scoreLabel: string; aligned: number };
+
+function suggestLeverage(signal: SignalResult): LeverageSuggestion {
+  if (signal.signal === 'HOLD') return { value: 1, reasonKey: 'unclear' };
   const aligned = signal.factors.filter((f) =>
     signal.signal === 'BUY' ? f.verdict === 'bullish' : f.verdict === 'bearish',
   ).length;
   const scoreLabel = `${signal.score >= 0 ? '+' : ''}${signal.score}`;
   if (signal.confidence === 'strong') {
-    return { value: 5, reason: `Skor ${scoreLabel}, ${aligned} faktor searah — sinyal kuat` };
+    return { value: 5, reasonKey: 'strong', scoreLabel, aligned };
   }
-  return { value: 3, reason: `Skor ${scoreLabel}, ${aligned} faktor searah — sinyal moderat, jaga ukuran posisi` };
+  return { value: 3, reasonKey: 'moderate', scoreLabel, aligned };
 }
 
 // Swing SL: pakai low/high 20 candle terakhir
@@ -98,8 +103,12 @@ function SummaryChip({ label, value, color }: { label: string; value: string; co
 }
 
 export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Props) {
+  const { t } = useTranslation();
   const suggested = suggestLeverage(signal);
-  const [leverage, setLeverage] = useState(suggested.value);
+  const suggestedReason = suggested.reasonKey === 'unclear'
+    ? t('trading.setup.leverageUnclear')
+    : t(`trading.setup.leverage${suggested.reasonKey === 'strong' ? 'Strong' : 'Moderate'}`, { score: suggested.scoreLabel, aligned: suggested.aligned });
+  const [leverage, setLeverage] = useState<number>(suggested.value);
   const [showLimit, setShowLimit] = useState(false);
 
   const isBuy  = signal.signal === 'BUY';
@@ -147,10 +156,10 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
       <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <p style={{ margin: '0 0 2px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
-            Setup Trade
+            {t('trading.setup.title')}
           </p>
           <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>
-            Swing SL · R:R 1:1 / 1:2 / 1:3
+            {t('trading.setup.subtitle')}
           </p>
         </div>
         {/* Market / Limit toggle */}
@@ -180,9 +189,9 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
           <div style={{ padding: '14px', background: 'var(--bg-overlay)', borderRadius: 10, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <AlertTriangle size={15} style={{ color: 'var(--warn-400)', flexShrink: 0, marginTop: 1 }} />
             <div>
-              <p style={{ margin: '0 0 4px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Tunggu sinyal lebih kuat</p>
+              <p style={{ margin: '0 0 4px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{t('trading.setup.holdTitle')}</p>
               <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                Skor komposit {signal.score >= 0 ? '+' : ''}{signal.score} — faktor bullish dan bearish masih seimbang (butuh ±30 untuk sinyal). Detail per faktor ada di panel Analisa Detail.
+                {t('trading.setup.holdDesc', { score: `${signal.score >= 0 ? '+' : ''}${signal.score}` })}
               </p>
             </div>
           </div>
@@ -191,9 +200,9 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
             {/* Leverage */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
-                <p style={{ margin: 0, fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Leverage</p>
+                <p style={{ margin: 0, fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('trading.setup.leverage')}</p>
                 <span style={{ fontSize: '10px', color: 'var(--blue-400)', fontWeight: 600 }}>
-                  {leverage === suggested.value ? '✦ Disarankan' : `Disarankan: ${suggested.value}×`}
+                  {leverage === suggested.value ? `✦ ${t('trading.setup.recommended')}` : t('trading.setup.recommendedValue', { value: suggested.value })}
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 5 }}>
@@ -209,14 +218,14 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
                   }}>{lev}×</button>
                 ))}
               </div>
-              <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.4 }}>{suggested.reason}</p>
+              <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.4 }}>{suggestedReason}</p>
             </div>
 
             <div style={{ height: 1, background: 'var(--border-subtle)' }} />
 
             {/* Entry */}
             <PriceRow
-              label={showLimit ? 'Entry (Limit)' : 'Entry (Market)'}
+              label={showLimit ? t('trading.setup.entryLimit') : t('trading.setup.entryMarket')}
               badge={showLimit ? 'limit' : 'market'}
               color="var(--blue-400)"
               value={fmtUSD(entry)}
@@ -227,24 +236,24 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
 
             {showLimit && (
               <p style={{ margin: '-4px 0 0', fontSize: '10px', color: 'var(--text-muted)', paddingLeft: 2 }}>
-                {fmtPct(((entry - marketEntry) / marketEntry) * 100)} dari harga pasar saat ini
+                {t('trading.setup.limitDiff', { pct: fmtPct(((entry - marketEntry) / marketEntry) * 100) })}
               </p>
             )}
 
             {/* Stop Loss */}
             <PriceRow
-              label={`Stop Loss`}
+              label={t('trading.setup.stopLoss')}
               badge={`−${slPct.toFixed(1)}%`}
               color="var(--loss-500)"
               value={fmtUSD(stopLoss)}
-              subValue={closes.length >= 20 ? 'Berdasarkan swing low 20 candle' : fmtIDR(stopLoss)}
+              subValue={closes.length >= 20 ? t('trading.setup.swingBased') : fmtIDR(stopLoss)}
               copyValue={stopLoss.toFixed(stopLoss < 1 ? 6 : 2)}
             />
 
             {/* TP levels */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <PriceRow
-                label="Take Profit 1"
+                label={t('trading.setup.takeProfit', { n: 1 })}
                 badge="R:R 1:1"
                 color="var(--gain-400)"
                 value={fmtUSD(tp1)}
@@ -252,7 +261,7 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
                 copyValue={tp1.toFixed(tp1 < 1 ? 6 : 2)}
               />
               <PriceRow
-                label="Take Profit 2"
+                label={t('trading.setup.takeProfit', { n: 2 })}
                 badge="R:R 1:2"
                 color="var(--gain-500)"
                 value={fmtUSD(tp2)}
@@ -260,7 +269,7 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
                 copyValue={tp2.toFixed(tp2 < 1 ? 6 : 2)}
               />
               <PriceRow
-                label="Take Profit 3"
+                label={t('trading.setup.takeProfit', { n: 3 })}
                 badge="R:R 1:3"
                 color="#4ade80"
                 value={fmtUSD(tp3)}
@@ -272,20 +281,20 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
             {/* Liquidation */}
             {liq && leverage > 1 && (
               <PriceRow
-                label={`Likuidasi (${leverage}×)`}
+                label={t('trading.setup.liquidation', { leverage })}
                 badge="danger"
                 color="var(--warn-400)"
                 value={fmtUSD(liq)}
-                subValue="⚠ Hindari menyentuh harga ini"
+                subValue={`⚠ ${t('trading.setup.avoidTouching')}`}
                 copyValue={liq.toFixed(liq < 1 ? 6 : 2)}
               />
             )}
 
             {/* Summary chips */}
             <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
-              <SummaryChip label="Max Loss" value={`−${maxLossPct}%`} color="var(--loss-500)" />
-              <SummaryChip label="TP1 Gain" value={`+${maxGain1Pct}%`} color="var(--gain-400)" />
-              <SummaryChip label="TP2 Gain" value={`+${maxGain2Pct}%`} color="var(--gain-500)" />
+              <SummaryChip label={t('trading.setup.maxLoss')} value={`−${maxLossPct}%`} color="var(--loss-500)" />
+              <SummaryChip label={t('trading.setup.tpGain', { n: 1 })} value={`+${maxGain1Pct}%`} color="var(--gain-400)" />
+              <SummaryChip label={t('trading.setup.tpGain', { n: 2 })} value={`+${maxGain2Pct}%`} color="var(--gain-500)" />
             </div>
 
             {/* Expand/collapse price ladder hint */}
@@ -294,7 +303,7 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
               style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', fontSize: '11px', padding: '2px 0', fontFamily: 'var(--font-sans)' }}
             >
               {showLimit ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              {showLimit ? 'Pakai harga market' : 'Lihat harga limit (lebih murah)'}
+              {showLimit ? t('trading.setup.useMarket') : t('trading.setup.viewLimit')}
             </button>
           </>
         )}
@@ -303,7 +312,7 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
         <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
           <Info size={10} style={{ color: 'var(--text-muted)', marginTop: 1, flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-            Bukan saran keuangan. Eksekusi di exchange masing-masing. SL berbasis swing 20 candle terakhir — sesuaikan dengan risk appetite kamu.
+            {t('trading.setup.disclaimer')}
           </p>
         </div>
       </div>

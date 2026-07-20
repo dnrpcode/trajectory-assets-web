@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TradingSignal } from '@/shared/utils/indicators';
 import { useExecutePaperTrade } from '../hooks/useTrading';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, usdToIdr, signal, onSuccess }: Props) {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const { data: summary } = usePortfolioSummary();
   const executeMutation = useExecutePaperTrade();
@@ -74,7 +76,7 @@ export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, 
               color: side === s ? '#fff' : 'var(--text-muted)',
             }}
           >
-            {s === 'buy' ? '▲ Paper Buy' : '▼ Paper Sell'}
+            {s === 'buy' ? `▲ ${t('trading.paperTrade.buy')}` : `▼ ${t('trading.paperTrade.sell')}`}
           </button>
         ))}
       </div>
@@ -82,13 +84,13 @@ export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, 
       {/* Info */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <div style={{ padding: '10px 12px', background: 'var(--bg-raised)', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
-          <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Harga {coinSymbol}</p>
+          <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('trading.paperTrade.price', { symbol: coinSymbol })}</p>
           <p style={{ margin: '2px 0 0', fontSize: '13px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
             {formatCurrency(priceIDR)}
           </p>
         </div>
         <div style={{ padding: '10px 12px', background: 'var(--bg-raised)', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
-          <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Budget 5%</p>
+          <p style={{ margin: 0, fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('trading.paperTrade.budget')}</p>
           <p style={{ margin: '2px 0 0', fontSize: '13px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--blue-400)' }}>
             {formatCurrency(budget5pct)}
           </p>
@@ -98,7 +100,7 @@ export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, 
       {/* Amount input */}
       <div>
         <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: 6 }}>
-          Jumlah (IDR)
+          {t('trading.paperTrade.amount')}
         </label>
         <input
           type="text"
@@ -127,13 +129,13 @@ export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, 
       {/* Notes */}
       <div>
         <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: 6 }}>
-          Catatan (opsional)
+          {t('trading.paperTrade.notes')}
         </label>
         <input
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Alasan trade..."
+          placeholder={t('trading.paperTrade.notesPlaceholder')}
           style={{
             width: '100%', boxSizing: 'border-box',
             background: 'var(--bg-raised)', border: '1px solid var(--border-default)',
@@ -150,7 +152,7 @@ export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, 
         disabled={amount <= 0}
         fullWidth
       >
-        {side === 'buy' ? '▲ Eksekusi Paper Buy' : '▼ Eksekusi Paper Sell'}
+        {side === 'buy' ? `▲ ${t('trading.paperTrade.executeBuy')}` : `▼ ${t('trading.paperTrade.executeSell')}`}
       </Button>
     </div>
   );

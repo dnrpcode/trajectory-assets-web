@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Scan, X, Loader2, Plus } from 'lucide-react';
 import { Modal } from '@/shared/ui/Modal';
 import { SignalBadge } from './SignalBadge';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function SignalScannerModal({ open, onClose }: Props) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { data: results, isFetching, isError } = useSignalScanner();
   const { data: watchlist = [] } = useWatchlist();
@@ -69,7 +71,7 @@ export function SignalScannerModal({ open, onClose }: Props) {
             fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap',
           }}
         >
-          <Plus size={11} /> Add
+          <Plus size={11} /> {t('common.add')}
         </button>
       )}
     </div>
@@ -82,14 +84,14 @@ export function SignalScannerModal({ open, onClose }: Props) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Scan size={16} style={{ color: 'var(--blue-400)' }} />
-            <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Signal Scanner</h2>
+            <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{t('trading.scanner.title')}</h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}>
             <X size={16} />
           </button>
         </div>
         <p style={{ margin: '0 0 14px', fontSize: '12px', color: 'var(--text-muted)' }}>
-          Scan RSI + MA crossover untuk {12} top crypto. Masing-masing ~300ms, total ±4 detik.
+          {t('trading.scanner.description', { count: 12 })}
         </p>
 
         {/* Scan button */}
@@ -103,7 +105,7 @@ export function SignalScannerModal({ open, onClose }: Props) {
               fontFamily: 'var(--font-sans)',
             }}
           >
-            <Scan size={15} /> Mulai Scan
+            <Scan size={15} /> {t('trading.scanner.start')}
           </button>
         )}
 
@@ -111,15 +113,15 @@ export function SignalScannerModal({ open, onClose }: Props) {
         {isFetching && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '32px 0' }}>
             <Loader2 size={28} style={{ color: 'var(--blue-400)', animation: 'spin 1s linear infinite' }} />
-            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>Scanning signals...</p>
-            <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>Mengambil data 30 hari dari CoinGecko</p>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>{t('trading.scanner.scanning')}</p>
+            <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>{t('trading.scanner.fetching')}</p>
           </div>
         )}
 
         {/* Error */}
         {isError && !isFetching && (
           <div style={{ padding: '12px', background: 'var(--loss-tint)', borderRadius: 8, marginBottom: 12 }}>
-            <p style={{ margin: 0, fontSize: '12px', color: 'var(--loss-500)' }}>Gagal scan. CoinGecko mungkin rate-limit. Coba lagi dalam 1 menit.</p>
+            <p style={{ margin: 0, fontSize: '12px', color: 'var(--loss-500)' }}>{t('trading.scanner.error')}</p>
           </div>
         )}
 
@@ -129,7 +131,7 @@ export function SignalScannerModal({ open, onClose }: Props) {
             {strong.length > 0 && (
               <div>
                 <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
-                  Sinyal Kuat ({strong.length})
+                  {t('trading.scanner.strongSignals', { count: strong.length })}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {strong.map(renderRow)}
@@ -140,7 +142,7 @@ export function SignalScannerModal({ open, onClose }: Props) {
             {hold.length > 0 && (
               <div>
                 <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
-                  Hold / Netral ({hold.length})
+                  {t('trading.scanner.holdSignals', { count: hold.length })}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {hold.map(renderRow)}
@@ -157,7 +159,7 @@ export function SignalScannerModal({ open, onClose }: Props) {
                 fontFamily: 'var(--font-sans)',
               }}
             >
-              <Scan size={12} /> Refresh Scan
+              <Scan size={12} /> {t('trading.scanner.refresh')}
             </button>
           </div>
         )}

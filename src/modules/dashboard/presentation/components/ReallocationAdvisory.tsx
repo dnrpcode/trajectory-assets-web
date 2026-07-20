@@ -1,5 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { ArrowUpRight, ArrowDownRight, CheckCircle } from 'lucide-react';
 import { CategoryBreakdown, RebalancingAdvice } from '@/shared/types';
+import { formatCurrency } from '@/shared/utils/formatCurrency';
 
 interface Props {
   score: number;
@@ -16,6 +18,7 @@ function ScoreColor(score: number): { color: string; bg: string } {
 }
 
 export function ReallocationAdvisory({ score, breakdown, advices, totalValue, riskProfileName }: Props) {
+  const { t } = useTranslation();
   const { color: scoreColor, bg: scoreBg } = ScoreColor(score);
 
   return (
@@ -29,7 +32,7 @@ export function ReallocationAdvisory({ score, breakdown, advices, totalValue, ri
             className="text-sm font-semibold mb-5"
             style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}
           >
-            Perbandingan Distribusi Aset
+            {t('advisory.distributionComparison')}
           </h3>
           <div className="space-y-4">
             {breakdown.map((cat) => (
@@ -41,7 +44,7 @@ export function ReallocationAdvisory({ score, breakdown, advices, totalValue, ri
                       {cat.actualPercentage.toFixed(1)}%
                     </span>
                     <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      target {cat.targetPercentage}%
+                      {t('advisory.target', { pct: cat.targetPercentage })}
                     </span>
                     {Math.abs(cat.gap) > 0.5 && (
                       <span
@@ -85,7 +88,7 @@ export function ReallocationAdvisory({ score, breakdown, advices, totalValue, ri
           style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: '24px' }}
         >
           <p className="text-xs font-semibold uppercase mb-4" style={{ color: 'var(--text-secondary)', letterSpacing: 'var(--tracking-caps)' }}>
-            Skor Rebalancing
+            {t('advisory.rebalancingScore')}
           </p>
           <div
             className="w-28 h-28 rounded-full flex flex-col items-center justify-center mb-4"
@@ -97,11 +100,11 @@ export function ReallocationAdvisory({ score, breakdown, advices, totalValue, ri
             <span className="text-xs" style={{ color: scoreColor }}>/ 100</span>
           </div>
           <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-            Profil: <span style={{ color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{riskProfileName}</span>
+            {t('advisory.profile')}: <span style={{ color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{riskProfileName}</span>
           </p>
           <p className="text-xs text-center mt-1" style={{ color: 'var(--text-muted)' }}>
-            Total Portofolio: <span style={{ color: 'var(--text-secondary)' }}>
-              Rp {totalValue.toLocaleString('id-ID')}
+            {t('advisory.totalPortfolio')}: <span style={{ color: 'var(--text-secondary)' }}>
+              {formatCurrency(totalValue)}
             </span>
           </p>
         </div>
@@ -116,7 +119,7 @@ export function ReallocationAdvisory({ score, breakdown, advices, totalValue, ri
             className="text-sm font-semibold mb-4"
             style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}
           >
-            Rekomendasi Rebalancing
+            {t('advisory.recommendations')}
           </h3>
           <div className="space-y-3">
             {advices.map((advice, i) => {
@@ -141,9 +144,16 @@ export function ReallocationAdvisory({ score, breakdown, advices, totalValue, ri
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold mb-1" style={{ color: cardColor }}>{advice.title}</p>
+                    <p className="text-sm font-semibold mb-1" style={{ color: cardColor }}>
+                      {t(isIncrease ? 'advisory.increaseTitle' : 'advisory.decreaseTitle', { category: advice.categoryLabel })}
+                    </p>
                     <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)', lineHeight: 'var(--leading-relaxed)' }}>
-                      {advice.description}
+                      {t(isIncrease ? 'advisory.increaseDesc' : 'advisory.decreaseDesc', {
+                        category: advice.categoryLabel,
+                        actual: advice.actualPct.toFixed(1),
+                        target: advice.targetPct,
+                        amount: formatCurrency(advice.actionAmount),
+                      })}
                     </p>
                   </div>
                 </div>
@@ -164,8 +174,8 @@ export function ReallocationAdvisory({ score, breakdown, advices, totalValue, ri
           >
             <CheckCircle size={40} strokeWidth={1.5} style={{ color: 'var(--gain-500)' }} />
           </div>
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Portofolio Anda Sudah Seimbang</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Tidak ada rekomendasi rebalancing saat ini.</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{t('advisory.balancedTitle')}</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{t('advisory.balancedDesc')}</p>
         </div>
       )}
     </div>

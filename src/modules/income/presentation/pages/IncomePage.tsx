@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   CalendarDays, Plus, Trash2, ChevronLeft, ChevronRight,
   Search, TrendingUp, AlertCircle, CheckCircle2, MinusCircle,
@@ -21,22 +23,22 @@ import type { DividendInfo, DividendEvent } from '../../domain/entities/Dividend
 
 // ─── Consistency helpers ───────────────────────────────────────────────────────
 
-function consistencyLabel(years: number, total: number): { text: string; color: string; bg: string; icon: React.ReactNode } {
+function consistencyLabel(t: TFunction, years: number, total: number): { text: string; color: string; bg: string; icon: React.ReactNode } {
   const ratio = years / total;
   if (ratio >= 0.8) return {
-    text: `Rutin (${years}/${total} tahun)`,
+    text: t('income.consistency.regular', { years, total }),
     color: 'var(--gain-400)',
     bg: 'var(--gain-tint)',
     icon: <CheckCircle2 size={11} />,
   };
   if (ratio >= 0.4) return {
-    text: `Semi-rutin (${years}/${total} tahun)`,
+    text: t('income.consistency.semiRegular', { years, total }),
     color: 'var(--warn-400)',
     bg: 'var(--warn-tint)',
     icon: <MinusCircle size={11} />,
   };
   return {
-    text: `Tidak rutin (${years}/${total} tahun)`,
+    text: t('income.consistency.irregular', { years, total }),
     color: 'var(--loss-400)',
     bg: 'var(--loss-tint)',
     icon: <AlertCircle size={11} />,
@@ -53,12 +55,6 @@ function formatPrice(price: number, currency: string) {
 }
 
 // ─── Calendar helpers ─────────────────────────────────────────────────────────
-
-const MONTH_NAMES_ID = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-];
-const DAY_HEADERS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
 function getCalendarDays(year: number, month: number): (number | null)[] {
   const firstDay = new Date(year, month, 1).getDay();
@@ -78,6 +74,7 @@ interface TickerSearchProps {
 }
 
 function TickerSearch({ watchlistTickers, onAdd }: TickerSearchProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<{ ticker: string; name: string }[]>([]);
   const [searching, setSearching] = useState(false);
@@ -95,7 +92,7 @@ function TickerSearch({ watchlistTickers, onAdd }: TickerSearchProps) {
 
   useEffect(() => {
     if (query.length < 2) { setResults([]); return; }
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       setSearching(true);
       try {
         const res = await searchDividendTicker.execute(query);
@@ -103,12 +100,12 @@ function TickerSearch({ watchlistTickers, onAdd }: TickerSearchProps) {
         setOpen(true);
       } catch {
         setResults([]);
-        toast('Pencarian gagal. Periksa koneksi dan coba lagi.', 'error');
+        toast(t('income.searchFailed'), 'error');
       } finally {
         setSearching(false);
       }
     }, 350);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [query]);
 
   const handleAdd = (ticker: string) => {
@@ -134,7 +131,7 @@ function TickerSearch({ watchlistTickers, onAdd }: TickerSearchProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="Cari saham IDX (contoh: BBCA, TLKM)..."
+          placeholder={t('income.searchPlaceholder')}
           className="flex-1 bg-transparent outline-none text-sm"
           style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}
         />
@@ -164,7 +161,7 @@ function TickerSearch({ watchlistTickers, onAdd }: TickerSearchProps) {
                   <span className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>{r.name}</span>
                 </div>
                 {already
-                  ? <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-muted)' }}>Sudah ditambahkan</span>
+                  ? <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{t('income.alreadyAdded')}</span>
                   : <Plus size={13} style={{ color: 'var(--blue-400)', flexShrink: 0 }} />}
               </button>
             );
@@ -185,7 +182,8 @@ interface StockCardProps {
 }
 
 function StockCard({ info, isSelected, onClick, onRemove }: StockCardProps) {
-  const consistency = consistencyLabel(info.consistentYears, info.totalYearsChecked);
+  const { t } = useTranslation();
+  const consistency = consistencyLabel(t, info.consistentYears, info.totalYearsChecked);
 
   return (
     <div
@@ -217,7 +215,7 @@ function StockCard({ info, isSelected, onClick, onRemove }: StockCardProps) {
       <div className="flex items-center gap-2 flex-wrap">
         {info.trailingYield > 0 && (
           <span className="text-xs font-mono font-semibold" style={{ color: 'var(--gain-400)' }}>
-            {formatYield(info.trailingYield)} yield
+            {t('income.yieldValue', { value: formatYield(info.trailingYield) })}
           </span>
         )}
         <span
@@ -231,8 +229,8 @@ function StockCard({ info, isSelected, onClick, onRemove }: StockCardProps) {
 
       {info.lastDividend && (
         <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
-          Terakhir: <span style={{ color: 'var(--text-secondary)' }}>
-            {formatPrice(info.lastDividend.amount, info.currency)}/lembar · {formatDate(info.lastDividend.date)}
+          {t('income.last')}: <span style={{ color: 'var(--text-secondary)' }}>
+            {t('income.perShare', { amount: formatPrice(info.lastDividend.amount, info.currency) })} · {formatDate(info.lastDividend.date)}
           </span>
         </p>
       )}
@@ -247,7 +245,8 @@ interface DividendDetailProps {
 }
 
 function DividendDetail({ info }: DividendDetailProps) {
-  const consistency = consistencyLabel(info.consistentYears, info.totalYearsChecked);
+  const { t } = useTranslation();
+  const consistency = consistencyLabel(t, info.consistentYears, info.totalYearsChecked);
   const sorted = [...info.events].reverse();
 
   return (
@@ -265,7 +264,7 @@ function DividendDetail({ info }: DividendDetailProps) {
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{info.name}</p>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Harga saat ini</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('income.currentPrice')}</p>
           <p className="font-mono font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
             {formatPrice(info.currentPrice, info.currency)}
           </p>
@@ -275,13 +274,13 @@ function DividendDetail({ info }: DividendDetailProps) {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="rounded-md p-3" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)' }}>
-          <p className="text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>Yield Trailing 12 Bulan</p>
+          <p className="text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>{t('income.trailingYield')}</p>
           <p className="font-mono font-bold text-lg" style={{ color: info.trailingYield > 0 ? 'var(--gain-400)' : 'var(--text-muted)' }}>
             {info.trailingYield > 0 ? formatYield(info.trailingYield) : '—'}
           </p>
         </div>
         <div className="rounded-md p-3" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)' }}>
-          <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Konsistensi Dividen</p>
+          <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>{t('income.consistencyLabel')}</p>
           <span
             className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit"
             style={{ color: consistency.color, background: consistency.bg }}
@@ -294,10 +293,10 @@ function DividendDetail({ info }: DividendDetailProps) {
 
       {/* History */}
       <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--text-muted)', letterSpacing: 'var(--tracking-caps)' }}>
-        Riwayat Pembagian Dividen
+        {t('income.dividendHistory')}
       </p>
       {sorted.length === 0 ? (
-        <p className="text-sm text-center py-4" style={{ color: 'var(--text-muted)' }}>Tidak ada riwayat dividen</p>
+        <p className="text-sm text-center py-4" style={{ color: 'var(--text-muted)' }}>{t('income.noHistory')}</p>
       ) : (
         <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1">
           {sorted.map((ev, i) => {
@@ -311,7 +310,7 @@ function DividendDetail({ info }: DividendDetailProps) {
                 <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{formatDate(ev.date)}</span>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <span className="font-mono text-xs font-semibold" style={{ color: 'var(--gain-400)' }}>
-                    {formatPrice(ev.amount, info.currency)}/lbr
+                    {t('income.perShare', { amount: formatPrice(ev.amount, info.currency) })}
                   </span>
                   {yieldPct != null && (
                     <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -347,6 +346,9 @@ function LoadingCard({ ticker }: { ticker: string }) {
 const PALETTE = ['var(--gain-500)', 'var(--blue-400)', '#a855f7', 'var(--warn-400)', '#f43f5e', '#06b6d4', '#f97316'];
 
 export function IncomePage() {
+  const { t } = useTranslation();
+  const MONTH_NAMES = t('income.months', { returnObjects: true }) as string[];
+  const DAY_HEADERS = t('income.weekdays', { returnObjects: true }) as string[];
   const { data: watchlist = [], isLoading: watchlistLoading } = useDividendWatchlist();
   const { mutate: add } = useAddToDividendWatchlist();
   const { mutate: remove } = useRemoveFromDividendWatchlist();
@@ -419,14 +421,14 @@ export function IncomePage() {
           <div className="flex items-center gap-2 mb-1">
             <CalendarDays size={22} style={{ color: 'var(--blue-400)' }} />
             <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-              Kalender Dividen &amp; Kupon
+              {t('income.title')}
             </h1>
           </div>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Pantau jadwal dividen emiten IDX · yield · konsistensi pembagian
+            {t('income.subtitle')}
           </p>
         </div>
-        <TickerSearch watchlistTickers={tickers} onAdd={(t) => add(t)} />
+        <TickerSearch watchlistTickers={tickers} onAdd={(ticker) => add(ticker)} />
       </div>
 
       {watchlistLoading ? (
@@ -437,9 +439,9 @@ export function IncomePage() {
           style={{ background: 'var(--bg-surface)', border: '1px dashed var(--border-default)' }}
         >
           <CalendarDays size={32} className="mb-3 opacity-30" />
-          <h3 className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Belum ada saham dipantau</h3>
+          <h3 className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>{t('income.emptyTitle')}</h3>
           <p className="text-sm text-center max-w-xs" style={{ color: 'var(--text-muted)' }}>
-            Cari ticker saham IDX di atas untuk mulai memantau jadwal dividen dan yield-nya.
+            {t('income.emptyDesc')}
           </p>
         </div>
       ) : (
@@ -448,7 +450,7 @@ export function IncomePage() {
           {/* ── Left: watchlist ─────────────────────────────────── */}
           <div className="flex flex-col gap-2">
             <p className="text-xs font-semibold uppercase mb-1" style={{ color: 'var(--text-muted)', letterSpacing: 'var(--tracking-caps)' }}>
-              Watchlist ({tickers.length})
+              {t('income.watchlistCount', { count: tickers.length })}
             </p>
             {loadingTickers.map((t) => <LoadingCard key={t} ticker={t} />)}
             {infos.map((info) => (
@@ -473,7 +475,7 @@ export function IncomePage() {
                 <ChevronLeft size={16} />
               </button>
               <span className="font-semibold text-base" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-                {MONTH_NAMES_ID[calMonth]} {calYear}
+                {MONTH_NAMES[calMonth]} {calYear}
               </span>
               <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[var(--bg-raised)] transition-colors" style={{ color: 'var(--text-secondary)' }}>
                 <ChevronRight size={16} />
@@ -562,19 +564,19 @@ export function IncomePage() {
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold uppercase" style={{ color: 'var(--text-muted)', letterSpacing: 'var(--tracking-caps)' }}>
                   {selectedDay !== null
-                    ? `${selectedDay} ${MONTH_NAMES_ID[calMonth]} ${calYear}`
-                    : `${MONTH_NAMES_ID[calMonth]} ${calYear}`}
+                    ? `${selectedDay} ${MONTH_NAMES[calMonth]} ${calYear}`
+                    : `${MONTH_NAMES[calMonth]} ${calYear}`}
                 </p>
                 {selectedDay !== null && (
                   <button onClick={() => setSelectedDay(null)} className="text-xs" style={{ color: 'var(--blue-400)' }}>
-                    Lihat semua
+                    {t('income.viewAll')}
                   </button>
                 )}
               </div>
 
               {displayedEvents.length === 0 ? (
                 <p className="text-xs text-center py-4" style={{ color: 'var(--text-muted)' }}>
-                  Tidak ada pembagian dividen bulan ini
+                  {t('income.noEventsThisMonth')}
                 </p>
               ) : (
                 <div className="flex flex-col gap-2">
@@ -603,7 +605,7 @@ export function IncomePage() {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="font-mono text-xs font-semibold" style={{ color: 'var(--gain-400)' }}>
-                              {info ? formatPrice(event.amount, info.currency) : event.amount.toLocaleString('id-ID')}/lbr
+                              {t('income.perShare', { amount: info ? formatPrice(event.amount, info.currency) : event.amount.toLocaleString('id-ID') })}
                             </span>
                             {yieldPct != null && (
                               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{yieldPct.toFixed(2)}%</span>

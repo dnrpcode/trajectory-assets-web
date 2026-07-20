@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Layout } from '@/shared/ui/Layout';
 import { RoboAdvisorChat } from '../components/RoboAdvisorChat';
@@ -9,14 +10,16 @@ import { AllocationTarget, RiskProfile } from '@/shared/types';
 import { getAllocationTarget } from '@/shared/constants/allocationTargets';
 import { ShieldCheck, PieChart, TrendingUp, Bot } from 'lucide-react';
 
-const TOPICS = [
-  { icon: <Bot size={14} strokeWidth={2} />, label: 'Kondisi portofolio' },
-  { icon: <TrendingUp size={14} strokeWidth={2} />, label: 'Proyeksi CAGR & akumulasi' },
-  { icon: <PieChart size={14} strokeWidth={2} />, label: 'Rebalancing & alokasi' },
-  { icon: <ShieldCheck size={14} strokeWidth={2} />, label: 'Profil risiko investasi' },
+const TOPIC_ICONS = [
+  <Bot size={14} strokeWidth={2} />,
+  <TrendingUp size={14} strokeWidth={2} />,
+  <PieChart size={14} strokeWidth={2} />,
+  <ShieldCheck size={14} strokeWidth={2} />,
 ];
 
 export function ChatPage() {
+  const { t } = useTranslation();
+  const TOPICS = t('chat.topics', { returnObjects: true }) as string[];
   const { data: assets = [] } = useActiveAssets();
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
@@ -50,10 +53,10 @@ export function ChatPage() {
     <Layout>
       <div className="mb-6">
         <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-          Robo Advisor
+          {t('chat.title')}
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-          Konsultasikan portofolio dengan AI berbasis data Anda secara real-time.
+          {t('chat.pageSubtitle')}
         </p>
       </div>
 
@@ -71,16 +74,16 @@ export function ChatPage() {
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '20px' }}
           >
             <h4 className="text-xs font-semibold uppercase mb-4" style={{ color: 'var(--text-muted)', letterSpacing: 'var(--tracking-caps)' }}>
-              Topik Layanan
+              {t('chat.serviceTopics')}
             </h4>
             <div className="space-y-3">
-              {TOPICS.map(({ icon, label }) => (
+              {TOPICS.map((label, i) => (
                 <div key={label} className="flex items-center gap-3">
                   <div
                     className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{ background: 'var(--bg-raised)', color: 'var(--blue-400)' }}
                   >
-                    {icon}
+                    {TOPIC_ICONS[i]}
                   </div>
                   <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{label}</span>
                 </div>
@@ -93,11 +96,11 @@ export function ChatPage() {
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '16px', padding: '20px' }}
           >
             <h4 className="text-xs font-semibold uppercase mb-4" style={{ color: 'var(--text-muted)', letterSpacing: 'var(--tracking-caps)' }}>
-              Profil Anda
+              {t('chat.yourProfile')}
             </h4>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Profil Risiko</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('chat.riskProfile')}</span>
                 <span
                   className="text-xs font-semibold px-2 py-0.5 rounded-full capitalize"
                   style={{ background: 'var(--blue-tint)', color: 'var(--blue-300)', border: '1px solid rgba(77,124,255,0.2)' }}
@@ -106,13 +109,13 @@ export function ChatPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Horizon</span>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('chat.horizon')}</span>
                 <span className="text-xs font-semibold capitalize" style={{ color: 'var(--text-secondary)' }}>
                   {user.investmentHorizon}
                 </span>
               </div>
               <div className="pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
-                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Target Alokasi</p>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>{t('chat.targetAllocation')}</p>
                 {(Object.entries(user.targetAllocation) as [string, number][])
                   .filter(([, v]) => v > 0)
                   .sort(([, a], [, b]) => b - a)
@@ -134,7 +137,7 @@ export function ChatPage() {
 
           {/* AI note */}
           <p className="text-xs text-center px-2" style={{ color: 'var(--text-muted)', lineHeight: 'var(--leading-relaxed)' }}>
-            Perubahan profil & alokasi hanya diterapkan setelah Anda mengonfirmasi saran AI.
+            {t('chat.confirmNote')}
           </p>
         </div>
       </div>

@@ -100,7 +100,11 @@ ${allocationList || "(belum ada data)"}
 ${allocationJson}
 
 **Rekomendasi Rebalancing:**
-${advices.length > 0 ? advices.map((a) => `- ${a.description}`).join("\n") : "- Portofolio sudah cukup seimbang"}
+${advices.length > 0 ? advices.map((a) =>
+  a.type === "increase"
+    ? `- Posisi ${a.categoryLabel} saat ini ${a.actualPct.toFixed(1)}%, di bawah target ideal (${a.targetPct}%). Rekomendasi: tambah sekitar Rp ${a.actionAmount.toLocaleString("id-ID")}.`
+    : `- ${a.categoryLabel} overweight di ${a.actualPct.toFixed(1)}% (target ${a.targetPct}%). Pertimbangkan take profit sekitar Rp ${a.actionAmount.toLocaleString("id-ID")} untuk menjaga profil risiko.`
+).join("\n") : "- Portofolio sudah cukup seimbang"}
 
 ## Kemampuan Kamu
 

@@ -52,6 +52,78 @@
       "nearSupport": "Price is only {{dist}}% above the 20-candle low — near support, limited downside room.",
       "nearResistance": "Price is only {{dist}}% below the 20-candle high — near resistance, limited upside room.",
       "midRange": "Price is mid-range over 20 candles ({{low}}% from support, {{high}}% to resistance) — far from both bounds."
+    },
+    "title": "Trading",
+    "subtitle": "RSI + MA signals · Entry, stop loss & take profit setup",
+    "findSignal": "Find Signal",
+    "addCoin": "Add Coin",
+    "priceMayBeStale": "Prices may be out of date.",
+    "emptyTitle": "No coins in your watchlist yet",
+    "emptyDesc": "Add a crypto coin to see RSI & MA signals, entry recommendations, stop loss, take profit, and leverage.",
+    "emptyCta": "Add Your First Coin",
+    "backToTrading": "Back to Trading",
+    "change24h": "(24h)",
+    "price30d": "30-Day Price",
+    "price": "Price",
+    "currentSignal": "Current Signal",
+    "error": {
+      "rateLimit": "API rate limit reached",
+      "offline": "Unable to connect",
+      "generic": "Failed to load data",
+      "retry": "Retry"
+    },
+    "search": {
+      "placeholder": "Search coin... (BTC, Ethereum, Solana)",
+      "noResults": "No results for \"{{query}}\"",
+      "prompt": "Type a coin name or symbol to search",
+      "alreadyAdded": "Already added"
+    },
+    "scanner": {
+      "title": "Signal Scanner",
+      "description": "Scans RSI + MA crossover for the top {{count}} coins. ~300ms each, ±4 seconds total.",
+      "start": "Start Scan",
+      "scanning": "Scanning signals...",
+      "fetching": "Fetching 30-day data from CoinGecko",
+      "error": "Scan failed. CoinGecko may be rate-limiting. Try again in a minute.",
+      "strongSignals": "Strong Signals ({{count}})",
+      "holdSignals": "Hold / Neutral ({{count}})",
+      "refresh": "Refresh Scan"
+    },
+    "paperTrade": {
+      "buy": "Paper Buy",
+      "sell": "Paper Sell",
+      "price": "{{symbol}} Price",
+      "budget": "5% Budget",
+      "amount": "Amount (IDR)",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "Reason for this trade...",
+      "executeBuy": "Execute Paper Buy",
+      "executeSell": "Execute Paper Sell"
+    },
+    "setup": {
+      "title": "Trade Setup",
+      "subtitle": "Swing SL · R:R 1:1 / 1:2 / 1:3",
+      "holdTitle": "Wait for a stronger signal",
+      "holdDesc": "Composite score {{score}} — bullish and bearish factors are still balanced (needs ±30 for a signal). Per-factor detail is in the Detailed Analysis panel.",
+      "leverage": "Leverage",
+      "recommended": "Recommended",
+      "recommendedValue": "Recommended: {{value}}×",
+      "leverageUnclear": "Signal isn't clear yet — avoid leverage",
+      "leverageStrong": "Score {{score}}, {{aligned}} aligned factors — strong signal",
+      "leverageModerate": "Score {{score}}, {{aligned}} aligned factors — moderate signal, keep position size in check",
+      "entryLimit": "Entry (Limit)",
+      "entryMarket": "Entry (Market)",
+      "limitDiff": "{{pct}} from current market price",
+      "stopLoss": "Stop Loss",
+      "swingBased": "Based on 20-candle swing low",
+      "takeProfit": "Take Profit {{n}}",
+      "liquidation": "Liquidation ({{leverage}}×)",
+      "avoidTouching": "Avoid letting price touch this level",
+      "maxLoss": "Max Loss",
+      "tpGain": "TP{{n}} Gain",
+      "useMarket": "Use market price",
+      "viewLimit": "View limit price (cheaper)",
+      "disclaimer": "Not financial advice. Execute on your own exchange. SL is based on the last 20-candle swing — adjust to your own risk appetite."
     }
   },
   "common": {
@@ -448,6 +520,52 @@
     }
   },
   "income": {
+    "title": "Dividend & Coupon Calendar",
+    "subtitle": "Track IDX issuer dividend schedules · yield · payout consistency",
+    "searchPlaceholder": "Search IDX stock (e.g. BBCA, TLKM)...",
+    "searchFailed": "Search failed. Check your connection and try again.",
+    "alreadyAdded": "Already added",
+    "yieldValue": "{{value}} yield",
+    "last": "Last",
+    "perShare": "{{amount}}/share",
+    "currentPrice": "Current price",
+    "trailingYield": "Trailing 12-Month Yield",
+    "consistencyLabel": "Dividend Consistency",
+    "dividendHistory": "Dividend Payout History",
+    "noHistory": "No dividend history",
+    "consistency": {
+      "regular": "Regular ({{years}}/{{total}} yrs)",
+      "semiRegular": "Semi-regular ({{years}}/{{total}} yrs)",
+      "irregular": "Irregular ({{years}}/{{total}} yrs)"
+    },
+    "emptyTitle": "No stocks tracked yet",
+    "emptyDesc": "Search for an IDX ticker above to start tracking its dividend schedule and yield.",
+    "watchlistCount": "Watchlist ({{count}})",
+    "viewAll": "View all",
+    "noEventsThisMonth": "No dividend payouts this month",
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "weekdays": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    ],
     "rotation": {
       "title": "Dividend Rotation Roadmap",
       "subtitle": "Estimated order of stock rotation based on historical dividend & price patterns in your watchlist",
@@ -467,97 +585,293 @@
     }
   },
   "help": {
-    "title": "User Guide",
-    "subtitle": "Everything you need to know to get the most out of Trajectory.",
-    "glossaryTitle": "Glossary",
-    "glossaryDesc": "Financial terms used throughout the app.",
-    "glossary_cagr": "Compound Annual Growth Rate",
-    "glossary_unrealized_gain": "Profit not yet sold",
-    "glossary_avg_cost": "Average buy price per unit",
-    "glossary_rebalancing": "Readjusting asset allocation",
-    "dashboardTitle": "Dashboard",
-    "q_dashboard_1": "What does the Dashboard show?",
-    "a_dashboard_1": "Dashboard shows your portfolio summary: total value, unrealized gain/loss, estimated CAGR, and rebalancing score. Use the \"vs IHSG\" tab on the growth chart to compare your portfolio performance directly against the IHSG index.",
-    "q_dashboard_2": "What is Unrealized Gain/Loss?",
-    "a_dashboard_2": "Unrealized gain/loss is the difference between the current market value of your assets and the total capital you've invested. It's called 'unrealized' because you haven't sold yet — the value changes as market prices fluctuate.",
-    "q_dashboard_3": "What is Est. CAGR?",
-    "a_dashboard_3": "CAGR (Compound Annual Growth Rate) is the estimated annualized compound growth rate of your portfolio. Calculated from portfolio history and/or current asset composition. This is a projection, not a guarantee.",
-    "q_dashboard_4": "What is the Rebalancing Score?",
-    "a_dashboard_4": "A 0–100 score showing how well your actual asset allocation matches your risk profile target. Score 85–100 = optimal, 60–84 = needs attention, below 60 = rebalancing needed soon.",
-    "portfolioTitle": "Portfolio",
-    "q_portfolio_1": "How do I add a new asset?",
-    "a_portfolio_1": "Click 'New Position' on the Portfolio or Dashboard page. Select entry type 'New Position', fill in asset name, category, platform, buy price, and units. The asset projection will be calculated automatically.",
-    "q_portfolio_2": "What is the difference between Top Up and New Position?",
-    "a_portfolio_2": "New Position is used when buying an asset not yet in your portfolio. Top Up is used when adding units to an existing asset. Both will automatically update the average buy price (avg cost).",
-    "q_portfolio_3": "What does a 'stale' asset mean?",
-    "a_portfolio_3": "An asset is marked stale if its price hasn't been updated in the current month. This matters because portfolio value calculations depend on current prices. Use a 'Price Update' entry to refresh it.",
-    "q_portfolio_4": "How do I delete an asset?",
-    "a_portfolio_4": "Open the asset detail, scroll down, click 'Delete Asset'. Warning: all related transactions (entries) will also be permanently deleted. Consider using 'Sell All' as an alternative if you want to keep the history.",
-    "rebalancingTitle": "Rebalancing Audit",
-    "q_rebalancing_1": "How does the Rebalancing Audit work?",
-    "a_rebalancing_1": "The system compares your actual asset allocation (percentage of each asset class) against the target allocation set in Settings. Differences above 3% will generate action recommendations.",
-    "q_rebalancing_2": "How do I change the target allocation?",
-    "a_rebalancing_2": "Open Settings, change your Risk Profile or Investment Horizon, then save. The target allocation will change according to the risk × horizon matrix. You can preview the changes before saving.",
-    "q_rebalancing_3": "I've rebalanced but my score is still low, why?",
-    "a_rebalancing_3": "Make sure all asset prices are up to date (no stale assets). The score is calculated from current market values, not invested capital. If any asset prices are stale, the allocation calculation won't be accurate.",
-    "projectionsTitle": "CAGR Simulator",
-    "q_projections_1": "Where does the CAGR rate come from?",
-    "a_projections_1": "The CAGR rate is calculated from three sources in priority order: (1) Blend of historical portfolio data × asset composition model if data ≥ 6 months, (2) Weighted average return model per asset class based on actual portfolio, (3) Risk profile benchmark as a last fallback.",
-    "q_projections_2": "What are the Optimistic and Pessimistic scenarios?",
-    "a_projections_2": "The Optimistic scenario assumes returns 1.5× the base rate (max 40%). The Pessimistic scenario assumes 0.5× the base rate (min 2%). These show a range of possibilities, not guarantees.",
-    "q_projections_3": "How accurate is this simulation?",
-    "a_projections_3": "This simulation is a planning tool, not a definite prediction. Markets can be far more volatile than assumptions. Use it as a guide for determining contributions and investment horizon, not as a guaranteed target.",
-    "chatTitle": "Robo Advisor",
-    "q_chat_1": "What can the Robo Advisor do?",
-    "a_chat_1": "Robo Advisor is an AI with real-time access to your portfolio data. You can ask about your portfolio condition, request rebalancing recommendations, or ask the AI to change your risk profile and target allocation directly.",
-    "q_chat_2": "Can the AI directly change my risk profile?",
-    "a_chat_2": "Yes. If the AI recommends a change to your risk profile or target allocation, a confirmation card will appear. You can accept or reject the change before it's applied.",
-    "q_chat_3": "Why can't I use Robo Advisor?",
-    "a_chat_3": "Robo Advisor requires an API Key from an AI provider (OpenRouter, Groq, or OpenAI). Contact your administrator or see the setup documentation to configure VITE_AI_API_KEY in environment variables.",
-    "journalTitle": "Transaction Journal",
-    "q_journal_1": "What is recorded in the Journal?",
-    "a_journal_1": "The Journal records all transaction entries: purchases, sales, top-ups, price updates, income (dividends/interest), fees, and corrections. This is an immutable log — every change is recorded as a new entry, not overwriting old data.",
-    "q_journal_2": "What is a Correction entry?",
-    "a_journal_2": "A Correction is used to void an incorrect entry without deleting it. Corrected entries are marked and excluded from asset projection calculations, but the history is preserved for audit trail purposes.",
-    "settingsTitle": "Settings",
-    "q_settings_1": "How does the Risk Profile affect the app?",
-    "a_settings_1": "The Risk Profile determines the ideal target asset allocation (e.g. aggressive = more stocks/crypto, conservative = more bonds/cash). This target is used in the Rebalancing Audit and CAGR Simulator.",
-    "q_settings_2": "What is the AI History feature?",
-    "a_settings_2": "When enabled, your portfolio data (asset names, values, allocation, risk profile) is sent to the AI when using Robo Advisor. This data is used to provide more personalized and contextual recommendations.",
-    "q_settings_3": "How do I change the app language?",
-    "a_settings_3": "Open Settings, scroll to the 'Account' section, click the language toggle (ID/EN) to switch between Bahasa Indonesia and English. All labels, dates, and UI text will adjust instantly.",
-    "stockLiveTitle": "IDX Stock Prices & Estimates",
-    "q_stocklive_1": "How do I see real-time IDX stock prices?",
-    "a_stocklive_1": "Open an IDX stock asset detail, then click the Market tab. The Market Price panel shows the latest price from Yahoo Finance (auto-refreshed every 90 seconds), change vs previous close, and a price chart (1D/5D/1M/1Y).",
-    "q_stocklive_2": "What does the Sync price button do?",
-    "a_stocklive_2": "The Sync button automatically creates a \"Price Update\" entry with the current market price and saves it to your ledger. This instantly updates unrealized gain/loss and portfolio value calculations without manual input.",
-    "q_stocklive_3": "What is the difference between \"Stored\" and market price?",
-    "a_stocklive_3": "The Stored price is the last price in your ledger (from the most recent entry). The Market price is the live price from Yahoo Finance. If they differ, the Stored label turns yellow as a reminder to sync.",
-    "forecastTitle": "Estimates & Technical Analysis",
-    "q_forecast_1": "How does the Next Close Estimate work?",
-    "a_forecast_1": "The system runs 2,000 Monte Carlo simulations using a Geometric Brownian Motion (GBM) model fitted to ~6 months of historical data. The result is a probability distribution of the next closing price, shown as median (P50), bear case (P10), and bull case (P90).",
-    "q_forecast_2": "What are RSI, Bollinger Bands, and other technical signals?",
-    "a_forecast_2": "RSI (Relative Strength Index) measures momentum — below 30 = oversold (potential rebound), above 70 = overbought (be cautious). Bollinger %B shows where the price sits relative to the volatility channel. 5D/20D Momentum is the actual return over the past 5 and 20 trading days.",
-    "q_forecast_3": "How accurate are these estimates?",
-    "a_forecast_3": "These are statistical tools, not guaranteed predictions. The model uses zero drift (random walk assumption) for 1-day forecasts — meaning the median is always close to the last price, and the P10–P90 range reflects historical volatility. More volatile stocks produce wider ranges.",
-    "incomePageTitle": "Dividends & Coupons",
-    "q_income_1": "How do I track IDX stock dividends?",
-    "a_income_1": "Open the Dividends & Coupons page, search for a stock ticker (BBCA, TLKM, etc.), then click + to add to your watchlist. The system shows 5-year dividend history, trailing 12-month yield, and payment consistency.",
-    "q_income_2": "Where does the dividend data come from?",
-    "a_income_2": "Dividend data is fetched in real-time from Yahoo Finance via a Vercel proxy. The system calculates trailing 12-month dividend yield (total dividends / current price × 100%) and shows per-event history.",
-    "q_income_3": "What is dividend payment consistency?",
-    "a_income_3": "Consistency is calculated from the number of unique years (out of the last 5) that had at least one dividend payment. A score of \"5 out of 5 years\" means the company paid dividends every year — a reliable indicator for dividend investors.",
-    "tradingPageTitle": "Crypto Trading & Watchlist",
-    "q_trading_1": "What can I do on the Trading page?",
-    "a_trading_1": "The Trading page provides a real-time crypto watchlist (via CoinGecko), a technical signal scanner (RSI + Moving Average), historical price charts per coin, and paper trading for buy/sell simulation without real money.",
-    "q_trading_2": "What is Paper Trading?",
-    "a_trading_2": "Paper trading is a crypto trading simulation using virtual balance (not real money). Practice entry/exit strategies, view simulated P&L, and measure performance without risking capital.",
-    "q_trading_3": "How do I read RSI signals in the scanner?",
-    "a_trading_3": "The scanner shows 14-period RSI for each coin in your watchlist. RSI < 30 = oversold signal (potential entry), RSI > 70 = overbought signal (consider exiting or caution on entry). Combine with Moving Average trend for confirmation.",
-    "glossary_rsi": "Relative Strength Index — overbought/oversold momentum indicator (0–100)",
-    "glossary_monte_carlo": "Probabilistic simulation method using thousands of random scenarios",
-    "glossary_support_resistance": "Historical price levels where price frequently reverses direction",
-    "glossary_yield": "Dividend yield: total dividends ÷ share price × 100%"
+    "title": "Feature Guide",
+    "subtitle": "Interactive simulations of every Trajectory feature — click a feature below to see how it works.",
+    "tourButton": "Interactive Tour",
+    "tabGuide": "Guide & Simulations",
+    "tabFaq": "FAQ",
+    "sectionFeatureDemo": "Feature simulations",
+    "sectionQuickStart": "Start here",
+    "sectionEntryTypes": "Transaction entry types",
+    "sectionProTips": "Tips & tricks",
+    "sectionGlossary": "Glossary",
+    "demos": [
+      {
+        "title": "Add Asset",
+        "steps": [
+          "List of active assets — tap New Position to record a new asset",
+          "Fill in the name, purchase price per unit, lot size, and transaction date",
+          "The asset appears in the list instantly, value & gain computed automatically"
+        ]
+      },
+      {
+        "title": "Dashboard",
+        "steps": [
+          "Summary of total value, unrealized gain, CAGR, and rebalancing score",
+          "Growth chart of value vs. capital across all historical data",
+          "Rebalancing audit: actual vs. target allocation with adjustment suggestions"
+        ]
+      },
+      {
+        "title": "Price Sync",
+        "steps": [
+          "Assets marked ⚠ Stale mean their price hasn't been updated this month",
+          "The Market tab shows real-time IDX stock prices from Yahoo Finance",
+          "Click Sync — a Price Update entry is created automatically, the stale mark disappears"
+        ]
+      },
+      {
+        "title": "Robo Advisor",
+        "steps": [
+          "The AI has real-time access to all of your portfolio data",
+          "Ask anything: analysis, recommendations, or scenario simulations",
+          "The AI's response includes specific analysis based on your actual portfolio"
+        ]
+      },
+      {
+        "title": "CAGR Simulator",
+        "steps": [
+          "Enter your portfolio value, target CAGR, and investment horizon",
+          "Three scenarios are projected: optimistic, base case, and pessimistic",
+          "See estimated value 5, 10, 20, up to 30 years ahead"
+        ]
+      },
+      {
+        "title": "Dividends",
+        "steps": [
+          "Search for an IDX stock ticker (BBCA, TLKM, BMRI, etc.) in the search field",
+          "Trailing 12-month yield, consistency, and payout history appear automatically",
+          "Add it to your watchlist to track several issuers at once"
+        ]
+      },
+      {
+        "title": "Crypto Trading",
+        "steps": [
+          "Real-time crypto watchlist from CoinGecko — price, volume, market cap",
+          "A multi-indicator scanner (RSI, MA, MACD, support/resistance) scores buy/sell signals with a per-factor reason",
+          "Paper trading: simulate crypto buys/sells without using real money"
+        ]
+      }
+    ],
+    "quickStart": [
+      {
+        "title": "Log your first asset",
+        "cta": "Open Portfolio",
+        "desc": "Open Portfolio → click \"New Position\". Fill in the asset name, category, purchase price, unit count, and date. Every asset class is supported: stocks, mutual funds, bonds, gold, crypto, even cash."
+      },
+      {
+        "title": "Update prices monthly",
+        "cta": "View Portfolio",
+        "desc": "For IDX stocks: open the asset detail → Market tab → click Sync. For other assets: add a \"Price Update\" entry. This keeps your portfolio value accurate and clears the stale ⚠ mark."
+      },
+      {
+        "title": "Check your Dashboard",
+        "cta": "Open Dashboard",
+        "desc": "The Dashboard summarizes total value, unrealized gain/loss, estimated CAGR, rebalancing score, and a growth chart. Once a month after updating prices is enough."
+      },
+      {
+        "title": "Ask the Robo Advisor",
+        "cta": "Start Chat",
+        "desc": "The AI has full access to your portfolio data. Ask for recommendations, allocation analysis, or scenario simulations any time — no need to copy-paste data manually."
+      }
+    ],
+    "entryTypes": [
+      {
+        "type": "New Position",
+        "desc": "Purchase of an asset not yet in your portfolio"
+      },
+      {
+        "type": "Top Up",
+        "desc": "Additional purchase of an asset you already hold"
+      },
+      {
+        "type": "Partial Sell",
+        "desc": "Sale of part of an asset's units"
+      },
+      {
+        "type": "Full Sell",
+        "desc": "Sale of all units, closing the position"
+      },
+      {
+        "type": "Price Update",
+        "desc": "Record the current market price (required monthly for non-cash assets)"
+      },
+      {
+        "type": "Income",
+        "desc": "Dividends, coupons, or interest received"
+      },
+      {
+        "type": "Fee",
+        "desc": "Platform fees, taxes, or other charges"
+      },
+      {
+        "type": "Correction",
+        "desc": "Void a previous incorrect entry without deleting it"
+      }
+    ],
+    "proTips": [
+      "Update prices at the start of the month so the portfolio growth chart and rebalancing score stay accurate.",
+      "Export a CSV from the Portfolio page at year-end for tax reporting.",
+      "Made a mistake? Use Edit Log (the pencil icon on an asset's detail page) — the old entry is corrected automatically and the audit trail stays intact.",
+      "For IDX stocks, the Sync button on the Market tab creates a Price Update entry with the current price instantly — no manual input needed.",
+      "Cash assets (savings, deposits) don't need monthly price updates — the system never marks them stale.",
+      "Turn on \"Portfolio Context for AI\" in Settings so the Robo Advisor can analyze your actual data.",
+      "Add at least 2 stocks to your Dividends & Coupons watchlist to see the Dividend Rotation Roadmap — a suggested rotation order based on historical dividend and price patterns.",
+      "Create a goal on the Financial Goals page with a date & monthly contribution — the system calculates whether your portfolio is on track and how much you need to contribute per month."
+    ],
+    "glossary": [
+      "Compound Annual Growth Rate — the portfolio's annualized compounded growth rate.",
+      "Paper profit on an asset that hasn't been sold yet.",
+      "Average purchase price per unit, adjusted every time you top up.",
+      "Total capital invested in an asset (units × avg cost × exchange rate).",
+      "Adjusting asset proportions back to the target allocation.",
+      "Relative Strength Index — a 0–100 momentum indicator; <30 oversold, >70 overbought.",
+      "Moving Average Convergence Divergence — the difference between EMA12 and EMA26; a strengthening positive histogram signals rising buy momentum.",
+      "A probabilistic simulation using thousands of random scenarios to estimate price.",
+      "Historical price levels where price has often reversed direction.",
+      "Dividend return: total dividends over 12 months ÷ share price × 100%.",
+      "An asset whose price hasn't been updated this calendar month — needs a Price Update or Sync.",
+      "An immutable transaction record — entries are never deleted, only corrected.",
+      "Crypto trading simulation with a virtual balance, no real money involved.",
+      "A strategy of holding a stock only around its dividend payout window to capture yield, then rotating into another stock."
+    ],
+    "faqs": [
+      {
+        "section": "Portfolio & Entries",
+        "items": [
+          {
+            "q": "How do I add a new asset?",
+            "a": "Click \"New Position\" on the Portfolio page. Choose the asset category, fill in the name (and ticker for IDX stocks, e.g. BBCA), platform, purchase price per unit, unit count, currency, and date. The system automatically computes cost basis and average purchase price."
+          },
+          {
+            "q": "What's the difference between Top Up and New Position?",
+            "a": "\"New Position\" is used when the asset isn't in your portfolio yet. \"Top Up\" is used for an additional purchase of an asset you already hold — the system automatically updates the weighted average purchase price."
+          },
+          {
+            "q": "What does a stale asset mean and how do I fix it?",
+            "a": "An asset is marked stale (⚠ icon) if its price hasn't been updated this calendar month. For IDX stocks: open the asset detail → Market tab → click Sync. For other assets: add a \"Price Update\" entry with the current price. Cash assets are never marked stale."
+          },
+          {
+            "q": "How do I edit an entry that's already recorded?",
+            "a": "Open the asset detail → click the pencil icon (✏) next to the entry you want to change. Fill in the fields that need changing, then save. The system marks the old entry as \"corrected\" and creates a new one — the audit trail stays intact."
+          },
+          {
+            "q": "How do I delete an asset?",
+            "a": "Open the asset detail, scroll down, and click \"Delete Asset\". All related entries will also be deleted. If the asset has already been fully sold, it's better to use a \"Full Sell\" entry instead so the history is preserved."
+          }
+        ]
+      },
+      {
+        "section": "Dashboard & Calculations",
+        "items": [
+          {
+            "q": "Where does the Est. CAGR figure on the Dashboard come from?",
+            "a": "CAGR is calculated from your own portfolio's historical data: (current value / first value)^(1/years) - 1. If your portfolio history is less than 1 year, the estimate uses an annualized growth rate instead."
+          },
+          {
+            "q": "Why does the portfolio growth chart look flat?",
+            "a": "The chart uses historical data backfilled from your transaction entries. For IDX stocks with a ticker, historical prices are pulled from Yahoo Finance automatically. If there's no ticker or market data is unavailable, the chart falls back to the last purchase price."
+          },
+          {
+            "q": "What is the Rebalancing Score?",
+            "a": "A 0–100 score showing how closely your actual asset allocation matches the target allocation for your risk profile. A score of 100 means the allocation is exactly on target. Any significant deviation from target reduces the score. The target allocation can be changed via Settings → Risk Profile."
+          }
+        ]
+      },
+      {
+        "section": "IDX Stocks & Technical Analysis",
+        "items": [
+          {
+            "q": "How do I see real-time IDX stock prices?",
+            "a": "Open the detail page of an IDX stock asset (make sure the ticker is filled in, e.g. BBCA), then click the Market tab. The price panel shows the latest price from Yahoo Finance. Click \"Sync\" to automatically create a Price Update entry."
+          },
+          {
+            "q": "What is the Next Close Estimate?",
+            "a": "The system runs 2,000 Monte Carlo simulations using a Geometric Brownian Motion model based on historical volatility and returns. The result is a probabilistic range: a low estimate (bear, P10), a middle estimate (base, median), and a high estimate (bull, P90)."
+          },
+          {
+            "q": "What do RSI, Bollinger Bands, and MA mean in technical analysis?",
+            "a": "RSI (Relative Strength Index): 0–100 momentum, <30 oversold, >70 overbought. Bollinger Bands: a volatility channel above/below the MA — price outside the band suggests a potential reversal. Moving Average 20 & 50: short- and medium-term trend."
+          }
+        ]
+      },
+      {
+        "section": "Robo Advisor (AI)",
+        "items": [
+          {
+            "q": "What can the Robo Advisor do?",
+            "a": "The Robo Advisor is an AI with real-time access to your portfolio data: all assets, values, allocation, risk profile, unrealized gain/loss, and more. You can ask for analysis, rebalancing recommendations, asset suggestions, projections, or general financial questions."
+          },
+          {
+            "q": "Can the AI change my portfolio data?",
+            "a": "Not directly. The AI can only recommend a change to your risk profile or target allocation — if you approve it, the Robo Advisor updates your settings. The AI cannot create or delete transaction entries."
+          },
+          {
+            "q": "How do I enable portfolio context for the AI?",
+            "a": "Go to Settings → turn on \"Include portfolio data for AI\". When enabled, every conversation includes a snapshot of your asset data as context. When disabled, the AI only answers general questions without personal data."
+          }
+        ]
+      },
+      {
+        "section": "Dividends & Calendar",
+        "items": [
+          {
+            "q": "What is the Dividend Rotation Roadmap?",
+            "a": "A feature on the Dividends & Coupons page that lays out an estimated \"move from stock A to stock B\" order across the year, based on the historical pattern of dividend payout months and price movement around those periods. It appears automatically once you have at least 2 stocks in your watchlist."
+          },
+          {
+            "q": "Are the dates in the Dividend Rotation Roadmap guaranteed?",
+            "a": "No. Yahoo Finance (our data source) only provides historical payment dates, not official cum-date/ex-date figures. So the month ranges in the roadmap are estimates based on prior years' patterns — always check the issuer's official schedule (IDX/shareholder meeting) before trading."
+          },
+          {
+            "q": "How is the confidence score calculated?",
+            "a": "Based on how consistently the stock has paid dividends in the same month over the last 5 years. High = a very consistent pattern; Low = an unstable pattern, so the estimated date and return are less reliable."
+          }
+        ]
+      },
+      {
+        "section": "Financial Goals",
+        "items": [
+          {
+            "q": "How is financial goal progress calculated?",
+            "a": "Goals are ordered by nearest deadline (a waterfall model). Portfolio value is allocated sequentially: goal #1 is funded first, the remainder flows to goal #2, and so on. Each goal's progress = the funds allocated to it ÷ the goal amount. That way, a single rupiah is never counted toward two goals at once."
+          },
+          {
+            "q": "What do the On Track / Falling Behind statuses mean?",
+            "a": "If a goal has a deadline, the system projects the portfolio's value on that date using a CAGR assumption (the same one used on the CAGR Simulator page) plus the TOTAL monthly contribution from all goals. The projection is compared against the cumulative target (that goal plus every earlier-priority goal). Projection ≥ cumulative target = On Track; below it = Falling Behind."
+          },
+          {
+            "q": "What is the Achievement Roadmap, and why does my second goal show 0%?",
+            "a": "The Roadmap appears once you have more than one goal: it shows the order of achievement, the estimated month each goal is reached, and suggestions (e.g. the total contribution needed). A lower-priority goal can show 0% because your portfolio value is still fully allocated to the goal with the nearer deadline — once that goal is covered, allocation automatically flows to the next one."
+          },
+          {
+            "q": "What's the difference between \"Required per month\" and the monthly contribution I entered?",
+            "a": "The monthly contribution is your planned deposit for that goal. \"Required per month\" is the system's calculation: the minimum TOTAL monthly deposit (across all goals combined) needed to hit the cumulative target exactly by its deadline. If the required figure is well above your planned total, you'll need to contribute more, push back the deadline, or lower the target amount."
+          },
+          {
+            "q": "Why does the goal I set during onboarding show up here?",
+            "a": "The savings goal you entered during onboarding is saved as your first financial goal. You can change its name, amount, deadline, and contribution any time from the Financial Goals page."
+          }
+        ]
+      },
+      {
+        "section": "Settings & Account",
+        "items": [
+          {
+            "q": "How does Risk Profile affect the app?",
+            "a": "Risk Profile determines the ideal target asset allocation used for the Rebalancing Score and Dashboard suggestions. Conservative = more bonds/gold; Aggressive = more stocks/crypto. It can be changed any time in Settings."
+          },
+          {
+            "q": "How do I change the app language?",
+            "a": "Go to Settings → Account section → click the ID / EN button to switch between Bahasa Indonesia and English."
+          },
+          {
+            "q": "Is my data safe?",
+            "a": "Data is stored in Firebase Firestore with security rules ensuring only you can read and write your own data (verified via Firebase Auth). All communication is encrypted over HTTPS with security headers enabled."
+          }
+        ]
+      }
+    ]
   },
   "chat": {
     "title": "Robo Advisor",
@@ -580,7 +894,36 @@
     "quickPrompt1": "How is my portfolio doing?",
     "quickPrompt2": "Recommend rebalancing",
     "quickPrompt3": "Change my risk profile",
-    "quickPrompt4": "Explain my target allocation"
+    "quickPrompt4": "Explain my target allocation",
+    "pageSubtitle": "Discuss your portfolio with an AI that has real-time access to your data.",
+    "serviceTopics": "Service Topics",
+    "yourProfile": "Your Profile",
+    "riskProfile": "Risk Profile",
+    "horizon": "Horizon",
+    "targetAllocation": "Target Allocation",
+    "confirmNote": "Profile & allocation changes only apply after you confirm the AI's suggestion.",
+    "topics": [
+      "Portfolio condition",
+      "CAGR projection & accumulation",
+      "Rebalancing & allocation",
+      "Investment risk profile"
+    ]
+  },
+  "advisory": {
+    "title": "Rebalancing Audit",
+    "subtitle": "Analysis of how well your portfolio allocation matches your {{profile}} risk profile.",
+    "distributionComparison": "Asset Distribution Comparison",
+    "target": "target {{pct}}%",
+    "rebalancingScore": "Rebalancing Score",
+    "profile": "Profile",
+    "totalPortfolio": "Total Portfolio",
+    "recommendations": "Rebalancing Recommendations",
+    "increaseTitle": "Increase {{category}} Allocation",
+    "increaseDesc": "Your {{category}} position is currently {{actual}}%, below the ideal target ({{target}}%). Recommendation: add around {{amount}}.",
+    "decreaseTitle": "Reduce {{category}} Allocation",
+    "decreaseDesc": "{{category}} is overweight at {{actual}}% (target {{target}}%). Consider taking profit of around {{amount}} to keep your risk profile in check.",
+    "balancedTitle": "Your Portfolio Is Balanced",
+    "balancedDesc": "No rebalancing recommendations at this time."
   },
   "tour": {
     "next": "Next",

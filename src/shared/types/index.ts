@@ -47,11 +47,11 @@ export interface CategoryBreakdown {
 }
 
 export interface RebalancingAdvice {
-  title: string;
   type: 'increase' | 'decrease';
   categoryLabel: string;
-  description: string;
   actionAmount: number;
+  actualPct: number;
+  targetPct: number;
 }
 
 export interface PortfolioHistoryPoint {

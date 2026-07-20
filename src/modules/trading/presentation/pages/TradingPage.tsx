@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, TrendingUp, Scan, AlertTriangle } from 'lucide-react';
 import { Layout } from '@/shared/ui/Layout';
 import { Button } from '@/shared/ui/Button';
@@ -10,6 +11,7 @@ import { useWatchlist, useCoinMarkets } from '../hooks/useTrading';
 import { getCoinGeckoErrorMessage, CoinMarket } from '../../data/CoinGeckoRepository';
 
 export function TradingPage() {
+  const { t } = useTranslation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const { data: watchlist = [], isLoading: watchlistLoading } = useWatchlist();
@@ -24,18 +26,18 @@ export function TradingPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)', letterSpacing: 'var(--tracking-snug)' }}>
-            Trading
+            {t('trading.title')}
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-            Sinyal RSI + MA · Setup entry, stop loss & take profit
+            {t('trading.subtitle')}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button variant="secondary" onClick={() => setScannerOpen(true)} icon={<Scan size={14} />}>
-            Cari Sinyal
+            {t('trading.findSignal')}
           </Button>
           <Button onClick={() => setSearchOpen(true)} icon={<Plus size={14} strokeWidth={2.5} />}>
-            Tambah Coin
+            {t('trading.addCoin')}
           </Button>
         </div>
       </div>
@@ -49,7 +51,7 @@ export function TradingPage() {
         }}>
           <AlertTriangle size={14} style={{ color: 'var(--warn-400)', flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: 13, color: 'var(--warn-400)' }}>
-            {getCoinGeckoErrorMessage(marketsError)} Harga mungkin tidak terupdate.
+            {getCoinGeckoErrorMessage(marketsError)} {t('trading.priceMayBeStale')}
           </p>
         </div>
       )}
@@ -66,12 +68,12 @@ export function TradingPage() {
           <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--bg-raised)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <TrendingUp size={24} style={{ color: 'var(--blue-400)' }} />
           </div>
-          <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Belum ada coin di watchlist</h3>
+          <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>{t('trading.emptyTitle')}</h3>
           <p style={{ margin: '0 0 20px', fontSize: '13px', color: 'var(--text-muted)', maxWidth: 320 }}>
-            Tambahkan coin crypto untuk melihat sinyal RSI & MA, rekomendasi entry, stop loss, take profit, dan leverage.
+            {t('trading.emptyDesc')}
           </p>
           <Button onClick={() => setSearchOpen(true)} icon={<Plus size={14} />}>
-            Tambah Coin Pertama
+            {t('trading.emptyCta')}
           </Button>
         </div>
       ) : (

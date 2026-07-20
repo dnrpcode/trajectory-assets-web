@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, X, Plus, Loader } from 'lucide-react';
 import { CoinGeckoService, CoinSearchResult, getCoinGeckoErrorMessage } from '../../data/CoinGeckoRepository';
 import { useAddToWatchlist, useWatchlist } from '../hooks/useTrading';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function CoinSearchModal({ open, onClose }: Props) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CoinSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +71,7 @@ export function CoinSearchModal({ open, onClose }: Props) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari coin... (BTC, Ethereum, Solana)"
+            placeholder={t('trading.search.placeholder')}
             style={{
               flex: 1, background: 'transparent', border: 'none', outline: 'none',
               fontSize: '14px', color: 'var(--text-primary)', fontFamily: 'var(--font-sans)',
@@ -90,12 +92,12 @@ export function CoinSearchModal({ open, onClose }: Props) {
           )}
           {!searchError && results.length === 0 && query && !loading && (
             <p style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-              Tidak ada hasil untuk "{query}"
+              {t('trading.search.noResults', { query })}
             </p>
           )}
           {!searchError && results.length === 0 && !query && (
             <p style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-              Ketik nama atau simbol coin untuk mencari
+              {t('trading.search.prompt')}
             </p>
           )}
           {results.map((coin) => {
@@ -126,7 +128,7 @@ export function CoinSearchModal({ open, onClose }: Props) {
                   <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{coin.symbol.toUpperCase()}</p>
                 </div>
                 {inWatchlist ? (
-                  <span style={{ fontSize: '11px', color: 'var(--gain-500)', fontWeight: 600 }}>Sudah ditambahkan</span>
+                  <span style={{ fontSize: '11px', color: 'var(--gain-500)', fontWeight: 600 }}>{t('trading.search.alreadyAdded')}</span>
                 ) : (
                   <Plus size={16} style={{ color: 'var(--blue-400)', flexShrink: 0 }} />
                 )}

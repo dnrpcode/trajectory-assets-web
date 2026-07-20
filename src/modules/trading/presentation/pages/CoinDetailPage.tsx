@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, RefreshCw, WifiOff, Clock, ServerCrash } from 'lucide-react';
 import { CoinGeckoError, getCoinGeckoErrorMessage } from '../../data/CoinGeckoRepository';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ComposedChart, Line } from 'recharts';
@@ -17,6 +18,7 @@ function formatDate(ms: number) {
 
 
 export function CoinDetailPage() {
+  const { t } = useTranslation();
   const { coinId } = useParams<{ coinId: string }>();
   const navigate = useNavigate();
   const { data: watchlist = [] } = useWatchlist();
@@ -50,10 +52,10 @@ export function CoinDetailPage() {
     const isOffline = error instanceof TypeError;
     const Icon = isRateLimit ? Clock : isOffline ? WifiOff : ServerCrash;
     const title = isRateLimit
-      ? 'Batas permintaan API tercapai'
+      ? t('trading.error.rateLimit')
       : isOffline
-      ? 'Tidak dapat terhubung'
-      : 'Gagal memuat data';
+      ? t('trading.error.offline')
+      : t('trading.error.generic');
 
     return (
       <Layout>
@@ -81,7 +83,7 @@ export function CoinDetailPage() {
             }}
           >
             <RefreshCw size={13} />
-            Coba Lagi
+            {t('trading.error.retry')}
           </button>
         </div>
       </Layout>
@@ -115,7 +117,7 @@ export function CoinDetailPage() {
         onClick={() => navigate('/trading')}
         style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '13px', marginBottom: 20, padding: 0, fontFamily: 'var(--font-sans)' }}
       >
-        <ArrowLeft size={14} /> Kembali ke Trading
+        <ArrowLeft size={14} /> {t('trading.backToTrading')}
       </button>
 
       {/* Header */}
@@ -132,7 +134,7 @@ export function CoinDetailPage() {
                 ${currentPrice.toLocaleString('en-US', { maximumFractionDigits: 4 })}
               </span>
               <span style={{ fontSize: '13px', fontWeight: 600, color: priceChange >= 0 ? 'var(--gain-500)' : 'var(--loss-500)' }}>
-                {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}% (24h)
+                {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}% {t('trading.change24h')}
               </span>
             </div>
           </div>
@@ -155,7 +157,7 @@ export function CoinDetailPage() {
           <Card variant="default" padding="none">
             <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Harga 30 Hari</h3>
+                <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{t('trading.price30d')}</h3>
                 <div style={{ display: 'flex', gap: 12, fontSize: '11px', color: 'var(--text-muted)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <span style={{ width: 16, height: 2, background: 'var(--blue-400)', display: 'inline-block', borderRadius: 1 }} />MA7
@@ -176,7 +178,7 @@ export function CoinDetailPage() {
                     labelFormatter={(v) => formatDate(Number(v))}
                     formatter={(value, name) => [
                       `$${Number(value).toLocaleString('en-US', { maximumFractionDigits: 4 })}`,
-                      name === 'price' ? 'Harga' : name === 'ma7' ? 'MA7' : 'MA25',
+                      name === 'price' ? t('trading.price') : name === 'ma7' ? 'MA7' : 'MA25',
                     ]}
                     contentStyle={{ background: 'var(--bg-raised)', border: '1px solid var(--border-default)', borderRadius: 8, fontSize: 12 }}
                   />
@@ -234,7 +236,7 @@ export function CoinDetailPage() {
 
           {/* Signal card */}
           <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, padding: '18px' }}>
-            <p style={{ margin: '0 0 12px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Sinyal Saat Ini</p>
+            <p style={{ margin: '0 0 12px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>{t('trading.currentSignal')}</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
               <SignalBadge signal={signal.signal} size="lg" />
               <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{signal.reason}</span>

@@ -289,6 +289,8 @@ After any portfolio mutation: invalidate `activeAssets`, `allAssets`, `portfolio
 
 `ThemeProvider` wraps the entire app (outermost, outside `QueryClientProvider`).
 
+Semua page component di atas di-`React.lazy()` + `Suspense` (fallback `FullPageSpinner`) supaya tiap route jadi chunk terpisah — jangan ubah jadi static import lagi, itu yang bikin bundle awal 1,8MB sebelum di-split.
+
 ---
 
 ## Auth State
@@ -478,11 +480,11 @@ Vercel Edge proxy (`api/dividend/`) di-deploy otomatis — tidak perlu config ta
 
 ## What Is NOT Done Yet
 
-- Translations (`t()`) baru ada di: Dashboard, Portfolio, Settings, EntryForm, Navbar. Masih hardcode Indonesia di: AssetDetailPage, JournalPage, OnboardingPage, auth pages, AssetCard, modal-modal.
-- AI recommendation di AssetDetailPage masih mock/static.
-- Proyeksi jadwal dividen mendatang — kalender income hanya tampilkan data historis Yahoo Finance, belum ada estimasi next payment.
+- Semua halaman (`presentation/pages/*.tsx`) sudah pakai `t()` — cek dengan `grep -rL "useTranslation" src/modules/*/presentation/pages/*.tsx`, hasilnya harus kosong. Dua pengecualian yang disengaja tetap hardcode Bahasa Indonesia:
+  - Konten simulasi `DemoXXX` di `HelpPage.tsx` (nama saham dummy, angka contoh) — sesuai aturan pengecualian di checklist atas.
+  - String `reason` di `src/shared/utils/indicators.ts` (dipakai CoinCard, SignalScannerModal, TradeSetupCard) — dihasilkan business logic pure function di domain layer, bukan JSX, jadi belum dialiri lewat `t()`.
+- `firestore.rules` sudah ada dan cukup ketat (owner-only, validasi field wajib per collection), tapi ada bug: bagian `goals` memvalidasi field `notes` padahal entity `Goal` menulis `description` — validasi panjang string itu jadi tidak pernah berjalan. Belum diperbaiki.
 - No tests.
-- Firestore Security Rules — cek di Firebase console.
 
 ---
 

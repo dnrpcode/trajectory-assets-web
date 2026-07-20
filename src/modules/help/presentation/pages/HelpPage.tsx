@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ChevronDown, LayoutGrid, Activity, ShieldCheck, TrendingUp,
   MessageSquare, FileText, Settings, Play, BarChart2,
@@ -853,75 +854,32 @@ function DemoTrading3() {
 interface DemoStep { label: string; Component: () => React.ReactElement }
 interface DemoConfig { id: string; title: string; icon: React.ReactNode; color: string; steps: DemoStep[] }
 
-const DEMOS: DemoConfig[] = [
-  {
-    id: 'portfolio', title: 'Tambah Aset',
-    icon: <PlusCircle size={13} strokeWidth={2} />, color: 'var(--blue-400)',
-    steps: [
-      { label: 'Daftar aset aktif — tekan Posisi Baru untuk mencatat aset baru', Component: DemoPortfolio1 },
-      { label: 'Isi nama, harga beli per unit, jumlah lot, dan tanggal transaksi', Component: DemoPortfolio2 },
-      { label: 'Aset langsung masuk ke daftar, nilai & gain dihitung otomatis', Component: DemoPortfolio3 },
-    ],
-  },
-  {
-    id: 'dashboard', title: 'Dashboard',
-    icon: <LayoutGrid size={13} strokeWidth={2} />, color: 'var(--blue-400)',
-    steps: [
-      { label: 'Ringkasan total nilai, unrealized gain, CAGR, dan skor rebalancing', Component: DemoDashboard1 },
-      { label: 'Grafik pertumbuhan nilai vs modal dari semua data historis', Component: DemoDashboard2 },
-      { label: 'Audit rebalancing: alokasi aktual vs target dan saran penyesuaian', Component: DemoDashboard3 },
-    ],
-  },
-  {
-    id: 'sync', title: 'Sync Harga',
-    icon: <RefreshCw size={13} strokeWidth={2} />, color: 'var(--blue-300)',
-    steps: [
-      { label: 'Aset bertanda ⚠ Stale berarti harganya belum diupdate bulan ini', Component: DemoSync1 },
-      { label: 'Tab Pasar menampilkan harga real-time saham IDX dari Yahoo Finance', Component: DemoSync2 },
-      { label: 'Klik Sync — entri Update Harga dibuat otomatis, tanda stale hilang', Component: DemoSync3 },
-    ],
-  },
-  {
-    id: 'advisor', title: 'Robo Advisor',
-    icon: <Bot size={13} strokeWidth={2} />, color: 'var(--ai-accent)',
-    steps: [
-      { label: 'AI memiliki akses ke seluruh data portofoliomu secara real-time', Component: DemoAdvisor1 },
-      { label: 'Tanyakan apa saja: analisis, rekomendasi, atau simulasi skenario', Component: DemoAdvisor2 },
-      { label: 'Respons AI berisi analisis spesifik berdasarkan kondisi portofoliomu', Component: DemoAdvisor3 },
-    ],
-  },
-  {
-    id: 'cagr', title: 'Simulasi CAGR',
-    icon: <TrendingUp size={13} strokeWidth={2} />, color: 'var(--blue-400)',
-    steps: [
-      { label: 'Masukkan nilai portofolio, target CAGR, dan horizon investasi', Component: DemoCAGR1 },
-      { label: 'Tiga skenario diproyeksikan: optimis, base case, dan pesimis', Component: DemoCAGR2 },
-      { label: 'Lihat estimasi nilai di 5, 10, 20, hingga 30 tahun ke depan', Component: DemoCAGR3 },
-    ],
-  },
-  {
-    id: 'dividend', title: 'Dividen',
-    icon: <CalendarDays size={13} strokeWidth={2} />, color: 'var(--gain-400)',
-    steps: [
-      { label: 'Cari ticker saham IDX (BBCA, TLKM, BMRI, dll.) di kolom pencarian', Component: DemoDividend1 },
-      { label: 'Yield trailing 12 bulan, konsistensi, dan riwayat pembayaran tampil otomatis', Component: DemoDividend2 },
-      { label: 'Tambahkan ke watchlist untuk memantau beberapa emiten sekaligus', Component: DemoDividend3 },
-    ],
-  },
-  {
-    id: 'trading', title: 'Trading Kripto',
-    icon: <BarChart2 size={13} strokeWidth={2} />, color: 'var(--warn-400)',
-    steps: [
-      { label: 'Watchlist kripto real-time dari CoinGecko — harga, volume, market cap', Component: DemoTrading1 },
-      { label: 'Scanner multi-indikator (RSI, MA, MACD, support/resistance) memberi skor sinyal beli/jual lengkap dengan alasan per faktor', Component: DemoTrading2 },
-      { label: 'Paper trading: simulasi beli/jual kripto tanpa menggunakan uang nyata', Component: DemoTrading3 },
-    ],
-  },
-];
+const DEMOS_META = [
+  { id: 'portfolio', icon: <PlusCircle size={13} strokeWidth={2} />, color: 'var(--blue-400)', Components: [DemoPortfolio1, DemoPortfolio2, DemoPortfolio3] },
+  { id: 'dashboard', icon: <LayoutGrid size={13} strokeWidth={2} />, color: 'var(--blue-400)', Components: [DemoDashboard1, DemoDashboard2, DemoDashboard3] },
+  { id: 'sync', icon: <RefreshCw size={13} strokeWidth={2} />, color: 'var(--blue-300)', Components: [DemoSync1, DemoSync2, DemoSync3] },
+  { id: 'advisor', icon: <Bot size={13} strokeWidth={2} />, color: 'var(--ai-accent)', Components: [DemoAdvisor1, DemoAdvisor2, DemoAdvisor3] },
+  { id: 'cagr', icon: <TrendingUp size={13} strokeWidth={2} />, color: 'var(--blue-400)', Components: [DemoCAGR1, DemoCAGR2, DemoCAGR3] },
+  { id: 'dividend', icon: <CalendarDays size={13} strokeWidth={2} />, color: 'var(--gain-400)', Components: [DemoDividend1, DemoDividend2, DemoDividend3] },
+  { id: 'trading', icon: <BarChart2 size={13} strokeWidth={2} />, color: 'var(--warn-400)', Components: [DemoTrading1, DemoTrading2, DemoTrading3] },
+] as const;
+
+function useDemos(): DemoConfig[] {
+  const { t } = useTranslation();
+  const text = t('help.demos', { returnObjects: true }) as { title: string; steps: string[] }[];
+  return DEMOS_META.map((meta, i) => ({
+    id: meta.id,
+    title: text[i].title,
+    icon: meta.icon,
+    color: meta.color,
+    steps: meta.Components.map((Component, j) => ({ label: text[i].steps[j], Component })),
+  }));
+}
 
 // ── Demo Player ───────────────────────────────────────────────────────────────
 
 function FeatureDemoPlayer() {
+  const DEMOS = useDemos();
   const [fi, setFi] = useState(0);
   const [si, setSi] = useState(0);
   const [stepKey, setStepKey] = useState(0);
@@ -1032,122 +990,76 @@ function FeatureDemoPlayer() {
 
 // ── Quick Start ───────────────────────────────────────────────────────────────
 
-const QUICK_START = [
-  { n: '1', title: 'Catat aset pertamamu', icon: <PlusCircle size={17} />, route: '/portfolio', cta: 'Buka Portfolio', desc: 'Buka Portfolio → klik "Posisi Baru". Isi nama aset, kategori, harga beli, jumlah unit, dan tanggal. Semua kelas aset didukung: saham, reksa dana, obligasi, emas, kripto, hingga kas.' },
-  { n: '2', title: 'Update harga setiap bulan', icon: <RefreshCw size={17} />, route: '/portfolio', cta: 'Lihat Portfolio', desc: 'Untuk saham IDX: buka detail aset → tab Pasar → klik Sync. Untuk aset lain: tambah entri "Update Harga". Ini menjaga nilai portofolio akurat dan menghilangkan tanda stale ⚠.' },
-  { n: '3', title: 'Pantau di Dashboard', icon: <LayoutGrid size={17} />, route: '/dashboard', cta: 'Buka Dashboard', desc: 'Dashboard merangkum total nilai, unrealized gain/loss, estimasi CAGR, skor rebalancing, dan grafik pertumbuhan. Cukup dibuka sekali sebulan setelah update harga.' },
-  { n: '4', title: 'Tanya Robo Advisor', icon: <MessageSquare size={17} />, route: '/chat', cta: 'Mulai Chat', desc: 'AI memiliki akses penuh ke data portofoliomu. Tanya rekomendasi, analisis alokasi, atau simulasi skenario kapan saja. Tidak perlu copas data manual.' },
-];
+const QUICK_START_META = [
+  { n: '1', icon: <PlusCircle size={17} />, route: '/portfolio' },
+  { n: '2', icon: <RefreshCw size={17} />, route: '/portfolio' },
+  { n: '3', icon: <LayoutGrid size={17} />, route: '/dashboard' },
+  { n: '4', icon: <MessageSquare size={17} />, route: '/chat' },
+] as const;
+
+function useQuickStart() {
+  const { t } = useTranslation();
+  const text = t('help.quickStart', { returnObjects: true }) as { title: string; cta: string; desc: string }[];
+  return QUICK_START_META.map((meta, i) => ({ ...meta, ...text[i] }));
+}
 
 // ── Entry Types ───────────────────────────────────────────────────────────────
 
-const ENTRY_TYPES = [
-  { type: 'Posisi Baru', desc: 'Pembelian aset yang belum ada di portofolio', color: 'var(--gain-400)' },
-  { type: 'Top Up', desc: 'Pembelian tambahan aset yang sudah ada', color: 'var(--gain-400)' },
-  { type: 'Jual Sebagian', desc: 'Penjualan sebagian unit aset', color: 'var(--loss-400)' },
-  { type: 'Jual Semua', desc: 'Penjualan seluruh unit, menutup posisi', color: 'var(--loss-400)' },
-  { type: 'Update Harga', desc: 'Catat harga pasar terkini (wajib tiap bulan untuk aset non-kas)', color: 'var(--blue-400)' },
-  { type: 'Pendapatan', desc: 'Dividen, kupon, atau bunga yang diterima', color: 'var(--gain-400)' },
-  { type: 'Biaya / Fee', desc: 'Biaya platform, pajak, atau fee lainnya', color: 'var(--loss-400)' },
-  { type: 'Koreksi', desc: 'Batalkan entri sebelumnya yang salah tanpa menghapusnya', color: 'var(--warn-400)' },
+const ENTRY_TYPES_COLORS = [
+  'var(--gain-400)', 'var(--gain-400)', 'var(--loss-400)', 'var(--loss-400)',
+  'var(--blue-400)', 'var(--gain-400)', 'var(--loss-400)', 'var(--warn-400)',
 ];
+
+function useEntryTypes() {
+  const { t } = useTranslation();
+  const text = t('help.entryTypes', { returnObjects: true }) as { type: string; desc: string }[];
+  return text.map((item, i) => ({ ...item, color: ENTRY_TYPES_COLORS[i] }));
+}
 
 // ── Pro Tips ──────────────────────────────────────────────────────────────────
 
-const PRO_TIPS = [
-  { icon: <RefreshCw size={14} />, text: 'Update harga di awal bulan supaya grafik pertumbuhan portofolio dan skor rebalancing selalu akurat.' },
-  { icon: <Download size={14} />, text: 'Ekspor CSV dari halaman Portfolio setiap akhir tahun untuk kebutuhan laporan pajak.' },
-  { icon: <Pencil size={14} />, text: 'Salah input? Gunakan fitur Edit Log (ikon pensil di detail aset) — entri lama dikoreksi otomatis, audit trail tetap terjaga.' },
-  { icon: <Zap size={14} />, text: 'Untuk saham IDX, tombol Sync di tab Pasar langsung membuat entri Update Harga dengan harga terkini — tidak perlu input manual.' },
-  { icon: <ShieldCheck size={14} />, text: 'Kas (tabungan, deposito) tidak perlu update harga bulanan — sistem tidak menandainya sebagai stale.' },
-  { icon: <MessageSquare size={14} />, text: 'Aktifkan "Konteks Portofolio untuk AI" di Pengaturan agar Robo Advisor bisa menganalisis data aktualmu.' },
-  { icon: <RefreshCw size={14} />, text: 'Tambahkan minimal 2 saham ke watchlist Dividen & Kupon untuk melihat Roadmap Rotasi Dividen — urutan pindah saham berdasarkan pola dividen & harga historis.' },
-  { icon: <Target size={14} />, text: 'Buat target di halaman Target Finansial dengan tanggal & kontribusi bulanan — sistem menghitung apakah portofoliomu on track dan berapa setoran bulanan yang dibutuhkan.' },
+const PRO_TIPS_ICONS = [
+  <RefreshCw size={14} />, <Download size={14} />, <Pencil size={14} />, <Zap size={14} />,
+  <ShieldCheck size={14} />, <MessageSquare size={14} />, <RefreshCw size={14} />, <Target size={14} />,
 ];
+
+function useProTips() {
+  const { t } = useTranslation();
+  const text = t('help.proTips', { returnObjects: true }) as string[];
+  return text.map((tipText, i) => ({ icon: PRO_TIPS_ICONS[i], text: tipText }));
+}
 
 // ── Glossary ──────────────────────────────────────────────────────────────────
+// Term names are technical jargon kept identical across languages — only the definition is localized.
 
-const GLOSSARY = [
-  { term: 'CAGR', def: 'Compound Annual Growth Rate — tingkat pertumbuhan majemuk tahunan portofolio.' },
-  { term: 'Unrealized Gain', def: 'Keuntungan di atas kertas dari aset yang belum dijual.' },
-  { term: 'Avg Cost', def: 'Rata-rata harga beli per unit, disesuaikan setiap kali top up.' },
-  { term: 'Cost Basis', def: 'Total modal yang diinvestasikan untuk suatu aset (unit × avg cost × kurs).' },
-  { term: 'Rebalancing', def: 'Penyesuaian ulang proporsi aset agar sesuai target alokasi.' },
-  { term: 'RSI', def: 'Relative Strength Index — indikator momentum 0–100; <30 oversold, >70 overbought.' },
-  { term: 'MACD', def: 'Moving Average Convergence Divergence — selisih EMA12 dan EMA26; histogram positif yang menguat menandakan momentum beli bertambah.' },
-  { term: 'Monte Carlo', def: 'Simulasi probabilistik dengan ribuan skenario acak untuk estimasi harga.' },
-  { term: 'Support / Resistance', def: 'Level harga historis tempat harga sering berbalik arah.' },
-  { term: 'Yield', def: 'Imbal hasil dividen: total dividen 12 bulan ÷ harga saham × 100%.' },
-  { term: 'Stale', def: 'Aset belum diupdate harganya di bulan berjalan — perlu Update Harga / Sync.' },
-  { term: 'Ledger', def: 'Catatan transaksi immutable — entri tidak pernah dihapus, hanya dikoreksi.' },
-  { term: 'Paper Trading', def: 'Simulasi trading kripto dengan saldo virtual, tanpa uang nyata.' },
-  { term: 'Dividend Capture', def: 'Strategi memegang saham hanya di sekitar periode pembagian dividen untuk mengejar yield, lalu rotasi ke saham lain.' },
+const GLOSSARY_TERMS = [
+  'CAGR', 'Unrealized Gain', 'Avg Cost', 'Cost Basis', 'Rebalancing', 'RSI', 'MACD',
+  'Monte Carlo', 'Support / Resistance', 'Yield', 'Stale', 'Ledger', 'Paper Trading', 'Dividend Capture',
 ];
+
+function useGlossary() {
+  const { t } = useTranslation();
+  const defs = t('help.glossary', { returnObjects: true }) as string[];
+  return GLOSSARY_TERMS.map((term, i) => ({ term, def: defs[i] }));
+}
 
 // ── FAQ ───────────────────────────────────────────────────────────────────────
 
-const FAQS = [
-  {
-    section: 'Portfolio & Entri', icon: <Activity size={15} strokeWidth={1.75} />,
-    items: [
-      { q: 'Bagaimana cara menambah aset baru?', a: 'Klik "Posisi Baru" di halaman Portfolio. Pilih kategori aset, isi nama (dan ticker untuk saham IDX, misal BBCA), platform, harga beli per unit, jumlah unit, mata uang, dan tanggal. Sistem akan otomatis menghitung cost basis dan rata-rata harga beli.' },
-      { q: 'Apa perbedaan Top Up dengan Posisi Baru?', a: '"Posisi Baru" digunakan saat aset belum ada di portofolio. "Top Up" digunakan untuk pembelian tambahan aset yang sudah ada — sistem akan mengupdate rata-rata harga beli (weighted average) secara otomatis.' },
-      { q: 'Apa yang dimaksud aset stale dan bagaimana cara memperbaikinya?', a: 'Aset ditandai stale (ikon ⚠) jika harganya belum diperbarui di bulan berjalan. Untuk saham IDX: buka detail aset → tab Pasar → klik Sync. Untuk aset lain: tambah entri "Update Harga" dengan harga terkini. Aset kas tidak pernah ditandai stale.' },
-      { q: 'Bagaimana cara mengedit entri yang sudah tercatat?', a: 'Buka detail aset → klik ikon pensil (✏) di samping entri yang ingin diubah. Isi kolom yang perlu diubah, lalu simpan. Sistem akan menandai entri lama sebagai "dikoreksi" dan membuat entri baru — audit trail tetap terjaga.' },
-      { q: 'Bagaimana cara menghapus aset?', a: 'Buka detail aset, scroll ke bawah, klik "Hapus Aset". Semua entri terkait juga akan dihapus. Jika aset sudah dijual habis, lebih baik gunakan entri "Jual Semua" agar riwayat tetap tersimpan.' },
-    ],
-  },
-  {
-    section: 'Dashboard & Perhitungan', icon: <LayoutGrid size={15} strokeWidth={1.75} />,
-    items: [
-      { q: 'Dari mana angka Est. CAGR di Dashboard berasal?', a: 'CAGR dihitung dari data historis portofoliomu sendiri: (nilai sekarang / nilai pertama)^(1/tahun) - 1. Jika riwayat portofolio kurang dari 1 tahun, estimasi menggunakan kecepatan pertumbuhan yang diannualisasi.' },
-      { q: 'Mengapa grafik pertumbuhan portofolio terlihat flat?', a: 'Grafik menggunakan data historis yang dibackfill dari entri transaksi. Untuk saham IDX yang punya ticker, harga historis diambil dari Yahoo Finance secara otomatis. Jika tidak ada ticker atau data pasar tidak tersedia, grafik menggunakan harga beli terakhir sebagai fallback.' },
-      { q: 'Apa itu Skor Rebalancing?', a: 'Skor 0–100 yang menunjukkan seberapa sesuai alokasi aset aktualmu dengan target alokasi sesuai profil risiko. Skor 100 = alokasi tepat sasaran. Setiap deviasi signifikan dari target mengurangi skor. Target alokasi bisa diubah via Pengaturan → Profil Risiko.' },
-    ],
-  },
-  {
-    section: 'Saham IDX & Analisis Teknikal', icon: <FileText size={15} strokeWidth={1.75} />, color: 'var(--blue-300)',
-    items: [
-      { q: 'Bagaimana cara melihat harga saham IDX secara real-time?', a: 'Buka detail aset saham IDX (pastikan ticker diisi, misal BBCA), lalu klik tab Pasar. Panel harga akan menampilkan harga terakhir dari Yahoo Finance. Klik tombol "Sync" untuk otomatis membuat entri Update Harga.' },
-      { q: 'Apa itu Estimasi Penutupan Berikutnya?', a: 'Sistem menjalankan 2.000 simulasi Monte Carlo menggunakan model Geometric Brownian Motion berdasarkan volatilitas dan return historis. Hasilnya berupa rentang probabilistik: harga terendah (bear, P10), tengah (base, median), dan tertinggi (bull, P90).' },
-      { q: 'Apa yang dimaksud RSI, Bollinger Band, dan MA di analisis teknikal?', a: 'RSI (Relative Strength Index): momentum 0–100, <30 oversold, >70 overbought. Bollinger Band: pita volatilitas di atas/bawah MA — harga di luar pita = potensi reversal. Moving Average 20 & 50: tren jangka pendek dan menengah.' },
-    ],
-  },
-  {
-    section: 'Robo Advisor (AI)', icon: <MessageSquare size={15} strokeWidth={1.75} />, color: 'var(--ai-accent)',
-    items: [
-      { q: 'Apa yang bisa dilakukan Robo Advisor?', a: 'Robo Advisor adalah AI yang memiliki akses ke data portofoliomu secara real-time: semua aset, nilai, alokasi, profil risiko, unrealized gain/loss, dll. Kamu bisa tanya analisis, rekomendasi rebalancing, saran aset, proyeksi, atau pertanyaan keuangan umum.' },
-      { q: 'Apakah AI bisa mengubah data portofolio saya?', a: 'Tidak langsung. AI hanya bisa merekomendasikan perubahan profil risiko atau target alokasi — jika disetujui, Robo Advisor akan memperbarui pengaturanmu. AI tidak bisa membuat atau menghapus entri transaksi.' },
-      { q: 'Bagaimana cara mengaktifkan konteks portofolio untuk AI?', a: 'Buka Pengaturan → aktifkan "Sertakan data portofolio untuk AI". Jika diaktifkan, setiap percakapan akan menyertakan snapshot data asetmu sebagai konteks. Jika dinonaktifkan, AI hanya menjawab pertanyaan umum tanpa data personal.' },
-    ],
-  },
-  {
-    section: 'Dividen & Kalender', icon: <CalendarDays size={15} strokeWidth={1.75} />, color: 'var(--gain-400)',
-    items: [
-      { q: 'Apa itu Roadmap Rotasi Dividen?', a: 'Fitur di halaman Dividen & Kupon yang menyusun urutan estimasi "pindah dari saham A ke B" sepanjang tahun, berdasarkan pola historis bulan pembayaran dividen dan pergerakan harga di sekitar periode itu. Muncul otomatis setelah kamu punya minimal 2 saham di watchlist.' },
-      { q: 'Apakah tanggal di Roadmap Rotasi Dividen itu pasti?', a: 'Tidak. Yahoo Finance (sumber data kami) hanya menyediakan tanggal pembayaran historis, bukan cum-date/ex-date resmi. Jadi rentang bulan di roadmap adalah estimasi dari pola tahun-tahun sebelumnya — selalu cek jadwal resmi emiten (IDX/RUPS) sebelum bertransaksi.' },
-      { q: 'Bagaimana skor keyakinan (confidence) dihitung?', a: 'Berdasarkan seberapa konsisten saham tersebut membayar dividen di bulan yang sama selama 5 tahun terakhir. Tinggi = pola sangat konsisten, Rendah = pola tidak stabil sehingga estimasi tanggal & return kurang bisa diandalkan.' },
-    ],
-  },
-  {
-    section: 'Target Finansial', icon: <Target size={15} strokeWidth={1.75} />, color: 'var(--warn-400)',
-    items: [
-      { q: 'Bagaimana progres target finansial dihitung?', a: 'Target diurutkan berdasarkan tenggat terdekat (model waterfall). Nilai portofolio dialokasikan berurutan: target #1 diisi lebih dulu, sisanya mengalir ke target #2, dan seterusnya. Progres tiap target = dana yang teralokasi untuknya ÷ nominal target. Dengan begitu satu rupiah tidak pernah dihitung untuk dua target sekaligus.' },
-      { q: 'Apa arti status On Track / Perlu Dikejar?', a: 'Kalau target punya tenggat, sistem memproyeksikan nilai portofolio di tanggal itu memakai asumsi CAGR (sama seperti halaman Simulasi CAGR) plus TOTAL kontribusi bulanan dari semua target. Proyeksi dibandingkan dengan target kumulatif (target itu + semua target berprioritas lebih awal). Proyeksi ≥ kumulatif = On Track; di bawahnya = Perlu Dikejar.' },
-      { q: 'Apa itu Roadmap Pencapaian dan kenapa target kedua saya 0%?', a: 'Roadmap muncul kalau kamu punya lebih dari satu target: menampilkan urutan pencapaian, estimasi bulan tercapainya tiap target, dan saran (misal total setoran yang dibutuhkan). Target berprioritas belakang bisa tampil 0% karena portofoliomu masih dialokasikan penuh ke target yang tenggatnya lebih dekat — begitu target di depannya tertutup, alokasi otomatis mengalir ke target berikutnya.' },
-      { q: 'Apa bedanya "Butuh per bulan" dengan kontribusi bulanan yang saya isi?', a: 'Kontribusi bulanan adalah rencana setoranmu per target. "Butuh per bulan" adalah hitungan sistem: TOTAL setoran bulanan minimum (gabungan semua target) agar target kumulatif tercapai tepat di tenggatnya. Kalau angka kebutuhan jauh di atas total rencanamu, artinya perlu menambah setoran, memundurkan tenggat, atau menurunkan nominal target.' },
-      { q: 'Kenapa target yang saya buat saat onboarding muncul di sini?', a: 'Target dana yang diisi saat onboarding tersimpan sebagai target finansial pertamamu. Kamu bisa mengubah nama, nominal, tenggat, dan kontribusinya kapan saja dari halaman Target Finansial.' },
-    ],
-  },
-  {
-    section: 'Pengaturan & Akun', icon: <Settings size={15} strokeWidth={1.75} />,
-    items: [
-      { q: 'Apa pengaruh Profil Risiko terhadap aplikasi?', a: 'Profil Risiko menentukan target alokasi aset ideal yang digunakan untuk Skor Rebalancing dan saran di Dashboard. Konservatif = lebih banyak obligasi/emas; Agresif = lebih banyak saham/kripto. Bisa diubah kapan saja di Pengaturan.' },
-      { q: 'Bagaimana cara mengubah bahasa aplikasi?', a: 'Buka Pengaturan → bagian Akun → klik tombol ID / EN untuk beralih antara Bahasa Indonesia dan English.' },
-      { q: 'Apakah data saya aman?', a: 'Data tersimpan di Firebase Firestore dengan aturan keamanan yang memastikan hanya kamu yang bisa membaca dan menulis datamu sendiri (verifikasi via Firebase Auth). Semua komunikasi dienkripsi via HTTPS dengan security headers aktif.' },
-    ],
-  },
-];
+const FAQS_META = [
+  { icon: <Activity size={15} strokeWidth={1.75} /> },
+  { icon: <LayoutGrid size={15} strokeWidth={1.75} /> },
+  { icon: <FileText size={15} strokeWidth={1.75} />, color: 'var(--blue-300)' },
+  { icon: <MessageSquare size={15} strokeWidth={1.75} />, color: 'var(--ai-accent)' },
+  { icon: <CalendarDays size={15} strokeWidth={1.75} />, color: 'var(--gain-400)' },
+  { icon: <Target size={15} strokeWidth={1.75} />, color: 'var(--warn-400)' },
+  { icon: <Settings size={15} strokeWidth={1.75} /> },
+] as const;
+
+function useFaqs() {
+  const { t } = useTranslation();
+  const text = t('help.faqs', { returnObjects: true }) as { section: string; items: { q: string; a: string }[] }[];
+  return FAQS_META.map((meta, i) => ({ ...meta, ...text[i] }));
+}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -1176,9 +1088,15 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function HelpPage() {
+  const { t } = useTranslation();
   const { start } = useTour();
   const navigate = useNavigate();
   const [tab, setTab] = useState<'guide' | 'faq'>('guide');
+  const QUICK_START = useQuickStart();
+  const ENTRY_TYPES = useEntryTypes();
+  const PRO_TIPS = useProTips();
+  const GLOSSARY = useGlossary();
+  const FAQS = useFaqs();
 
   return (
     <Layout>
@@ -1186,10 +1104,10 @@ export function HelpPage() {
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 style={{ color: 'var(--text-primary)', fontSize: '20px', fontWeight: 700, letterSpacing: 'var(--tracking-snug)' }}>
-            Panduan Fitur
+            {t('help.title')}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: 4 }}>
-            Simulasi interaktif semua fitur Trajectory — klik fitur di bawah untuk melihat cara kerjanya.
+            {t('help.subtitle')}
           </p>
         </div>
         <button
@@ -1204,20 +1122,20 @@ export function HelpPage() {
           }}
         >
           <Play size={13} strokeWidth={2.5} style={{ fill: '#fff' }} />
-          Tour Interaktif
+          {t('help.tourButton')}
         </button>
       </div>
 
       {/* Tab switcher */}
       <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
-        {(['guide', 'faq'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{
+        {(['guide', 'faq'] as const).map(tabKey => (
+          <button key={tabKey} onClick={() => setTab(tabKey)} style={{
             padding: '6px 18px', borderRadius: 9, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            background: tab === t ? 'var(--bg-raised)' : 'transparent',
-            color: tab === t ? 'var(--text-primary)' : 'var(--text-muted)',
+            background: tab === tabKey ? 'var(--bg-raised)' : 'transparent',
+            color: tab === tabKey ? 'var(--text-primary)' : 'var(--text-muted)',
             transition: 'all 0.15s',
           }}>
-            {t === 'guide' ? 'Panduan & Simulasi' : 'FAQ'}
+            {tabKey === 'guide' ? t('help.tabGuide') : t('help.tabFaq')}
           </button>
         ))}
       </div>
@@ -1227,13 +1145,13 @@ export function HelpPage() {
 
           {/* Feature Demo Player */}
           <div>
-            <SectionLabel>Simulasi fitur</SectionLabel>
+            <SectionLabel>{t('help.sectionFeatureDemo')}</SectionLabel>
             <FeatureDemoPlayer />
           </div>
 
           {/* Quick Start */}
           <div>
-            <SectionLabel>Mulai dari sini</SectionLabel>
+            <SectionLabel>{t('help.sectionQuickStart')}</SectionLabel>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {QUICK_START.map(step => (
                 <div key={step.n} className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
@@ -1259,7 +1177,7 @@ export function HelpPage() {
 
           {/* Entry Types */}
           <div>
-            <SectionLabel>Tipe entri transaksi</SectionLabel>
+            <SectionLabel>{t('help.sectionEntryTypes')}</SectionLabel>
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
               {ENTRY_TYPES.map((e, i) => (
                 <div key={e.type} className="flex items-center gap-4 px-5 py-3" style={{ borderBottom: i < ENTRY_TYPES.length - 1 ? '1px solid var(--border-dim)' : 'none' }}>
@@ -1272,7 +1190,7 @@ export function HelpPage() {
 
           {/* Pro Tips */}
           <div>
-            <SectionLabel>Tips & trik</SectionLabel>
+            <SectionLabel>{t('help.sectionProTips')}</SectionLabel>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {PRO_TIPS.map((tip, i) => (
                 <div key={i} className="flex items-start gap-3 rounded-xl px-4 py-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
@@ -1285,7 +1203,7 @@ export function HelpPage() {
 
           {/* Glossary */}
           <div>
-            <SectionLabel>Glosarium istilah</SectionLabel>
+            <SectionLabel>{t('help.sectionGlossary')}</SectionLabel>
             <div className="rounded-2xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
               <div className="grid grid-cols-1 lg:grid-cols-2">
                 {GLOSSARY.map((g, i) => (

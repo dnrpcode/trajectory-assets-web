@@ -111,19 +111,19 @@ export function getRebalancingRecommendations(
 
     if (cat.gap < -3 && cat.targetPercentage > 0) {
       advices.push({
-        title: `Tambah Alokasi ${cat.label}`,
         type: 'increase',
         categoryLabel: cat.label,
         actionAmount: Math.round(Math.abs(difference)),
-        description: `Posisi ${cat.label} Anda saat ini ${cat.actualPercentage.toFixed(1)}%, di bawah target ideal (${cat.targetPercentage}%). Rekomendasi: tambah sekitar Rp ${Math.round(Math.abs(difference)).toLocaleString('id-ID')}.`,
+        actualPct: cat.actualPercentage,
+        targetPct: cat.targetPercentage,
       });
     } else if (cat.gap > 3 && cat.actualPercentage > 0) {
       advices.push({
-        title: `Kurangi Alokasi ${cat.label}`,
         type: 'decrease',
         categoryLabel: cat.label,
         actionAmount: Math.round(Math.abs(difference)),
-        description: `${cat.label} overweight di ${cat.actualPercentage.toFixed(1)}% (target ${cat.targetPercentage}%). Pertimbangkan take profit sekitar Rp ${Math.round(Math.abs(difference)).toLocaleString('id-ID')} untuk menjaga profil risiko.`,
+        actualPct: cat.actualPercentage,
+        targetPct: cat.targetPercentage,
       });
     }
   }
