@@ -166,8 +166,7 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes, port
   const marginRequiredIDR = leverage > 0 ? positionNotionalIDR / leverage : positionNotionalIDR;
 
   return (
-    <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden' }}>
-
+    <>
       {/* Header */}
       <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
@@ -373,6 +372,6 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes, port
           </p>
         </div>
       </div>
-    </div>
+    </>
   );
 }

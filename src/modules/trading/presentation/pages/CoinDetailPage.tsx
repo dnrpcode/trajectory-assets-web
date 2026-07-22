@@ -247,11 +247,42 @@ export function CoinDetailPage() {
             </div>
           </Card>
 
+          {/* Setup Trade + Paper Trading — 1 section gabungan */}
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden' }}>
+            <TradeSetupCard
+              signal={signal}
+              currentPriceUSD={currentPrice}
+              usdToIdr={usdToIdr}
+              closes={closes}
+              portfolioValueIDR={portfolioSummary?.totalValueIDR}
+              onUseSuggestedSize={(amountIDR, leverage, stopLossUSD, takeProfitUSD) =>
+                setPaperTradeSuggestion({ amountIDR, leverage, stopLossUSD, takeProfitUSD })
+              }
+            />
+            <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '14px 16px' }}>
+              <p style={{ margin: '0 0 12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
+                {t('trading.paperTrade.title')}
+              </p>
+              <PaperTradeForm
+                coinId={coinId!}
+                coinSymbol={coin?.symbol ?? coinId ?? ''}
+                coinName={coin?.name ?? coinId ?? ''}
+                currentPriceUSD={currentPrice}
+                usdToIdr={usdToIdr}
+                signal={signal.signal}
+                stopLossUSD={paperTradeSuggestion?.stopLossUSD}
+                takeProfitUSD={paperTradeSuggestion?.takeProfitUSD}
+                prefillAmountIDR={paperTradeSuggestion?.amountIDR}
+                prefillLeverage={paperTradeSuggestion?.leverage}
+              />
+            </div>
+          </div>
+
           {/* Signal backtest */}
           <BacktestPanel coinId={coinId!} />
         </div>
 
-        {/* Right: signal + trade setup */}
+        {/* Right: signal + analysis */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* Signal card */}
@@ -277,37 +308,6 @@ export function CoinDetailPage() {
 
           {/* Detailed analysis */}
           <SignalAnalysisCard signal={signal} />
-
-          {/* Trade setup */}
-          <TradeSetupCard
-            signal={signal}
-            currentPriceUSD={currentPrice}
-            usdToIdr={usdToIdr}
-            closes={closes}
-            portfolioValueIDR={portfolioSummary?.totalValueIDR}
-            onUseSuggestedSize={(amountIDR, leverage, stopLossUSD, takeProfitUSD) =>
-              setPaperTradeSuggestion({ amountIDR, leverage, stopLossUSD, takeProfitUSD })
-            }
-          />
-
-          {/* Paper trading */}
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, padding: '18px' }}>
-            <p style={{ margin: '0 0 12px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
-              {t('trading.paperTrade.title')}
-            </p>
-            <PaperTradeForm
-              coinId={coinId!}
-              coinSymbol={coin?.symbol ?? coinId ?? ''}
-              coinName={coin?.name ?? coinId ?? ''}
-              currentPriceUSD={currentPrice}
-              usdToIdr={usdToIdr}
-              signal={signal.signal}
-              stopLossUSD={paperTradeSuggestion?.stopLossUSD}
-              takeProfitUSD={paperTradeSuggestion?.takeProfitUSD}
-              prefillAmountIDR={paperTradeSuggestion?.amountIDR}
-              prefillLeverage={paperTradeSuggestion?.leverage}
-            />
-          </div>
 
           {/* Active alerts */}
           <AlertsList coinId={coinId!} />
