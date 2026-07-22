@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import {
   getWatchlist, addToWatchlist, removeFromWatchlist,
-  executePaperTrade, getPaperTrades,
+  executePaperTrade, getPaperTrades, backtestSignalStrategy,
 } from '@/infrastructure/di/container';
 import { CoinGeckoService, CoinGeckoError, OHLCPoint, sleep } from '../../data/CoinGeckoRepository';
 import { CoinMarket } from '../../domain/entities/Market';
@@ -100,6 +100,30 @@ export function useCoinDetail(coinId: string) {
     enabled: !!coinId,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
+    retry: cgRetry,
+    retryDelay: cgRetryDelay,
+  });
+}
+
+// ── Signal backtest ───────────────────────────────────────────────────────────
+// Data harian (bukan hourly) — CoinGecko otomatis kasih granularitas harian
+// untuk `days` > 90, jadi backtest ini terpisah dari sinyal live yang pakai
+// data 30 hari (granularitas jam) di useCoinDetail.
+
+const BACKTEST_DAYS = 200;
+
+export function useSignalBacktest(coinId: string, holdingDays: number) {
+  return useQuery({
+    queryKey: ['signalBacktest', coinId, holdingDays],
+    queryFn: async () => {
+      const ohlc = await CoinGeckoService.getOHLC(coinId, BACKTEST_DAYS);
+      const closes = ohlc.map((p) => p.close);
+      const dates = ohlc.map((p) => p.time);
+      return backtestSignalStrategy.execute(coinId, closes, dates, holdingDays);
+    },
+    enabled: !!coinId,
+    staleTime: 30 * 60_000,
+    gcTime: 60 * 60_000,
     retry: cgRetry,
     retryDelay: cgRetryDelay,
   });

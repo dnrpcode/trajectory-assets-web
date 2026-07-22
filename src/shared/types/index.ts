@@ -46,6 +46,24 @@ export interface CategoryBreakdown {
   color: string;
 }
 
+export interface SectorBreakdown {
+  sector: string;
+  valueIDR: number;
+  pct: number;
+  tickers: string[];
+}
+
+export interface SectorConcentrationResult {
+  breakdown: SectorBreakdown[];
+  totalStockValueIDR: number;
+  classifiedValueIDR: number;
+  /** % nilai saham yang sektornya berhasil teridentifikasi */
+  classifiedPct: number;
+  topSectorPct: number;
+  /** true kalau sektor terbesar > CONCENTRATION_THRESHOLD_PCT dari total saham */
+  isConcentrated: boolean;
+}
+
 export interface RebalancingAdvice {
   type: 'increase' | 'decrease';
   categoryLabel: string;

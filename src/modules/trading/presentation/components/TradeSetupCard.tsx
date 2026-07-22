@@ -1,14 +1,21 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Check, Info, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, Check, Info, AlertTriangle, ChevronDown, ChevronUp, Target } from 'lucide-react';
 import { SignalResult } from '@/shared/utils/indicators';
+import { formatCurrency, formatCurrencyCompact } from '@/shared/utils/formatCurrency';
 
 interface Props {
   signal: SignalResult;
   currentPriceUSD: number;
   usdToIdr: number;
   closes: number[];
+  /** Nilai portofolio saat ini (IDR) — dasar perhitungan position sizing berbasis risiko */
+  portfolioValueIDR?: number;
+  /** Dipanggil saat user klik "Pakai ukuran ini" — margin IDR, leverage, dan level SL/TP1 saat ini */
+  onUseSuggestedSize?: (amountIDR: number, leverage: number, stopLossUSD: number, takeProfitUSD: number) => void;
 }
+
+const RISK_OPTIONS = [1, 2, 3] as const;
 
 const LEVERAGE_OPTIONS = [1, 2, 3, 5, 10, 20, 50];
 
@@ -102,7 +109,7 @@ function SummaryChip({ label, value, color }: { label: string; value: string; co
   );
 }
 
-export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Props) {
+export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes, portfolioValueIDR, onUseSuggestedSize }: Props) {
   const { t } = useTranslation();
   const suggested = suggestLeverage(signal);
   const suggestedReason = suggested.reasonKey === 'unclear'
@@ -110,6 +117,7 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
     : t(`trading.setup.leverage${suggested.reasonKey === 'strong' ? 'Strong' : 'Moderate'}`, { score: suggested.scoreLabel, aligned: suggested.aligned });
   const [leverage, setLeverage] = useState<number>(suggested.value);
   const [showLimit, setShowLimit] = useState(false);
+  const [riskPct, setRiskPct] = useState<number>(1);
 
   const isBuy  = signal.signal === 'BUY';
   const isSell = signal.signal === 'SELL';
@@ -148,6 +156,14 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
   const maxLossPct  = (slPct * leverage).toFixed(0);
   const maxGain1Pct = (slPct * 1 * leverage).toFixed(0);
   const maxGain2Pct = (slPct * 2 * leverage).toFixed(0);
+
+  // ── Position sizing berbasis risiko ──────────────────────────────────────
+  // riskAmount = % risiko dari total portofolio yang boleh hilang kalau stop-loss kena.
+  // positionNotional = riskAmount / jarak SL (%) → ukuran posisi supaya rugi maks = riskAmount.
+  // marginRequired = positionNotional / leverage → modal riil yang perlu disetor.
+  const riskAmountIDR = (portfolioValueIDR ?? 0) * (riskPct / 100);
+  const positionNotionalIDR = slPct > 0 ? riskAmountIDR / (slPct / 100) : 0;
+  const marginRequiredIDR = leverage > 0 ? positionNotionalIDR / leverage : positionNotionalIDR;
 
   return (
     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, overflow: 'hidden' }}>
@@ -296,6 +312,47 @@ export function TradeSetupCard({ signal, currentPriceUSD, usdToIdr, closes }: Pr
               <SummaryChip label={t('trading.setup.tpGain', { n: 1 })} value={`+${maxGain1Pct}%`} color="var(--gain-400)" />
               <SummaryChip label={t('trading.setup.tpGain', { n: 2 })} value={`+${maxGain2Pct}%`} color="var(--gain-500)" />
             </div>
+
+            {/* Position sizing berbasis risiko */}
+            {portfolioValueIDR !== undefined && portfolioValueIDR > 0 && (
+              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 10, marginTop: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+                  <p style={{ margin: 0, fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {t('trading.setup.positionSizing')}
+                  </p>
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    {RISK_OPTIONS.map((r) => (
+                      <button key={r} onClick={() => setRiskPct(r)} style={{
+                        padding: '3px 8px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                        fontSize: '10px', fontWeight: 700, fontFamily: 'var(--font-mono)',
+                        background: riskPct === r ? 'var(--blue-500)' : 'var(--bg-raised)',
+                        color: riskPct === r ? '#fff' : 'var(--text-secondary)',
+                      }}>{r}%</button>
+                    ))}
+                  </div>
+                </div>
+                <p style={{ margin: '0 0 8px', fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  {t('trading.setup.positionSizingDesc', { riskPct, amount: formatCurrency(riskAmountIDR) })}
+                </p>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <SummaryChip label={t('trading.setup.notional')} value={formatCurrencyCompact(positionNotionalIDR)} color="var(--text-primary)" />
+                  <SummaryChip label={t('trading.setup.marginNeeded')} value={formatCurrencyCompact(marginRequiredIDR)} color="var(--blue-400)" />
+                </div>
+                {onUseSuggestedSize && marginRequiredIDR > 0 && (
+                  <button
+                    onClick={() => onUseSuggestedSize(Math.round(marginRequiredIDR), leverage, stopLoss, tp1)}
+                    style={{
+                      width: '100%', marginTop: 8, padding: '7px 0', borderRadius: 8, border: '1px solid rgba(77,124,255,0.3)',
+                      background: 'var(--blue-tint)', color: 'var(--blue-400)', cursor: 'pointer',
+                      fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-sans)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                    }}
+                  >
+                    <Target size={11} /> {t('trading.setup.useThisSize')}
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Expand/collapse price ladder hint */}
             <button

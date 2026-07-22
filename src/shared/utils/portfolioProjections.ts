@@ -1,10 +1,56 @@
 import { Asset } from '@/shared/types/asset';
 import { User } from '@/shared/types/user';
-import { CategoryBreakdown, RebalancingAdvice, AssetCategory, AllocationTarget, RiskProfile } from '../types';
+import { CategoryBreakdown, RebalancingAdvice, AssetCategory, AllocationTarget, RiskProfile, SectorBreakdown, SectorConcentrationResult } from '../types';
 import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '../constants/categories';
 import { getAllocationTarget } from '../constants/allocationTargets';
 import { computeActualAllocation } from './calculations';
 import { PortfolioHistoryPoint } from '@/shared/types';
+import { getIdxSector } from '../constants/idxSectors';
+
+const UNCLASSIFIED_SECTOR = 'unclassified';
+const CONCENTRATION_THRESHOLD_PCT = 40;
+
+/**
+ * Agregasi nilai saham aktif per sektor IDX-IC (lihat idxSectors.ts).
+ * Ticker yang belum ada di dataset masuk bucket "unclassified" — bukan
+ * dianggap error, karena dataset sengaja hanya cover ticker paling likuid.
+ */
+export function computeSectorConcentration(assets: Asset[]): SectorConcentrationResult {
+  const stocks = assets.filter((a) => a.status === 'active' && a.category === 'saham');
+  const byBucket = new Map<string, { valueIDR: number; tickers: Set<string> }>();
+
+  for (const asset of stocks) {
+    const sector = getIdxSector(asset.ticker) ?? UNCLASSIFIED_SECTOR;
+    const bucket = byBucket.get(sector) ?? { valueIDR: 0, tickers: new Set<string>() };
+    bucket.valueIDR += asset.currentValueIDR;
+    if (asset.ticker) bucket.tickers.add(asset.ticker.toUpperCase());
+    byBucket.set(sector, bucket);
+  }
+
+  const totalStockValueIDR = stocks.reduce((s, a) => s + a.currentValueIDR, 0);
+  const classifiedValueIDR = totalStockValueIDR - (byBucket.get(UNCLASSIFIED_SECTOR)?.valueIDR ?? 0);
+
+  const breakdown: SectorBreakdown[] = Array.from(byBucket.entries())
+    .map(([sector, { valueIDR, tickers }]) => ({
+      sector,
+      valueIDR,
+      pct: totalStockValueIDR > 0 ? (valueIDR / totalStockValueIDR) * 100 : 0,
+      tickers: Array.from(tickers).sort(),
+    }))
+    .sort((a, b) => b.valueIDR - a.valueIDR);
+
+  const topKnownSector = breakdown.find((b) => b.sector !== UNCLASSIFIED_SECTOR);
+  const topSectorPct = topKnownSector?.pct ?? 0;
+
+  return {
+    breakdown,
+    totalStockValueIDR,
+    classifiedValueIDR,
+    classifiedPct: totalStockValueIDR > 0 ? (classifiedValueIDR / totalStockValueIDR) * 100 : 0,
+    topSectorPct,
+    isConcentrated: topSectorPct > CONCENTRATION_THRESHOLD_PCT,
+  };
+}
 
 export function calculateCAGR(startValue: number, endValue: number, months: number): number {
   if (startValue <= 0 || endValue <= 0 || months <= 0) return 0;

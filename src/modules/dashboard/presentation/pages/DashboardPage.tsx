@@ -13,6 +13,7 @@ import { WealthGrowthChart } from '../components/WealthGrowthChart';
 import { BenchmarkChart } from '../components/BenchmarkChart';
 import { PlatformAllocationChart } from '../components/PlatformAllocationChart';
 import { PnLByCategoryChart } from '../components/PnLByCategoryChart';
+import { SectorConcentrationChart } from '../components/SectorConcentrationChart';
 import { StaleAssetBanner } from '@/shared/ui/StaleAssetBanner';
 import { EntryForm } from '@/shared/ui/EntryForm';
 import { usePortfolioSummary, usePortfolioSeries } from '../hooks/usePortfolio';
@@ -219,6 +220,18 @@ export function DashboardPage() {
               </div>
               <div className="px-2 pt-4 pb-5">
                 <PnLByCategoryChart assets={assets} />
+              </div>
+            </Card>
+
+            <Card variant="default" padding="none">
+              <div className="px-6 py-4 border-b border-[var(--border-subtle)]">
+                <h3 className="font-semibold text-[var(--text-primary)] text-sm" style={{ letterSpacing: 'var(--tracking-snug)' }}>
+                  {t('dashboard.sector.title')}
+                </h3>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('dashboard.sector.subtitle')}</p>
+              </div>
+              <div className="px-4 pt-4 pb-5">
+                <SectorConcentrationChart assets={assets} />
               </div>
             </Card>
           </div>

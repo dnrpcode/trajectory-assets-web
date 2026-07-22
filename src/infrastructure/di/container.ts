@@ -6,7 +6,11 @@ import { FirebaseAssetProjectionRepository } from '@/modules/portfolio/data/Fire
 import { FirebasePortfolioRepository } from '@/modules/dashboard/data/FirebasePortfolioRepository';
 import { FirebaseWatchlistRepository } from '@/modules/trading/data/FirebaseWatchlistRepository';
 import { FirebasePaperTradeRepository } from '@/modules/trading/data/FirebasePaperTradeRepository';
+import { FirebasePriceAlertRepository } from '@/modules/trading/data/FirebasePriceAlertRepository';
 import { AIAdvisorRepository } from '@/modules/advisor/data/AIAdvisorRepository';
+import { BacktestSignalStrategy } from '@/modules/trading/domain/use-cases/BacktestSignalStrategy';
+import { GetPriceAlerts, CreatePriceAlert, MarkPriceAlertTriggered, DeletePriceAlert } from '@/modules/trading/domain/use-cases/ManagePriceAlerts';
+import { EvaluatePriceAlerts } from '@/modules/trading/domain/use-cases/EvaluatePriceAlerts';
 
 import { LoginWithEmail } from '@/modules/auth/domain/use-cases/LoginWithEmail';
 import { LoginWithGoogle } from '@/modules/auth/domain/use-cases/LoginWithGoogle';
@@ -118,4 +122,11 @@ export const addToWatchlist        = new AddToWatchlist(watchlistRepository);
 export const removeFromWatchlist   = new RemoveFromWatchlist(watchlistRepository);
 export const executePaperTrade     = new ExecutePaperTrade(paperTradeRepository);
 export const getPaperTrades        = new GetPaperTrades(paperTradeRepository);
+export const backtestSignalStrategy = new BacktestSignalStrategy();
+export const priceAlertRepository  = new FirebasePriceAlertRepository();
+export const getPriceAlerts        = new GetPriceAlerts(priceAlertRepository);
+export const createPriceAlert      = new CreatePriceAlert(priceAlertRepository);
+export const markPriceAlertTriggered = new MarkPriceAlertTriggered(priceAlertRepository);
+export const deletePriceAlert      = new DeletePriceAlert(priceAlertRepository);
+export const evaluatePriceAlerts   = new EvaluatePriceAlerts();
 

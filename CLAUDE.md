@@ -233,6 +233,10 @@ aiAdvisorRepository, sendAdvisorMessage
 watchlistRepository, paperTradeRepository
 getWatchlist, addToWatchlist, removeFromWatchlist
 executePaperTrade, getPaperTrades
+backtestSignalStrategy   // pure — replay computeSignal day-by-day, no look-ahead
+priceAlertRepository
+getPriceAlerts, createPriceAlert, markPriceAlertTriggered, deletePriceAlert
+evaluatePriceAlerts     // pure — cek kondisi alert terhadap snapshot market
 
 // Income (dividend calendar — Yahoo Finance)
 dividendWatchlistRepository
@@ -255,6 +259,10 @@ getDividendWatchlist, addToDividendWatchlist, removeFromDividendWatchlist
 ['paperTrades', userId]          // usePaperTrades()
 ['coinMarkets', ...ids]          // useCoinMarkets()
 ['coinDetail', coinId]           // useCoinDetail()
+['signalBacktest', coinId, holdingDays]  // useSignalBacktest() — 200 hari data harian
+['priceAlerts', userId]          // usePriceAlerts(), useAlertWatcher()
+['alertWatcherPrices', coinIds]  // polling internal useAlertWatcher — jangan konsumsi langsung
+['alertWatcherRsi', coinIds]     // polling internal useAlertWatcher — jangan konsumsi langsung
 ['goals', userId]                // useGoals()
 ['dividendWatchlist', userId]    // useDividendWatchlist()
 ['dividendInfo', ticker]         // useDividendInfo(ticker)
@@ -327,6 +335,14 @@ Smart retry di hooks: tidak retry 401, max 2x untuk 429 dengan delay dari `Retry
 
 Signal scanner menggunakan `fetchWithRateLimitRetry` — wait Retry-After lalu retry sekali sebelum skip coin.
 
+**Signal backtest** (`BacktestSignalStrategy`, `CoinDetailPage` → `BacktestPanel`): replay `computeSignal()` day-by-day terhadap 200 hari data harian (`getOHLC(coinId, 200)` — CoinGecko otomatis kasih granularitas harian untuk `days` > 90, beda dari sinyal live yang pakai 30 hari/granularitas jam). Tanpa look-ahead bias (sinyal hari i pakai data 0..i, entry di closing hari i+1), tanpa overlapping trade. Output: win rate, avg return, max drawdown, breakdown BUY vs SELL.
+
+**Price/RSI alerts** (`priceAlerts` collection, `useAlertWatcher` di-mount sekali di `App.tsx`/`AppRoutes` — BUKAN di `Layout.tsx`, supaya tidak ikut ke-bundle di setiap page chunk): poll harga tiap 60 detik dan RSI tiap 5 menit selagi tab terbuka, evaluasi via `EvaluatePriceAlerts` (pure), lalu `markPriceAlertTriggered` + browser `Notification` API + toast. **Foreground-only** — belum ada push notification saat app tertutup (butuh FCM, belum diimplementasikan).
+
+**Position sizing berbasis risiko** (`TradeSetupCard`): pilih risiko 1-3% dari `portfolioValueIDR`, dibagi jarak stop-loss (%) untuk dapat ukuran posisi notional, dibagi leverage untuk margin yang dibutuhkan. Tombol "Pakai Ukuran Ini" mengisi `PaperTradeForm` via `prefillAmountIDR`/`prefillLeverage` (pattern: prefill props + `useEffect` sync, bukan fully controlled).
+
+**Paper Trading** (`PaperTradeForm`) — sekarang di-render di `CoinDetailPage`; sebelumnya komponen ini sudah ada tapi tidak pernah dipasang di UI manapun. `leverage` dan `stopLossUSD`/`takeProfitUSD` sekarang benar-benar dikirim ke `ExecutePaperTrade` (dulu hardcode `leverage: 1` dan `undefined`).
+
 ---
 
 ## Income Module (src/modules/income/)
@@ -354,6 +370,16 @@ Kalkulasi di client (tidak ada backend):
 - **Yield per event**: nominal ÷ harga saat ini × 100
 
 Watchlist disimpan Firestore `dividendWatchlist/{ticker}` — document ID = ticker uppercase.
+
+**PENTING — endpoint sektor Yahoo tidak bisa dipakai:** sudah dicoba `quoteSummary/{ticker}?modules=assetProfile` (sumber data sektor/industri per saham) — endpoint ini butuh session cookie + crumb token, dan flow resmi 2-langkah (`fc.yahoo.com` → cookie → `/v1/test/getcrumb` → crumb) tetap gagal konsisten ("Invalid Crumb"/"Invalid Cookie") saat dites langsung dari server tanpa state persisten. Beda dari endpoint `/v8/finance/chart` dan `/v1/finance/search` yang dipakai di atas — keduanya TIDAK butuh crumb. Jangan coba re-implement live sector fetch dari Yahoo tanpa solusi auth yang lebih baik. Solusi yang dipakai sekarang: dataset statis di `src/shared/constants/idxSectors.ts` (lihat bagian Sector Concentration di bawah).
+
+---
+
+## Sector Concentration (Dashboard)
+
+`computeSectorConcentration()` di `src/shared/utils/portfolioProjections.ts` — agregasi nilai saham aktif per sektor IDX-IC pakai lookup statis `IDX_SECTORS` (`src/shared/constants/idxSectors.ts`, ~90 ticker paling likuid, bukan API — lihat catatan di atas kenapa). Ticker di luar dataset masuk bucket `unclassified`, bukan error. `isConcentrated: true` kalau sektor terbesar > 40% dari total nilai saham. Ditampilkan via `SectorConcentrationChart` di `DashboardPage`.
+
+Kalau perlu tambah ticker baru ke dataset, edit `IDX_SECTORS` langsung — jangan bikin call API baru ke Yahoo untuk ini.
 
 ---
 

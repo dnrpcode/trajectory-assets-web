@@ -21,6 +21,7 @@ export { JournalPage } from './presentation/pages/JournalPage';
 export { AllocationPieChart } from './presentation/components/AllocationPieChart';
 export { WealthGrowthChart } from './presentation/components/WealthGrowthChart';
 export { PlatformAllocationChart } from './presentation/components/PlatformAllocationChart';
+export { SectorConcentrationChart } from './presentation/components/SectorConcentrationChart';
 export { PnLByCategoryChart } from './presentation/components/PnLByCategoryChart';
 export { CAGRProjectionChart } from './presentation/components/CAGRProjectionChart';
 export { ReallocationAdvisory } from './presentation/components/ReallocationAdvisory';

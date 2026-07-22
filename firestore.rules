@@ -93,6 +93,22 @@ service cloud.firestore {
         allow write: if isOwner(userId)
           && isString(request.resource.data.ticker, 20);
       }
+
+      // ── Price/RSI alerts ────────────────────────────────────────────────
+      match /priceAlerts/{alertId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isString(request.resource.data.coinId, 100)
+          && request.resource.data.metric in ['price', 'rsi']
+          && request.resource.data.condition in ['above', 'below']
+          && request.resource.data.threshold is number
+          && request.resource.data.active == true;
+        // Hanya boleh menandai triggered (active=false) atau menghapus — bukan mengubah kondisi/threshold
+        allow update: if isOwner(userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active', 'triggeredAt', 'triggeredValue'])
+          && request.resource.data.active == false;
+        allow delete: if isOwner(userId);
+      }
     }
 
     // Block everything else by default

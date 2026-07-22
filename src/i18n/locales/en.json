@@ -98,7 +98,9 @@
       "notes": "Notes (optional)",
       "notesPlaceholder": "Reason for this trade...",
       "executeBuy": "Execute Paper Buy",
-      "executeSell": "Execute Paper Sell"
+      "executeSell": "Execute Paper Sell",
+      "title": "Paper Trading",
+      "leverage": "Leverage"
     },
     "setup": {
       "title": "Trade Setup",
@@ -123,7 +125,46 @@
       "tpGain": "TP{{n}} Gain",
       "useMarket": "Use market price",
       "viewLimit": "View limit price (cheaper)",
-      "disclaimer": "Not financial advice. Execute on your own exchange. SL is based on the last 20-candle swing — adjust to your own risk appetite."
+      "disclaimer": "Not financial advice. Execute on your own exchange. SL is based on the last 20-candle swing — adjust to your own risk appetite.",
+      "positionSizing": "Position Size (Risk-Based)",
+      "positionSizingDesc": "Risks {{riskPct}}% of your portfolio ({{amount}}) if the stop-loss is hit.",
+      "notional": "Position Value",
+      "marginNeeded": "Margin Needed",
+      "useThisSize": "Use This Size in Paper Trade"
+    },
+    "backtest": {
+      "title": "Signal Backtest",
+      "subtitle": "Simulates BUY/SELL signal performance against daily historical price data — see whether this strategy is actually profitable before trusting it.",
+      "days": "{{count}}D",
+      "error": "Failed to load backtest data.",
+      "noTrades": "Not enough BUY/SELL signals in this historical data period yet.",
+      "winRate": "Win Rate",
+      "avgReturn": "Avg Return",
+      "trades": "Total Trades",
+      "maxDrawdown": "Max Drawdown",
+      "sideStat": "{{count}} {{side}} signals · {{winRate}}% win",
+      "disclaimer": "Backtested over {{days}} days of daily historical price data, signals computed without look-ahead bias (using only data up to that day). Past performance does not guarantee future results."
+    },
+    "alerts": {
+      "create": "Create Alert",
+      "createTitle": "{{symbol}} Price Alert",
+      "metricLabel": "Watch",
+      "conditionLabel": "Condition",
+      "metric": {
+        "price": "Price",
+        "rsi": "RSI"
+      },
+      "condition": {
+        "above": "Above",
+        "below": "Below"
+      },
+      "priceThreshold": "Price Threshold (USD)",
+      "rsiThreshold": "RSI Threshold",
+      "foregroundNote": "Notifications fire while this app tab is open (browser notification + in-app toast). Push notifications while the app is closed aren't supported yet.",
+      "summary": "{{metric}} {{condition}} {{threshold}}",
+      "triggered": "Triggered",
+      "notificationTitle": "{{symbol}} Alert",
+      "triggeredMessage": "{{symbol}}: {{metric}} is now {{condition}} {{threshold}} — currently {{value}}"
     }
   },
   "common": {
@@ -251,7 +292,16 @@
     "cagrSuffix": "/ yr",
     "rebalancingScore": "Rebalancing Score",
     "holdings": "Active Holdings",
-    "openAdvisory": "View Advisory →"
+    "openAdvisory": "View Advisory →",
+    "sector": {
+      "title": "Sector Concentration",
+      "subtitle": "Stock value distribution by IDX-IC sector",
+      "noStocks": "No active stocks yet",
+      "unclassified": "Unclassified",
+      "unclassifiedHint": "This ticker's sector isn't in our classification dataset yet",
+      "concentratedWarning": "{{pct}}% of your stocks are concentrated in {{sector}} — consider diversifying into other sectors to reduce risk.",
+      "coverageNote": "{{pct}}% of stock value was classified (dataset covers ~90 of the most liquid tickers)"
+    }
   },
   "portfolio": {
     "title": "Portfolio",
@@ -717,7 +767,9 @@
       "Cash assets (savings, deposits) don't need monthly price updates — the system never marks them stale.",
       "Turn on \"Portfolio Context for AI\" in Settings so the Robo Advisor can analyze your actual data.",
       "Add at least 2 stocks to your Dividends & Coupons watchlist to see the Dividend Rotation Roadmap — a suggested rotation order based on historical dividend and price patterns.",
-      "Create a goal on the Financial Goals page with a date & monthly contribution — the system calculates whether your portfolio is on track and how much you need to contribute per month."
+      "Create a goal on the Financial Goals page with a date & monthly contribution — the system calculates whether your portfolio is on track and how much you need to contribute per month.",
+      "Check the Signal Backtest tab on a coin's detail page before trusting a BUY/SELL signal — see its historical win rate & avg return first, don't enter blind.",
+      "Create a price or RSI alert on a coin's detail page (bell icon) so you don't have to keep watching the app — notifications fire automatically while the tab is open."
     ],
     "glossary": [
       "Compound Annual Growth Rate — the portfolio's annualized compounded growth rate.",
@@ -868,6 +920,31 @@
           {
             "q": "Is my data safe?",
             "a": "Data is stored in Firebase Firestore with security rules ensuring only you can read and write your own data (verified via Firebase Auth). All communication is encrypted over HTTPS with security headers enabled."
+          }
+        ]
+      },
+      {
+        "section": "Crypto Trading",
+        "items": [
+          {
+            "q": "What is Signal Backtest and why does it matter?",
+            "a": "Signal Backtest simulates the RSI+MA+MACD signal's performance against 200 days of daily historical price data — computing win rate, average return, and max drawdown from past BUY/SELL signals. Signals are computed without look-ahead bias (using only data up to that day). It helps you judge whether this strategy actually has an edge before trusting it for real entries."
+          },
+          {
+            "q": "How do Price & RSI Alerts work?",
+            "a": "Click the bell icon on a coin's detail page, choose a metric (Price or RSI), a condition (above/below), and a threshold value. The system checks this condition every 60 seconds (price) or 5 minutes (RSI) while the app tab is open, then sends a browser notification + in-app toast once the condition is met. The alert automatically deactivates after firing once."
+          },
+          {
+            "q": "Do alerts still work if the app is closed?",
+            "a": "Not yet. Alerts currently only work while the app tab is open in your browser (foreground). Push notifications while the app is closed require additional infrastructure that hasn't been implemented yet."
+          },
+          {
+            "q": "How is risk-based Position Sizing calculated?",
+            "a": "On the Trade Setup panel, pick a risk percentage (1-3% of your total portfolio). The system computes: the rupiah amount you're willing to lose = risk% × portfolio value, then position size = that amount ÷ stop-loss distance (%). If leverage is used, the margin needed = position size ÷ leverage. The result can be used directly in the Paper Trading panel via the \"Use This Size\" button."
+          },
+          {
+            "q": "What is Paper Trading and how do I use it?",
+            "a": "Paper Trading simulates buying/selling crypto with a virtual balance — practice your strategy without real money at risk. Enter an amount (or use the Position Sizing suggestion), pick a leverage, then execute. Trade history is saved per coin so you can evaluate your strategy's performance over time."
           }
         ]
       }

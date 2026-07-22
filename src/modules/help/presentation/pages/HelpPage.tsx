@@ -5,6 +5,7 @@ import {
   MessageSquare, FileText, Settings, Play, BarChart2,
   CalendarDays, PlusCircle, RefreshCw, Download,
   Pencil, Zap, ArrowRight, Bot, Search, CheckCircle2, Target,
+  FlaskConical, Bell,
 } from 'lucide-react';
 import { Layout } from '@/shared/ui/Layout';
 import { useTour } from '@/shared/ui/TourContext';
@@ -1021,6 +1022,7 @@ function useEntryTypes() {
 const PRO_TIPS_ICONS = [
   <RefreshCw size={14} />, <Download size={14} />, <Pencil size={14} />, <Zap size={14} />,
   <ShieldCheck size={14} />, <MessageSquare size={14} />, <RefreshCw size={14} />, <Target size={14} />,
+  <FlaskConical size={14} />, <Bell size={14} />,
 ];
 
 function useProTips() {
@@ -1052,6 +1054,7 @@ const FAQS_META = [
   { icon: <MessageSquare size={15} strokeWidth={1.75} />, color: 'var(--ai-accent)' },
   { icon: <CalendarDays size={15} strokeWidth={1.75} />, color: 'var(--gain-400)' },
   { icon: <Target size={15} strokeWidth={1.75} />, color: 'var(--warn-400)' },
+  { icon: <BarChart2 size={15} strokeWidth={1.75} />, color: 'var(--warn-400)' },
   { icon: <Settings size={15} strokeWidth={1.75} /> },
 ] as const;
 

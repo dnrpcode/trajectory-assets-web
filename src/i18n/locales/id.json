@@ -98,7 +98,9 @@
       "notes": "Catatan (opsional)",
       "notesPlaceholder": "Alasan trade...",
       "executeBuy": "Eksekusi Paper Buy",
-      "executeSell": "Eksekusi Paper Sell"
+      "executeSell": "Eksekusi Paper Sell",
+      "title": "Paper Trading",
+      "leverage": "Leverage"
     },
     "setup": {
       "title": "Setup Trade",
@@ -123,7 +125,46 @@
       "tpGain": "TP{{n}} Gain",
       "useMarket": "Pakai harga market",
       "viewLimit": "Lihat harga limit (lebih murah)",
-      "disclaimer": "Bukan saran keuangan. Eksekusi di exchange masing-masing. SL berbasis swing 20 candle terakhir — sesuaikan dengan risk appetite kamu."
+      "disclaimer": "Bukan saran keuangan. Eksekusi di exchange masing-masing. SL berbasis swing 20 candle terakhir — sesuaikan dengan risk appetite kamu.",
+      "positionSizing": "Ukuran Posisi (Risk-Based)",
+      "positionSizingDesc": "Risiko {{riskPct}}% dari portofolio ({{amount}}) kalau stop-loss kena.",
+      "notional": "Nilai Posisi",
+      "marginNeeded": "Modal Dibutuhkan",
+      "useThisSize": "Pakai Ukuran Ini di Paper Trade"
+    },
+    "backtest": {
+      "title": "Backtest Sinyal",
+      "subtitle": "Simulasi performa sinyal BUY/SELL terhadap data harga historis harian — evaluasi apakah strategi ini benar-benar profitable sebelum dipercaya.",
+      "days": "{{count}}H",
+      "error": "Gagal memuat data backtest.",
+      "noTrades": "Belum ada sinyal BUY/SELL yang cukup pada periode data historis ini.",
+      "winRate": "Win Rate",
+      "avgReturn": "Avg Return",
+      "trades": "Total Trade",
+      "maxDrawdown": "Max Drawdown",
+      "sideStat": "{{count}} sinyal {{side}} · {{winRate}}% win",
+      "disclaimer": "Backtest dari {{days}} hari data harga historis harian, sinyal dihitung tanpa look-ahead bias (hanya pakai data sampai hari itu). Kinerja masa lalu tidak menjamin hasil masa depan."
+    },
+    "alerts": {
+      "create": "Buat Alert",
+      "createTitle": "Alert Harga {{symbol}}",
+      "metricLabel": "Pantau",
+      "conditionLabel": "Kondisi",
+      "metric": {
+        "price": "Harga",
+        "rsi": "RSI"
+      },
+      "condition": {
+        "above": "Di atas",
+        "below": "Di bawah"
+      },
+      "priceThreshold": "Threshold Harga (USD)",
+      "rsiThreshold": "Threshold RSI",
+      "foregroundNote": "Notifikasi muncul selagi tab aplikasi ini terbuka (browser notification + in-app). Belum mendukung push saat aplikasi tertutup.",
+      "summary": "{{metric}} {{condition}} {{threshold}}",
+      "triggered": "Terpicu",
+      "notificationTitle": "Alert {{symbol}}",
+      "triggeredMessage": "{{symbol}}: {{metric}} sudah {{condition}} {{threshold}} — sekarang {{value}}"
     }
   },
   "common": {
@@ -251,7 +292,16 @@
     "cagrSuffix": "/ th",
     "rebalancingScore": "Skor Rebalancing",
     "holdings": "Posisi Aktif",
-    "openAdvisory": "Lihat Panduan →"
+    "openAdvisory": "Lihat Panduan →",
+    "sector": {
+      "title": "Konsentrasi Sektor Saham",
+      "subtitle": "Distribusi nilai saham per sektor IDX-IC",
+      "noStocks": "Belum ada saham aktif",
+      "unclassified": "Belum Terklasifikasi",
+      "unclassifiedHint": "Sektor ticker ini belum ada di dataset klasifikasi kami",
+      "concentratedWarning": "{{pct}}% saham kamu terkonsentrasi di sektor {{sector}} — pertimbangkan diversifikasi ke sektor lain untuk mengurangi risiko.",
+      "coverageNote": "{{pct}}% nilai saham berhasil diklasifikasi (cakupan dataset ~90 ticker paling likuid)"
+    }
   },
   "portfolio": {
     "title": "Portfolio",
@@ -717,7 +767,9 @@
       "Kas (tabungan, deposito) tidak perlu update harga bulanan — sistem tidak menandainya sebagai stale.",
       "Aktifkan \"Konteks Portofolio untuk AI\" di Pengaturan agar Robo Advisor bisa menganalisis data aktualmu.",
       "Tambahkan minimal 2 saham ke watchlist Dividen & Kupon untuk melihat Roadmap Rotasi Dividen — urutan pindah saham berdasarkan pola dividen & harga historis.",
-      "Buat target di halaman Target Finansial dengan tanggal & kontribusi bulanan — sistem menghitung apakah portofoliomu on track dan berapa setoran bulanan yang dibutuhkan."
+      "Buat target di halaman Target Finansial dengan tanggal & kontribusi bulanan — sistem menghitung apakah portofoliomu on track dan berapa setoran bulanan yang dibutuhkan.",
+      "Cek tab Backtest Sinyal di detail koin sebelum percaya sinyal BUY/SELL — lihat win rate & avg return historisnya dulu, jangan langsung entry.",
+      "Buat alert harga atau RSI di detail koin (ikon lonceng) supaya kamu tidak perlu mantengin app terus — notifikasi muncul otomatis selagi tab masih terbuka."
     ],
     "glossary": [
       "Compound Annual Growth Rate — tingkat pertumbuhan majemuk tahunan portofolio.",
@@ -868,6 +920,31 @@
           {
             "q": "Apakah data saya aman?",
             "a": "Data tersimpan di Firebase Firestore dengan aturan keamanan yang memastikan hanya kamu yang bisa membaca dan menulis datamu sendiri (verifikasi via Firebase Auth). Semua komunikasi dienkripsi via HTTPS dengan security headers aktif."
+          }
+        ]
+      },
+      {
+        "section": "Trading Kripto",
+        "items": [
+          {
+            "q": "Apa itu Backtest Sinyal dan kenapa penting?",
+            "a": "Backtest Sinyal mensimulasikan performa sinyal RSI+MA+MACD terhadap 200 hari data harga historis harian — menghitung win rate, rata-rata return, dan max drawdown dari sinyal BUY/SELL di masa lalu. Sinyal dihitung tanpa look-ahead bias (hanya pakai data sampai hari itu). Ini membantu kamu menilai apakah strategi ini benar-benar punya edge sebelum dipercaya untuk entry sungguhan."
+          },
+          {
+            "q": "Bagaimana cara kerja Alert Harga & RSI?",
+            "a": "Klik ikon lonceng di detail koin, pilih metrik (Harga atau RSI), kondisi (di atas/di bawah), dan angka threshold. Sistem memantau kondisi ini setiap 60 detik (harga) atau 5 menit (RSI) selagi tab aplikasi terbuka, lalu mengirim notifikasi browser + toast begitu kondisinya terpenuhi. Alert otomatis nonaktif setelah terpicu sekali."
+          },
+          {
+            "q": "Apakah alert tetap jalan kalau aplikasi ditutup?",
+            "a": "Belum. Alert saat ini hanya bekerja selagi tab aplikasi terbuka di browser (foreground). Push notification saat aplikasi tertutup butuh infrastruktur tambahan yang belum diimplementasikan."
+          },
+          {
+            "q": "Bagaimana Position Sizing berbasis risiko dihitung?",
+            "a": "Di panel Setup Trade, pilih persentase risiko (1-3% dari total portofolio). Sistem menghitung: jumlah rupiah yang boleh hilang = risiko% × nilai portofolio, lalu ukuran posisi = jumlah itu ÷ jarak stop-loss (%). Kalau leverage dipakai, modal yang dibutuhkan = ukuran posisi ÷ leverage. Hasilnya bisa langsung dipakai di panel Paper Trading dengan tombol \"Pakai Ukuran Ini\"."
+          },
+          {
+            "q": "Apa itu Paper Trading dan bagaimana cara pakainya?",
+            "a": "Paper Trading adalah simulasi beli/jual kripto dengan saldo virtual — latihan strategi tanpa risiko uang sungguhan. Isi jumlah (atau pakai saran dari Position Sizing), pilih leverage, lalu eksekusi. Riwayat trade tersimpan per koin untuk kamu evaluasi performa strategi dari waktu ke waktu."
           }
         ]
       }

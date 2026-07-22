@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, RefreshCw, WifiOff, Clock, ServerCrash } from 'lucide-react';
+import { ArrowLeft, RefreshCw, WifiOff, Clock, ServerCrash, Bell } from 'lucide-react';
 import { CoinGeckoError, getCoinGeckoErrorMessage } from '../../data/CoinGeckoRepository';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ComposedChart, Line } from 'recharts';
 import { Layout } from '@/shared/ui/Layout';
@@ -9,7 +10,12 @@ import { Skeleton } from '@/shared/ui/Skeleton';
 import { SignalBadge } from '../components/SignalBadge';
 import { SignalAnalysisCard } from '../components/SignalAnalysisCard';
 import { TradeSetupCard } from '../components/TradeSetupCard';
+import { BacktestPanel } from '../components/BacktestPanel';
+import { PriceAlertModal } from '../components/PriceAlertModal';
+import { AlertsList } from '../components/AlertsList';
+import { PaperTradeForm } from '../components/PaperTradeForm';
 import { useCoinDetail, useCoinMarkets, useWatchlist } from '../hooks/useTrading';
+import { usePortfolioSummary } from '../hooks/useTradingPortfolio';
 import { computeMA, computeRSI } from '@/shared/utils/indicators';
 
 function formatDate(ms: number) {
@@ -19,6 +25,8 @@ function formatDate(ms: number) {
 
 export function CoinDetailPage() {
   const { t } = useTranslation();
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [paperTradeSuggestion, setPaperTradeSuggestion] = useState<{ amountIDR: number; leverage: number; stopLossUSD: number; takeProfitUSD: number } | null>(null);
   const { coinId } = useParams<{ coinId: string }>();
   const navigate = useNavigate();
   const { data: watchlist = [] } = useWatchlist();
@@ -26,6 +34,7 @@ export function CoinDetailPage() {
 
   const { data: detail, isLoading, error, refetch, isFetching } = useCoinDetail(coinId!);
   const { data: markets = [] } = useCoinMarkets(coinId ? [coinId] : []);
+  const { data: portfolioSummary } = usePortfolioSummary();
   const market = markets[0];
 
   if (isLoading) return (
@@ -139,13 +148,21 @@ export function CoinDetailPage() {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', color: 'var(--text-secondary)' }}
-        >
-          <RefreshCw size={14} style={{ animation: isFetching ? 'spin 1s linear infinite' : 'none' }} />
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setAlertModalOpen(true)}
+            style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px', fontWeight: 600 }}
+          >
+            <Bell size={14} /> {t('trading.alerts.create')}
+          </button>
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', color: 'var(--text-secondary)' }}
+          >
+            <RefreshCw size={14} style={{ animation: isFetching ? 'spin 1s linear infinite' : 'none' }} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-5 items-start">
@@ -229,6 +246,9 @@ export function CoinDetailPage() {
               </ResponsiveContainer>
             </div>
           </Card>
+
+          {/* Signal backtest */}
+          <BacktestPanel coinId={coinId!} />
         </div>
 
         {/* Right: signal + trade setup */}
@@ -264,10 +284,46 @@ export function CoinDetailPage() {
             currentPriceUSD={currentPrice}
             usdToIdr={usdToIdr}
             closes={closes}
+            portfolioValueIDR={portfolioSummary?.totalValueIDR}
+            onUseSuggestedSize={(amountIDR, leverage, stopLossUSD, takeProfitUSD) =>
+              setPaperTradeSuggestion({ amountIDR, leverage, stopLossUSD, takeProfitUSD })
+            }
           />
+
+          {/* Paper trading */}
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 14, padding: '18px' }}>
+            <p style={{ margin: '0 0 12px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
+              {t('trading.paperTrade.title')}
+            </p>
+            <PaperTradeForm
+              coinId={coinId!}
+              coinSymbol={coin?.symbol ?? coinId ?? ''}
+              coinName={coin?.name ?? coinId ?? ''}
+              currentPriceUSD={currentPrice}
+              usdToIdr={usdToIdr}
+              signal={signal.signal}
+              stopLossUSD={paperTradeSuggestion?.stopLossUSD}
+              takeProfitUSD={paperTradeSuggestion?.takeProfitUSD}
+              prefillAmountIDR={paperTradeSuggestion?.amountIDR}
+              prefillLeverage={paperTradeSuggestion?.leverage}
+            />
+          </div>
+
+          {/* Active alerts */}
+          <AlertsList coinId={coinId!} />
         </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      <PriceAlertModal
+        open={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        coinId={coinId!}
+        coinSymbol={coin?.symbol ?? coinId ?? ''}
+        coinName={coin?.name ?? coinId ?? ''}
+        currentPriceUSD={currentPrice}
+        currentRsi={isNaN(signal.rsi) ? undefined : signal.rsi}
+      />
     </Layout>
   );
 }

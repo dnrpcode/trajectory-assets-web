@@ -63,7 +63,7 @@ class CoinGeckoRepositoryImpl implements ICoinGeckoRepository {
     });
   }
 
-  async getOHLC(coinId: string, days: 30 | 14 | 7 = 30): Promise<OHLCPoint[]> {
+  async getOHLC(coinId: string, days = 30): Promise<OHLCPoint[]> {
     const raw = await get<{ prices: [number, number][] }>(
       `/coins/${coinId}/market_chart`,
       { vs_currency: 'usd', days: String(days) },

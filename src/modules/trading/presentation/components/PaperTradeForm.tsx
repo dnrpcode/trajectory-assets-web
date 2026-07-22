@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TradingSignal } from '@/shared/utils/indicators';
 import { useExecutePaperTrade } from '../hooks/useTrading';
@@ -14,10 +14,18 @@ interface Props {
   currentPriceUSD: number;
   usdToIdr: number;
   signal: TradingSignal;
+  stopLossUSD?: number;
+  takeProfitUSD?: number;
+  /** Diisi dari kalkulator Position Sizing di TradeSetupCard — prefill jumlah + leverage */
+  prefillAmountIDR?: number;
+  prefillLeverage?: number;
   onSuccess?: () => void;
 }
 
-export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, usdToIdr, signal, onSuccess }: Props) {
+export function PaperTradeForm({
+  coinId, coinSymbol, coinName, currentPriceUSD, usdToIdr, signal,
+  stopLossUSD, takeProfitUSD, prefillAmountIDR, prefillLeverage, onSuccess,
+}: Props) {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const { data: summary } = usePortfolioSummary();
@@ -25,11 +33,19 @@ export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, 
 
   const [side, setSide] = useState<'buy' | 'sell'>(signal === 'SELL' ? 'sell' : 'buy');
   const [amountIDR, setAmountIDR] = useState('');
+  const [leverage, setLeverage] = useState(1);
   const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    if (prefillAmountIDR === undefined) return;
+    setAmountIDR(Math.round(prefillAmountIDR).toLocaleString('id-ID'));
+    if (prefillLeverage !== undefined) setLeverage(prefillLeverage);
+  }, [prefillAmountIDR, prefillLeverage]);
 
   const priceIDR = currentPriceUSD * usdToIdr;
   const amount = parseFloat(amountIDR.replace(/\./g, '').replace(',', '.')) || 0;
-  const units = amount > 0 && priceIDR > 0 ? amount / priceIDR : 0;
+  const effectiveAmount = amount * leverage;
+  const units = effectiveAmount > 0 && priceIDR > 0 ? effectiveAmount / priceIDR : 0;
 
   // 5% allocation budget
   const budget5pct = summary ? summary.totalValueIDR * 0.05 : 0;
@@ -44,18 +60,19 @@ export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, 
       side,
       priceUSD: currentPriceUSD,
       entryPriceUSD: currentPriceUSD,
-      stopLossUSD: undefined,
-      takeProfitUSD: undefined,
-      leverage: 1,
+      stopLossUSD,
+      takeProfitUSD,
+      leverage,
       exchangeRateToIDR: usdToIdr,
       amountIDR: amount,
-      effectiveAmountIDR: amount,
+      effectiveAmountIDR: effectiveAmount,
       units,
       signal: signal as 'BUY' | 'SELL' | 'HOLD',
       notes: notes || undefined,
       date: new Date(),
     });
     setAmountIDR('');
+    setLeverage(1);
     setNotes('');
     onSuccess?.();
   };
@@ -122,8 +139,31 @@ export function PaperTradeForm({ coinId, coinSymbol, coinName, currentPriceUSD, 
         {units > 0 && (
           <p style={{ margin: '5px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>
             ≈ {units.toFixed(6)} {coinSymbol}
+            {leverage > 1 && ` (${leverage}× → ${formatCurrency(effectiveAmount)})`}
           </p>
         )}
+      </div>
+
+      {/* Leverage */}
+      <div>
+        <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: 6 }}>
+          {t('trading.paperTrade.leverage')}
+        </label>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {[1, 2, 3, 5, 10].map((lev) => (
+            <button
+              key={lev}
+              type="button"
+              onClick={() => setLeverage(lev)}
+              style={{
+                padding: '5px 10px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                fontWeight: 700, fontSize: '12px', fontFamily: 'var(--font-mono)',
+                background: leverage === lev ? 'var(--blue-500)' : 'var(--bg-raised)',
+                color: leverage === lev ? '#fff' : 'var(--text-secondary)',
+              }}
+            >{lev}×</button>
+          ))}
+        </div>
       </div>
 
       {/* Notes */}

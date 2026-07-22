@@ -6,6 +6,7 @@ import { TourProvider } from '@/shared/ui/TourContext';
 import { TourOverlay } from '@/shared/ui/TourOverlay';
 import { ToastProvider } from '@/shared/ui/Toast';
 import { useAuth, useAuthBootstrap } from '@/modules/auth/presentation/hooks/useAuth';
+import { useAlertWatcher } from '@/modules/trading';
 import { FullPageSpinner } from '@/shared/ui/Spinner';
 import { NotFoundPage } from '@/shared/ui/NotFoundPage';
 
@@ -55,6 +56,7 @@ function OnboardingPageGuard({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   useAuthBootstrap(); // single onAuthStateChanged subscription for the whole app
+  useAlertWatcher(); // background price/RSI alert polling — runs on every authenticated page
   const { authUser, loading } = useAuth();
   if (loading) return <FullPageSpinner />;
 
