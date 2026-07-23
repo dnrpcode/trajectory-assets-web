@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { getAssetEntries, deleteEntry, createEntry, recomputeAssetProjection, entryRepository } from '@/infrastructure/di/container';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { useToast } from '@/shared/ui/Toast';
@@ -36,6 +37,7 @@ export function useDeleteEntry() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (entry: AssetEntry) =>
@@ -50,7 +52,7 @@ export function useDeleteEntry() {
       queryClient.invalidateQueries({ queryKey: ['portfolioSeries', user?.id] });
     },
     onError: () => {
-      toast('Gagal menghapus transaksi. Periksa koneksi dan coba lagi.', 'error');
+      toast(t('entry.deleteError'), 'error');
     },
   });
 }
@@ -59,6 +61,7 @@ export function useCreateEntry() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (input: CreateEntryInput) => {
@@ -80,7 +83,7 @@ export function useCreateEntry() {
       queryClient.invalidateQueries({ queryKey: ['portfolioSeries', user?.id] });
     },
     onError: () => {
-      toast('Gagal menyimpan transaksi. Periksa koneksi dan coba lagi.', 'error');
+      toast(t('entry.saveError'), 'error');
     },
   });
 }
@@ -89,6 +92,7 @@ export function useEditEntry() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async ({ original, patch }: EditEntryInput) => {
@@ -110,10 +114,10 @@ export function useEditEntry() {
       queryClient.invalidateQueries({ queryKey: ['portfolioSummary', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioHistory', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['portfolioSeries', user?.id] });
-      toast('Transaksi berhasil diperbarui.', 'success');
+      toast(t('entry.updateSuccess'), 'success');
     },
     onError: () => {
-      toast('Gagal memperbarui transaksi. Periksa koneksi dan coba lagi.', 'error');
+      toast(t('entry.updateError'), 'error');
     },
   });
 }

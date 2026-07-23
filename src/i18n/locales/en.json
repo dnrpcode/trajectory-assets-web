@@ -372,7 +372,12 @@
     "insightLoss": "{{name}} is down {{pct}}%. Evaluate fundamentals before averaging down or cutting losses.",
     "insightNeutral": "{{name}} position is in the neutral zone ({{pct}}%). Monitor fundamentals for the right timing.",
     "insightIncome": "This asset has generated income of {{amount}}. Consistent income is a positive long-term signal.",
-    "insightRealized": "Realized gain: {{amount}}."
+    "insightRealized": "Realized gain: {{amount}}.",
+    "editEntryTitle": "Edit Transaction",
+    "editEntryDesc": "The old entry will be kept as a correction",
+    "editEntryDate": "Date",
+    "editEntryUnits": "Unit Count",
+    "editEntryNotesPlaceholder": "Optional"
   },
   "journal": {
     "title": "Journal",
@@ -422,7 +427,11 @@
     "deleteEntry": "Delete Transaction",
     "deleteEntryConfirm": "Delete {{type}} on {{date}}?",
     "deleteEntryDesc": "The asset projection will be automatically recalculated after this transaction is deleted.",
-    "deletedLabel": "Deleted"
+    "deletedLabel": "Deleted",
+    "deleteError": "Failed to delete transaction. Check your connection and try again.",
+    "saveError": "Failed to save transaction. Check your connection and try again.",
+    "updateSuccess": "Transaction updated successfully.",
+    "updateError": "Failed to update transaction. Check your connection and try again."
   },
   "category": {
     "saham": "Stocks",
@@ -780,7 +789,7 @@
     "proTips": [
       "Update prices at the start of the month so the portfolio growth chart and rebalancing score stay accurate.",
       "Export a CSV from the Portfolio page at year-end for tax reporting.",
-      "Made a mistake? Use Edit Log (the pencil icon on an asset's detail page) — the old entry is corrected automatically and the audit trail stays intact.",
+      "Made a mistake? Click the pencil icon to edit or the trash icon to delete — available on both the Journal and asset detail pages. The old entry is corrected automatically (never permanently erased), so the audit trail stays intact.",
       "For IDX stocks, the Sync button on the Market tab creates a Price Update entry with the current price instantly — no manual input needed.",
       "Cash assets (savings, deposits) don't need monthly price updates — the system never marks them stale.",
       "Turn on \"Portfolio Context for AI\" in Settings so the Robo Advisor can analyze your actual data.",

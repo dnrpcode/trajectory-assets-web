@@ -508,6 +508,8 @@ useForm<FormValues>({
 
 11. **`export type { ... }`** wajib saat re-export type dengan `isolatedModules` aktif.
 
+12. **Edit/Delete entry UI** (`DeleteEntryModal`, `EditEntryModal` di `src/modules/portfolio/presentation/components/EntryActionModals.tsx`) — komponen bersama, diekspor lewat barrel `@/modules/portfolio` supaya bisa dipakai lintas module. Dipakai di `AssetDetailPage` (module portfolio) DAN `JournalPage` (module dashboard, import via barrel — bukan cross-import file langsung). Tombol edit/delete hanya muncul untuk entri dengan `isCorrected === false`. `useEditEntry`/`useDeleteEntry` (hook di `portfolio/presentation/hooks/useEntries.ts`) meng-invalidate query key `['entries', userId]` yang sama dipakai `JournalPage`, jadi daftar Jurnal ikut ter-refresh walau query read-nya beda hook (`useDashboardEntries.ts`) — React Query key itu global, bukan per-module.
+
 ---
 
 ## Deployment

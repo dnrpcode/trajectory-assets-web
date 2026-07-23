@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, BookOpen } from 'lucide-react';
+import { PlusCircle, Activity, ArrowUp, ArrowRight, XCircle, DollarSign, CreditCard, RotateCcw, BookOpen, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Layout } from '@/shared/ui/Layout';
 import { JournalSkeleton } from '@/shared/ui/Skeleton';
 import { Badge } from '@/shared/ui/Badge';
 import { useEntries } from '../hooks/useDashboardEntries';
+import { useDeleteEntry, useEditEntry, DeleteEntryModal, EditEntryModal } from '@/modules/portfolio';
 import { formatDate, formatMonth } from '@/shared/utils/formatDate';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import { EntryType } from '@/shared/types';
@@ -62,6 +63,11 @@ export function JournalPage() {
   const { t } = useTranslation();
   const { data: entries = [], isLoading } = useEntries();
   const [typeFilter, setTypeFilter] = useState<EntryType | 'all'>('all');
+  const [entryToEdit, setEntryToEdit]     = useState<AssetEntry | null>(null);
+  const [entryToDelete, setEntryToDelete] = useState<AssetEntry | null>(null);
+
+  const { mutateAsync: deleteEntry, isPending: isDeletingEntry } = useDeleteEntry();
+  const { mutateAsync: editEntry, isPending: isEditingEntry } = useEditEntry();
 
   const filtered = entries
     .filter((e) => typeFilter === 'all' || e.entryType === typeFilter)
@@ -69,6 +75,12 @@ export function JournalPage() {
 
   const grouped = groupByMonth(filtered);
   const months = Array.from(grouped.keys()).sort((a, b) => b.localeCompare(a));
+
+  const handleDeleteConfirm = async () => {
+    if (!entryToDelete) return;
+    await deleteEntry(entryToDelete);
+    setEntryToDelete(null);
+  };
 
   return (
     <Layout>
@@ -129,18 +141,45 @@ export function JournalPage() {
               </h2>
               <div className="space-y-2">
                 {grouped.get(month)!.map((entry) => (
-                  <EntryRow key={entry.id} entry={entry} />
+                  <EntryRow key={entry.id} entry={entry} onEdit={setEntryToEdit} onDelete={setEntryToDelete} />
                 ))}
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {entryToDelete && (
+        <DeleteEntryModal
+          entry={entryToDelete}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setEntryToDelete(null)}
+          isDeleting={isDeletingEntry}
+        />
+      )}
+
+      {entryToEdit && (
+        <EditEntryModal
+          entry={entryToEdit}
+          isSaving={isEditingEntry}
+          onCancel={() => setEntryToEdit(null)}
+          onSave={async (patch) => {
+            await editEntry({ original: entryToEdit, patch });
+            setEntryToEdit(null);
+          }}
+        />
+      )}
     </Layout>
   );
 }
 
-function EntryRow({ entry }: { entry: AssetEntry }) {
+interface EntryRowProps {
+  entry: AssetEntry;
+  onEdit: (entry: AssetEntry) => void;
+  onDelete: (entry: AssetEntry) => void;
+}
+
+function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
   const { t } = useTranslation();
   const isGain = ['new_position', 'top_up', 'income'].includes(entry.entryType);
   const isLoss = ['partial_sell', 'full_sell', 'fee'].includes(entry.entryType);
@@ -208,6 +247,26 @@ function EntryRow({ entry }: { entry: AssetEntry }) {
           </p>
         )}
       </div>
+
+      {/* Aksi — hanya untuk entri aktif, entri yang sudah dikoreksi tidak bisa diubah lagi */}
+      {!entry.isCorrected && (
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={() => onEdit(entry)}
+            aria-label={t('common.edit')}
+            className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--blue-400)] hover:bg-[var(--bg-hover)] transition-colors"
+          >
+            <Pencil size={13} />
+          </button>
+          <button
+            onClick={() => onDelete(entry)}
+            aria-label={t('common.delete')}
+            className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--text-muted)] hover:text-[var(--loss-400)] hover:bg-[var(--bg-hover)] transition-colors"
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

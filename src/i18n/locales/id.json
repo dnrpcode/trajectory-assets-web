@@ -372,7 +372,12 @@
     "insightLoss": "{{name}} rugi {{pct}}%. Evaluasi fundamental sebelum averaging down atau cut loss.",
     "insightNeutral": "Posisi {{name}} di zona netral ({{pct}}%). Pantau fundamental untuk menentukan waktu yang tepat.",
     "insightIncome": "Aset ini menghasilkan pendapatan {{amount}}. Income konsisten = sinyal positif jangka panjang.",
-    "insightRealized": "Keuntungan terealisasi: {{amount}}."
+    "insightRealized": "Keuntungan terealisasi: {{amount}}.",
+    "editEntryTitle": "Edit Transaksi",
+    "editEntryDesc": "Entry lama akan disimpan sebagai koreksi",
+    "editEntryDate": "Tanggal",
+    "editEntryUnits": "Jumlah Unit",
+    "editEntryNotesPlaceholder": "Opsional"
   },
   "journal": {
     "title": "Jurnal",
@@ -422,7 +427,11 @@
     "deleteEntry": "Hapus Transaksi",
     "deleteEntryConfirm": "Hapus {{type}} pada {{date}}?",
     "deleteEntryDesc": "Proyeksi aset akan dihitung ulang secara otomatis setelah transaksi ini dihapus.",
-    "deletedLabel": "Dihapus"
+    "deletedLabel": "Dihapus",
+    "deleteError": "Gagal menghapus transaksi. Periksa koneksi dan coba lagi.",
+    "saveError": "Gagal menyimpan transaksi. Periksa koneksi dan coba lagi.",
+    "updateSuccess": "Transaksi berhasil diperbarui.",
+    "updateError": "Gagal memperbarui transaksi. Periksa koneksi dan coba lagi."
   },
   "category": {
     "saham": "Saham",
@@ -780,7 +789,7 @@
     "proTips": [
       "Update harga di awal bulan supaya grafik pertumbuhan portofolio dan skor rebalancing selalu akurat.",
       "Ekspor CSV dari halaman Portfolio setiap akhir tahun untuk kebutuhan laporan pajak.",
-      "Salah input? Gunakan fitur Edit Log (ikon pensil di detail aset) — entri lama dikoreksi otomatis, audit trail tetap terjaga.",
+      "Salah input? Klik ikon pensil untuk edit atau ikon tempat sampah untuk hapus — tersedia di halaman Jurnal maupun detail aset. Entri lama dikoreksi otomatis (bukan dihapus permanen), audit trail tetap terjaga.",
       "Untuk saham IDX, tombol Sync di tab Pasar langsung membuat entri Update Harga dengan harga terkini — tidak perlu input manual.",
       "Kas (tabungan, deposito) tidak perlu update harga bulanan — sistem tidak menandainya sebagai stale.",
       "Aktifkan \"Konteks Portofolio untuk AI\" di Pengaturan agar Robo Advisor bisa menganalisis data aktualmu.",

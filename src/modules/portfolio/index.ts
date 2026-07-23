@@ -27,7 +27,8 @@ export { FirebaseAssetProjectionRepository } from './data/FirebaseAssetProjectio
 
 // Presentation hooks
 export { useActiveAssets, useAllAssets, useDeleteAsset } from './presentation/hooks/useAssets';
-export { useAssetEntries, useEntries, useDeleteEntry, useCreateEntry } from './presentation/hooks/useEntries';
+export { useAssetEntries, useEntries, useDeleteEntry, useCreateEntry, useEditEntry } from './presentation/hooks/useEntries';
+export type { EditEntryInput } from './presentation/hooks/useEntries';
 
 // Presentation pages
 export { PortfolioPage } from './presentation/pages/PortfolioPage';
@@ -38,3 +39,4 @@ export { AssetCard } from './presentation/components/AssetCard';
 export { StaleAssetBanner } from './presentation/components/StaleAssetBanner';
 export { EntryForm } from './presentation/components/EntryForm';
 export { StockForecastCard } from './presentation/components/StockForecastCard';
+export { DeleteEntryModal, EditEntryModal } from './presentation/components/EntryActionModals';
