@@ -431,7 +431,11 @@
     "deleteError": "Failed to delete transaction. Check your connection and try again.",
     "saveError": "Failed to save transaction. Check your connection and try again.",
     "updateSuccess": "Transaction updated successfully.",
-    "updateError": "Failed to update transaction. Check your connection and try again."
+    "updateError": "Failed to update transaction. Check your connection and try again.",
+    "confirmTitle": "Confirm Transaction",
+    "confirmDesc": "Review the details below before saving",
+    "confirmBack": "Back to Form",
+    "confirmSubmit": "Confirm & Save"
   },
   "category": {
     "saham": "Stocks",

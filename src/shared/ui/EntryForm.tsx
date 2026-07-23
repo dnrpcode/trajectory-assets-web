@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -85,6 +87,8 @@ interface Props {
   defaultCategory?: AssetCategory;
   defaultPlatform?: string;
   isExistingAsset?: boolean;
+  /** Kalau true, klik Simpan menampilkan ringkasan konfirmasi dulu — data baru benar-benar tersimpan setelah user konfirmasi ulang. */
+  requireConfirmation?: boolean;
 }
 
 // Shared label style for the form
@@ -125,11 +129,13 @@ export function EntryForm({
   defaultCategory,
   defaultPlatform = '',
   isExistingAsset = false,
+  requireConfirmation = false,
 }: Props) {
   const { t } = useTranslation();
   const { theme } = useThemeContext();
   const user = useAuthStore((s) => s.user);
   const { mutateAsync, isPending } = useCreateEntry();
+  const [pendingSubmit, setPendingSubmit] = useState<FormValues | null>(null);
 
   const ENTRY_TYPE_LABELS: Record<FormEntryType, string> = {
     new_position: t('entry.new_position'),
@@ -185,7 +191,7 @@ export function EntryForm({
   const needsIncomeCategory = needsAmount;
   const showAssetFields = !isExistingAsset;
 
-  const onSubmit = async (data: FormValues) => {
+  const executeSubmit = async (data: FormValues) => {
     if (!user) return;
 
     const dateObj = new Date(data.date + 'T12:00:00'); // avoid timezone off-by-one
@@ -216,12 +222,100 @@ export function EntryForm({
     };
 
     await mutateAsync(input);
+    setPendingSubmit(null);
     onSuccess();
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    if (requireConfirmation) {
+      setPendingSubmit(data);
+      return;
+    }
+    await executeSubmit(data);
   };
 
   const availableTypes: FormEntryType[] = isExistingAsset
     ? ['price_update', 'top_up', 'partial_sell', 'full_sell', 'income', 'fee']
     : [...formEntryTypes];
+
+  // Ringkasan konfirmasi sebelum benar-benar tersimpan (hanya kalau requireConfirmation)
+  if (pendingSubmit) {
+    const p = pendingSubmit;
+    const total = p.pricePerUnit && p.units ? p.pricePerUnit * p.units : null;
+    const rowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid var(--border-dim)' };
+    const labelCol: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 'var(--text-xs)' };
+    const valueCol: React.CSSProperties = { color: 'var(--text-primary)', fontSize: 'var(--text-sm)', fontWeight: 600, fontFamily: 'var(--font-mono)', textAlign: 'right' };
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--blue-tint)', border: '1px solid rgba(77,124,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <ShieldCheck size={16} strokeWidth={2} style={{ color: 'var(--blue-400)' }} />
+          </div>
+          <div>
+            <h3 style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 600, margin: 0 }}>{t('entry.confirmTitle')}</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: 0 }}>{t('entry.confirmDesc')}</p>
+          </div>
+        </div>
+
+        <div style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', padding: '4px 14px' }}>
+          <div style={rowStyle}>
+            <span style={labelCol}>{t('entry.type')}</span>
+            <span style={valueCol}>{ENTRY_TYPE_LABELS[p.entryType]}</span>
+          </div>
+          {p.assetName && (
+            <div style={rowStyle}>
+              <span style={labelCol}>{t('entry.assetName')}</span>
+              <span style={valueCol}>{p.assetName}</span>
+            </div>
+          )}
+          <div style={rowStyle}>
+            <span style={labelCol}>{t('entry.date')}</span>
+            <span style={valueCol}>{p.date}</span>
+          </div>
+          {needsPrice && p.pricePerUnit != null && (
+            <div style={rowStyle}>
+              <span style={labelCol}>{isCash ? t('entry.amount') : t('entry.pricePerUnit')}</span>
+              <span style={valueCol}>{currency === 'IDR' ? formatCurrency(p.pricePerUnit) : `${currency} ${p.pricePerUnit.toLocaleString('id-ID', { maximumFractionDigits: 8 })}`}</span>
+            </div>
+          )}
+          {needsUnits && p.units != null && (
+            <div style={rowStyle}>
+              <span style={labelCol}>{t('entry.units')}</span>
+              <span style={valueCol}>{p.units.toLocaleString('id-ID', { maximumFractionDigits: 8 })}</span>
+            </div>
+          )}
+          {total != null && !isCash && (
+            <div style={rowStyle}>
+              <span style={labelCol}>{t('assetDetail.entryFieldTotal')}</span>
+              <span style={{ ...valueCol, color: 'var(--blue-400)' }}>{currency === 'IDR' ? formatCurrency(total) : `${currency} ${total.toLocaleString('id-ID', { maximumFractionDigits: 4 })}`}</span>
+            </div>
+          )}
+          {needsAmount && p.amount != null && (
+            <div style={rowStyle}>
+              <span style={labelCol}>{t('entry.amount')}</span>
+              <span style={valueCol}>{currency === 'IDR' ? formatCurrency(p.amount) : `${currency} ${p.amount.toLocaleString('id-ID', { maximumFractionDigits: 4 })}`}</span>
+            </div>
+          )}
+          {p.notes && (
+            <div style={{ ...rowStyle, borderBottom: 'none' }}>
+              <span style={labelCol}>{t('entry.notes')}</span>
+              <span style={{ ...valueCol, fontFamily: 'var(--font-sans)', fontWeight: 400, fontStyle: 'italic' }}>{p.notes}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-3">
+          <Button type="button" variant="secondary" size="md" onClick={() => setPendingSubmit(null)} style={{ flex: 1 }}>
+            {t('entry.confirmBack')}
+          </Button>
+          <Button type="button" variant="primary" size="md" loading={isPending} onClick={() => executeSubmit(p)} style={{ flex: 1 }}>
+            {t('entry.confirmSubmit')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

@@ -510,6 +510,10 @@ useForm<FormValues>({
 
 12. **Edit/Delete entry UI** (`DeleteEntryModal`, `EditEntryModal` di `src/modules/portfolio/presentation/components/EntryActionModals.tsx`) — komponen bersama, diekspor lewat barrel `@/modules/portfolio` supaya bisa dipakai lintas module. Dipakai di `AssetDetailPage` (module portfolio) DAN `JournalPage` (module dashboard, import via barrel — bukan cross-import file langsung). Tombol edit/delete hanya muncul untuk entri dengan `isCorrected === false`. `useEditEntry`/`useDeleteEntry` (hook di `portfolio/presentation/hooks/useEntries.ts`) meng-invalidate query key `['entries', userId]` yang sama dipakai `JournalPage`, jadi daftar Jurnal ikut ter-refresh walau query read-nya beda hook (`useDashboardEntries.ts`) — React Query key itu global, bukan per-module.
 
+13. **`EntryForm` (`src/shared/ui/EntryForm.tsx`) prop `requireConfirmation`** — kalau `true`, klik Simpan tidak langsung menulis ke Firestore: form di-swap jadi tampilan ringkasan (via state lokal `pendingSubmit`, bukan modal baru — supaya tidak nested-modal), user harus klik "Konfirmasi & Simpan" lagi baru `executeSubmit()` benar-benar jalan. Saat ini di-set di `AssetCard.tsx` (tombol Update Harga/Top Up/Jual di kartu Portfolio) — TIDAK di `AssetDetailPage`/`JournalPage`'s quick-action modal, jadi dua tempat itu masih submit langsung. Kalau mau perluas ke halaman lain, tinggal tambah prop `requireConfirmation` di pemanggilan `<EntryForm>`-nya, tidak perlu ubah `EntryForm` itu sendiri.
+
+**PENTING — ada 2 implementasi `useCreateEntry` yang hampir identik** (duplikasi arsitektur lama, belum di-unifikasi): `src/shared/hooks/useCreateEntry.ts` (dipakai `EntryForm`) dan `src/modules/portfolio/presentation/hooks/useEntries.ts` (dipakai tombol create langsung di `AssetDetailPage`/`JournalPage`). Keduanya invalidate query key yang sama, jadi tidak bug secara fungsional — tapi kalau ubah logic create-entry (mis. tambah field baru), WAJIB ubah di KEDUA file, jangan cuma satu.
+
 ---
 
 ## Deployment

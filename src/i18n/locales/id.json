@@ -431,7 +431,11 @@
     "deleteError": "Gagal menghapus transaksi. Periksa koneksi dan coba lagi.",
     "saveError": "Gagal menyimpan transaksi. Periksa koneksi dan coba lagi.",
     "updateSuccess": "Transaksi berhasil diperbarui.",
-    "updateError": "Gagal memperbarui transaksi. Periksa koneksi dan coba lagi."
+    "updateError": "Gagal memperbarui transaksi. Periksa koneksi dan coba lagi.",
+    "confirmTitle": "Konfirmasi Transaksi",
+    "confirmDesc": "Periksa detail berikut sebelum disimpan",
+    "confirmBack": "Kembali ke Form",
+    "confirmSubmit": "Konfirmasi & Simpan"
   },
   "category": {
     "saham": "Saham",

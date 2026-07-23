@@ -1,16 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import type { CreateEntryInput } from '@/shared/types/assetEntry';
 import { createEntry, recomputeAssetProjection } from '@/infrastructure/di/container';
 import { useAuthStore } from '@/shared/hooks/useAuthStore';
 import { useToast } from '@/shared/ui/Toast';
 
-
-
-
 export function useCreateEntry() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (input: CreateEntryInput) => {
@@ -31,7 +30,7 @@ export function useCreateEntry() {
       queryClient.invalidateQueries({ queryKey: ['portfolioSeries', user?.id] });
     },
     onError: () => {
-      toast('Gagal menyimpan transaksi. Periksa koneksi dan coba lagi.', 'error');
+      toast(t('entry.saveError'), 'error');
     },
   });
 }

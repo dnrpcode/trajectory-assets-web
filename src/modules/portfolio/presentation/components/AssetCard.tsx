@@ -209,6 +209,7 @@ export function AssetCard({ asset }: Props) {
           defaultCategory={asset.category}
           defaultPlatform={asset.platform}
           isExistingAsset={true}
+          requireConfirmation
         />
       </Modal>
 
