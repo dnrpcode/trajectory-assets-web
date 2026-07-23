@@ -210,6 +210,28 @@ export function GoalCard({ progress: p, order, onEdit, onDelete }: GoalCardProps
                   })}
                 </p>
               )}
+
+              {/* Pembanding: murni setoran, tanpa mengandalkan pertumbuhan investasi */}
+              <div className="mt-1 p-2.5 rounded-lg" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-subtle)' }}>
+                <p style={{ margin: '0 0 4px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                  {t('goals.card.noCagrTitle')}
+                </p>
+                <p style={{ margin: '0 0 4px' }}>
+                  {t('goals.card.noCagrProjected', {
+                    result: formatCurrency(p.calculation.noCagrProjectedValueIDR),
+                    rate: p.calculation.annualCagrPct,
+                    withGrowth: formatCurrency(p.projectedValueIDR ?? 0),
+                  })}
+                </p>
+                {p.calculation.noCagrRequiredMonthlyIDR !== null && p.calculation.noCagrRequiredMonthlyIDR > 0 && (
+                  <p style={{ margin: 0 }}>
+                    {t('goals.card.noCagrRequired', {
+                      required: formatCurrency(p.calculation.noCagrRequiredMonthlyIDR),
+                      withGrowth: p.requiredMonthlyIDR ? formatCurrency(p.requiredMonthlyIDR) : '—',
+                    })}
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>

@@ -531,7 +531,10 @@
       "calcNoContribution": "Kamu belum mengisi setoran bulanan (Rp 0) — proyeksi ini murni dari pertumbuhan investasi yang sudah ada, tanpa tambahan setoran.",
       "calc3": "Total proyeksi seluruh portofolio di bulan itu = {{portfolioFv}} + {{contributionFv}} = {{total}}.",
       "calc4": "Karena {{earlier}} sudah \"dijatah\" untuk target berprioritas lebih awal, sisa untuk target ini = {{total}} − {{earlier}} = {{result}} — itulah \"Proyeksi di tenggat\".",
-      "calc5": "Supaya total portofolio tepat mencapai target kumulatif {{cumulative}} di {{date}}, dibutuhkan TOTAL setoran (gabungan semua target) ≈ {{required}}/bulan mulai sekarang."
+      "calc5": "Supaya total portofolio tepat mencapai target kumulatif {{cumulative}} di {{date}}, dibutuhkan TOTAL setoran (gabungan semua target) ≈ {{required}}/bulan mulai sekarang.",
+      "noCagrTitle": "Pembanding: murni setoran, tanpa pertumbuhan investasi (CAGR 0%)",
+      "noCagrProjected": "Kalau investasi kamu TIDAK bertumbuh sama sekali dan portofolio cuma mengandalkan setoran rutin, proyeksi di tenggat cuma jadi {{result}} — dibanding {{withGrowth}} kalau memakai asumsi pertumbuhan {{rate}}%/tahun.",
+      "noCagrRequired": "Setoran murni yang dibutuhkan TANPA mengandalkan return investasi sama sekali: {{required}}/bulan — dibanding {{withGrowth}}/bulan kalau memakai asumsi pertumbuhan."
     },
     "form": {
       "addTitle": "Tambah Target Finansial",

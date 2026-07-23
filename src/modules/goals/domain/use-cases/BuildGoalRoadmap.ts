@@ -77,6 +77,18 @@ export class BuildGoalRoadmap {
         }
         // monthsRemaining === 0 && !achieved → tenggat lewat, required tak terdefinisi (null)
 
+        // Skenario pembanding: CAGR dianggap 0% — portofolio flat, setoran murni
+        // dijumlah linear (bukan majemuk). Baseline paling konservatif.
+        const noCagrTotalFutureValueIDR = currentValueIDR + totalMonthly * monthsRemaining;
+        const noCagrProjectedValueIDR = Math.max(0, Math.round(noCagrTotalFutureValueIDR - cumBefore));
+        let noCagrRequiredMonthlyIDR: number | null = null;
+        if (achieved) {
+          noCagrRequiredMonthlyIDR = 0;
+        } else if (monthsRemaining >= 1) {
+          const requiredLinear = (cumulativeTarget - currentValueIDR) / monthsRemaining;
+          noCagrRequiredMonthlyIDR = Math.max(0, Math.round(requiredLinear));
+        }
+
         calculation = {
           currentPortfolioValueIDR: currentValueIDR,
           allocatedToEarlierGoalsIDR: cumBefore,
@@ -89,6 +101,9 @@ export class BuildGoalRoadmap {
           contributionFutureValueIDR: Math.round(contributionFutureValueIDR),
           totalFutureValueIDR: Math.round(totalFutureValueIDR),
           cumulativeTargetIDR: cumulativeTarget,
+          noCagrTotalFutureValueIDR: Math.round(noCagrTotalFutureValueIDR),
+          noCagrProjectedValueIDR,
+          noCagrRequiredMonthlyIDR,
         };
       }
 

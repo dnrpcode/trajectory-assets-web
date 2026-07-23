@@ -35,6 +35,18 @@ export interface GoalCalculationDetail {
   totalFutureValueIDR: number;
   /** Target goal ini + semua goal berprioritas lebih awal */
   cumulativeTargetIDR: number;
+
+  // ── Skenario pembanding: TANPA pertumbuhan investasi (CAGR dianggap 0%) ──
+  // Portofolio dianggap flat (tidak tumbuh sama sekali), murni mengandalkan
+  // disiplin setoran bulanan. Ini baseline paling konservatif — beda antara
+  // angka ini dan projectedValueIDR menunjukkan seberapa besar proyeksi
+  // "normal" bergantung pada asumsi return pasar yang TIDAK dijamin.
+  /** currentPortfolioValueIDR (flat) + totalMonthlyContributionIDR × monthsRemaining (linear, tanpa compound) */
+  noCagrTotalFutureValueIDR: number;
+  /** noCagrTotalFutureValueIDR − allocatedToEarlierGoalsIDR, dibatasi ≥ 0 — versi "pure setoran" dari projectedValueIDR */
+  noCagrProjectedValueIDR: number;
+  /** Setoran bulanan yang dibutuhkan TANPA mengandalkan pertumbuhan investasi (linear: kekurangan ÷ sisa bulan). null kalau sudah tercapai lewat alokasi atau tenggat sudah lewat */
+  noCagrRequiredMonthlyIDR: number | null;
 }
 
 export interface GoalProgress {

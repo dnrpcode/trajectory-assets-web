@@ -531,7 +531,10 @@
       "calcNoContribution": "You haven't set a monthly contribution (Rp 0) — this projection is purely from the growth of your existing investment, with no added contribution.",
       "calc3": "Total projected portfolio value at that month = {{portfolioFv}} + {{contributionFv}} = {{total}}.",
       "calc4": "Since {{earlier}} is already \"earmarked\" for earlier-priority goals, what's left for this goal = {{total}} − {{earlier}} = {{result}} — that's the \"Projected at deadline\" figure.",
-      "calc5": "For the total portfolio to exactly reach the cumulative target of {{cumulative}} by {{date}}, you need a TOTAL contribution (combined across all goals) of ≈ {{required}}/month starting now."
+      "calc5": "For the total portfolio to exactly reach the cumulative target of {{cumulative}} by {{date}}, you need a TOTAL contribution (combined across all goals) of ≈ {{required}}/month starting now.",
+      "noCagrTitle": "Comparison: pure savings, no investment growth (0% CAGR)",
+      "noCagrProjected": "If your investments DON'T grow at all and the portfolio relies purely on regular contributions, the projection at deadline is only {{result}} — versus {{withGrowth}} when assuming {{rate}}%/year growth.",
+      "noCagrRequired": "The pure contribution needed WITHOUT relying on any investment return: {{required}}/month — versus {{withGrowth}}/month when assuming growth."
     },
     "form": {
       "addTitle": "Add Financial Goal",

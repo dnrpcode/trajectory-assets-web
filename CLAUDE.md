@@ -396,6 +396,8 @@ buildGoalRoadmap.execute(goals, currentValueIDR, cagrRatePct, totalMonthlyContri
 
 `GoalProgress.calculation` (tipe `GoalCalculationDetail`, null kalau goal tanpa `targetDate`) menyimpan pecahan angka mentah di balik "Proyeksi di tenggat" dan "Butuh per bulan" — `currentPortfolioValueIDR`, `growthFactor`, `portfolioFutureValueIDR`, `contributionFutureValueIDR`, `allocatedToEarlierGoalsIDR`, dll. Dipakai `GoalCard`'s expandable "Lihat cara hitungnya" untuk narasi langkah-demi-langkah dengan angka asli goal itu — supaya user (dan developer) benar-benar paham cara hitungnya, bukan cuma lihat hasil akhir. Kalau ubah formula di `BuildGoalRoadmap`, field `calculation` WAJIB ikut di-update supaya narasi UI tidak menyimpang dari hasil sebenarnya.
 
+`calculation` juga punya field `noCagr*` (`noCagrTotalFutureValueIDR`, `noCagrProjectedValueIDR`, `noCagrRequiredMonthlyIDR`) — skenario pembanding kalau CAGR dianggap 0% (portofolio flat, setoran dijumlah linear bukan majemuk: `currentValueIDR + totalMonthly × monthsRemaining`). Baseline paling konservatif, ditampilkan di `GoalCard` sebagai kotak "Pembanding: murni setoran" supaya user lihat seberapa besar proyeksi normalnya bergantung pada asumsi return pasar yang tidak dijamin.
+
 Onboarding (`CompleteOnboarding`, step 3 `OnboardingPage`) juga sudah dipindah — field "Kontribusi Bulanan" di form onboarding sekarang menulis ke `user.monthlyInvestmentIDR`, bukan ke goal yang dibuat.
 
 ---
