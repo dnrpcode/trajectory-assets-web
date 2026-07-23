@@ -525,7 +525,13 @@
       "monthsLeft": "{{count}} bulan lagi",
       "projected": "Proyeksi di tenggat",
       "requiredMonthly": "Butuh per bulan",
-      "plannedMonthly": "rencana {{amount}}"
+      "howCalculated": "Lihat cara hitungnya",
+      "calc1": "Portofolio kamu sekarang {{current}}, diproyeksikan tumbuh {{rate}}%/tahun selama {{months}} bulan → menjadi ≈ {{result}}.",
+      "calc2": "Ditambah setoran rutin {{monthly}}/bulan selama {{months}} bulan (ikut tumbuh sejak disetor) → menambah ≈ {{result}}.",
+      "calcNoContribution": "Kamu belum mengisi setoran bulanan (Rp 0) — proyeksi ini murni dari pertumbuhan investasi yang sudah ada, tanpa tambahan setoran.",
+      "calc3": "Total proyeksi seluruh portofolio di bulan itu = {{portfolioFv}} + {{contributionFv}} = {{total}}.",
+      "calc4": "Karena {{earlier}} sudah \"dijatah\" untuk target berprioritas lebih awal, sisa untuk target ini = {{total}} − {{earlier}} = {{result}} — itulah \"Proyeksi di tenggat\".",
+      "calc5": "Supaya total portofolio tepat mencapai target kumulatif {{cumulative}} di {{date}}, dibutuhkan TOTAL setoran (gabungan semua target) ≈ {{required}}/bulan mulai sekarang."
     },
     "form": {
       "addTitle": "Tambah Target Finansial",
@@ -538,13 +544,11 @@
       "targetRequired": "Masukkan target dana",
       "targetDate": "Tanggal Target (opsional)",
       "targetDateHint": "Dipakai untuk menghitung proyeksi on track / tidak.",
-      "monthlyContribution": "Kontribusi Bulanan (opsional)",
-      "monthlyContributionPlaceholder": "2.500.000",
-      "monthlyContributionHint": "Rencana setoran rutin per bulan untuk target ini.",
       "description": "Catatan (opsional)",
       "descriptionPlaceholder": "cth. Target sebelum umur 40",
       "create": "Buat Target",
-      "saveChanges": "Simpan Perubahan"
+      "saveChanges": "Simpan Perubahan",
+      "monthlyContributionMoved": "Kontribusi bulanan sekarang jadi satu pengaturan global (bukan per target) — atur di bagian atas halaman Target Finansial, dipakai bersama untuk semua target."
     },
     "basisMulti": "Target diurutkan dari tenggat terdekat — nilai portofolio saat ini ({{value}}) dialokasikan berurutan (waterfall) dengan asumsi CAGR {{rate}}% per tahun, sehingga satu rupiah tidak dihitung dua kali.",
     "roadmap": {
@@ -567,6 +571,17 @@
       "focusNext": "Target dengan prioritas lebih awal sudah tertutup nilai portofolio — setoranmu sekarang efektif mengejar “{{name}}”.",
       "addContribution": "Tanpa setoran bulanan, sebagian target tidak akan terjangkau dari pertumbuhan portofolio saja. Isi rencana kontribusi bulanan di masing-masing target.",
       "deadlinePassed": "Tenggat “{{name}}” sudah lewat tapi belum tercapai — perbarui tanggalnya atau sesuaikan nominal targetnya."
+    },
+    "monthlyContribution": {
+      "label": "Setoran Bulanan Total",
+      "notSet": "Belum diisi"
+    },
+    "methodology": {
+      "toggle": "Cara kerja perhitungan",
+      "step1": "1) Semua target diurutkan dari tenggat terdekat (model waterfall). Nilai portofolio yang sama dipakai berurutan: target #1 \"diisi\" duluan, sisanya baru dihitung untuk target #2, dst — supaya satu rupiah tidak dihitung dua kali untuk dua target berbeda.",
+      "step2": "2) Untuk setiap target, sistem memproyeksikan nilai portofolio ke depan pakai rumus bunga majemuk bulanan: nilai sekarang × (1 + tingkat pertumbuhan bulanan) pangkat jumlah bulan, ditambah kontribusi bulanan yang juga ikut majemuk. Tingkat pertumbuhan yang dipakai saat ini: {{rate}}%/tahun (dari CAGR historis portofoliomu, sama seperti di halaman Simulasi CAGR).",
+      "step3": "3) Proyeksi itu dibandingkan dengan target kumulatif (target ini + semua target berprioritas lebih awal) untuk menentukan status On Track / Perlu Dikejar.",
+      "step4": "4) \"Butuh per bulan\" dihitung mundur dari rumus yang sama: berapa setoran bulanan TOTAL (gabungan semua target) yang membuat proyeksi itu tepat menyentuh target kumulatif di tanggal tenggat."
     }
   },
   "income": {
@@ -767,7 +782,7 @@
       "Kas (tabungan, deposito) tidak perlu update harga bulanan — sistem tidak menandainya sebagai stale.",
       "Aktifkan \"Konteks Portofolio untuk AI\" di Pengaturan agar Robo Advisor bisa menganalisis data aktualmu.",
       "Tambahkan minimal 2 saham ke watchlist Dividen & Kupon untuk melihat Roadmap Rotasi Dividen — urutan pindah saham berdasarkan pola dividen & harga historis.",
-      "Buat target di halaman Target Finansial dengan tanggal & kontribusi bulanan — sistem menghitung apakah portofoliomu on track dan berapa setoran bulanan yang dibutuhkan.",
+      "Isi Setoran Bulanan Total sekali di halaman Target Finansial (bukan per target) — sistem otomatis hitung status on track semua targetmu dan bisa jelaskan cara hitungnya langkah demi langkah lewat tombol \"Lihat cara hitungnya\".",
       "Cek tab Backtest Sinyal di detail koin sebelum percaya sinyal BUY/SELL — lihat win rate & avg return historisnya dulu, jangan langsung entry.",
       "Buat alert harga atau RSI di detail koin (ikon lonceng) supaya kamu tidak perlu mantengin app terus — notifikasi muncul otomatis selagi tab masih terbuka."
     ],
@@ -898,7 +913,7 @@
           },
           {
             "q": "Apa bedanya \"Butuh per bulan\" dengan kontribusi bulanan yang saya isi?",
-            "a": "Kontribusi bulanan adalah rencana setoranmu per target. \"Butuh per bulan\" adalah hitungan sistem: TOTAL setoran bulanan minimum (gabungan semua target) agar target kumulatif tercapai tepat di tenggatnya. Kalau angka kebutuhan jauh di atas total rencanamu, artinya perlu menambah setoran, memundurkan tenggat, atau menurunkan nominal target."
+            "a": "Kontribusi bulanan sekarang adalah SATU angka global yang kamu isi sekali di halaman Target Finansial (bukan per target lagi) — merepresentasikan setoran rutin ke satu portofolio bersama. \"Butuh per bulan\" di tiap kartu target adalah hitungan sistem: berapa TOTAL setoran bulanan (gabungan, bukan per target) yang dibutuhkan supaya target kumulatif target itu tercapai tepat di tenggatnya. Kalau angka kebutuhan jauh di atas yang kamu isi, artinya perlu menambah setoran, memundurkan tenggat, atau menurunkan nominal target. Klik \"Lihat cara hitungnya\" di tiap kartu target untuk lihat rincian perhitungan langkah demi langkah dengan angka aslimu."
           },
           {
             "q": "Kenapa target yang saya buat saat onboarding muncul di sini?",

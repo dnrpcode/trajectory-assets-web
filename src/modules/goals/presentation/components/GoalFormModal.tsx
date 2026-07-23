@@ -15,7 +15,6 @@ interface GoalFormValues {
   name: string;
   targetAmountIDR: number;
   targetDate?: string;
-  monthlyContributionIDR?: number;
   description?: string;
 }
 
@@ -51,7 +50,6 @@ export function GoalFormModal({ open, onClose, goal, onSubmit, submitting }: Goa
     name: z.string().min(1, t('goals.form.nameRequired')),
     targetAmountIDR: z.number({ error: t('goals.form.targetRequired') }).min(1, t('goals.form.targetRequired')),
     targetDate: z.string().optional(),
-    monthlyContributionIDR: z.number().optional(),
     description: z.string().optional(),
   });
 
@@ -65,7 +63,6 @@ export function GoalFormModal({ open, onClose, goal, onSubmit, submitting }: Goa
       name: goal?.name ?? '',
       targetAmountIDR: goal?.targetAmountIDR,
       targetDate: toDateInputValue(goal?.targetDate),
-      monthlyContributionIDR: goal?.monthlyContributionIDR,
       description: goal?.description ?? '',
     });
   }, [open, goal, reset]);
@@ -75,7 +72,6 @@ export function GoalFormModal({ open, onClose, goal, onSubmit, submitting }: Goa
       name: values.name.trim(),
       targetAmountIDR: values.targetAmountIDR,
       targetDate: values.targetDate || undefined,
-      monthlyContributionIDR: values.monthlyContributionIDR || undefined,
       description: values.description?.trim() || undefined,
     });
   });
@@ -131,27 +127,15 @@ export function GoalFormModal({ open, onClose, goal, onSubmit, submitting }: Goa
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{t('goals.form.targetDateHint')}</p>
         </div>
 
-        <Controller
-          name="monthlyContributionIDR"
-          control={control}
-          render={({ field }) => (
-            <NumericInput
-              label={t('goals.form.monthlyContribution')}
-              placeholder={t('goals.form.monthlyContributionPlaceholder')}
-              prefix="Rp"
-              hint={t('goals.form.monthlyContributionHint')}
-              value={field.value}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-            />
-          )}
-        />
-
         <Input
           label={t('goals.form.description')}
           placeholder={t('goals.form.descriptionPlaceholder')}
           {...register('description')}
         />
+
+        <p className="text-xs" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
+          {t('goals.form.monthlyContributionMoved')}
+        </p>
 
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="secondary" onClick={onClose}>

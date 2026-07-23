@@ -19,7 +19,7 @@ import { RiskProfile, InvestmentHorizon, AssetCategory } from '@/shared/types';
 const goalSchema = z.object({
   targetAmountIDR: z.coerce.number().min(1, 'Masukkan target'),
   targetDate: z.string().optional(),
-  monthlyContributionIDR: z.coerce.number().optional(),
+  monthlyInvestmentIDR: z.coerce.number().optional(),
 });
 
 type GoalValues = z.infer<typeof goalSchema>;
@@ -73,10 +73,10 @@ export function OnboardingPage() {
         displayName: authUser.displayName ?? authUser.email ?? '',
         riskProfile,
         investmentHorizon: horizon,
+        monthlyInvestmentIDR: goalData?.monthlyInvestmentIDR,
         goal: goalData?.targetAmountIDR ? {
           targetAmountIDR: goalData.targetAmountIDR,
           targetDate: goalData.targetDate,
-          monthlyContributionIDR: goalData.monthlyContributionIDR,
         } : undefined,
       });
 
@@ -90,6 +90,7 @@ export function OnboardingPage() {
         targetAllocation: getAllocationTarget(riskProfile, horizon),
         aiHistoryEnabled: false,
         onboardingComplete: true,
+        monthlyInvestmentIDR: goalData?.monthlyInvestmentIDR,
         createdAt: now,
         updatedAt: now,
       });
@@ -347,7 +348,7 @@ export function OnboardingPage() {
                   type="number"
                   prefix="Rp"
                   placeholder={t('onboarding.goalMonthlyPlaceholder')}
-                  {...register('monthlyContributionIDR')}
+                  {...register('monthlyInvestmentIDR')}
                 />
 
                 <div className="flex gap-3 pt-2">

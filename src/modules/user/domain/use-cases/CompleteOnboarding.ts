@@ -9,10 +9,10 @@ export interface OnboardingInput {
   displayName: string;
   riskProfile: RiskProfile;
   investmentHorizon: InvestmentHorizon;
+  monthlyInvestmentIDR?: number;
   goal?: {
     targetAmountIDR: number;
     targetDate?: string;
-    monthlyContributionIDR?: number;
   };
 }
 
@@ -39,6 +39,7 @@ export class CompleteOnboarding {
       investmentHorizon: input.investmentHorizon,
       targetAllocation,
       onboardingComplete: true,
+      monthlyInvestmentIDR: input.monthlyInvestmentIDR,
       updatedAt: now,
     });
 
@@ -47,7 +48,6 @@ export class CompleteOnboarding {
         userId: input.userId,
         targetAmountIDR: input.goal.targetAmountIDR,
         targetDate: input.goal.targetDate,
-        monthlyContributionIDR: input.goal.monthlyContributionIDR,
         createdAt: now,
         updatedAt: now,
       });

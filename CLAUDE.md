@@ -220,7 +220,9 @@ getActiveAssets, getAllAssets, deleteAsset
 
 // Goals
 getGoals, createGoal, updateGoal, deleteGoal
-buildGoalRoadmap   // pure — waterfall berprioritas tenggat: alokasi, proyeksi kumulatif, saran
+buildGoalRoadmap.execute(goals, currentValueIDR, cagrRatePct, totalMonthlyContributionIDR)
+  // pure — waterfall berprioritas tenggat: alokasi, proyeksi kumulatif, saran
+  // kontribusi bulanan = argumen ke-4, dari user.monthlyInvestmentIDR (bukan per-goal)
 
 // Dashboard
 portfolioRepository
@@ -380,6 +382,21 @@ Watchlist disimpan Firestore `dividendWatchlist/{ticker}` — document ID = tick
 `computeSectorConcentration()` di `src/shared/utils/portfolioProjections.ts` — agregasi nilai saham aktif per sektor IDX-IC pakai lookup statis `IDX_SECTORS` (`src/shared/constants/idxSectors.ts`, ~90 ticker paling likuid, bukan API — lihat catatan di atas kenapa). Ticker di luar dataset masuk bucket `unclassified`, bukan error. `isConcentrated: true` kalau sektor terbesar > 40% dari total nilai saham. Ditampilkan via `SectorConcentrationChart` di `DashboardPage`.
 
 Kalau perlu tambah ticker baru ke dataset, edit `IDX_SECTORS` langsung — jangan bikin call API baru ke Yahoo untuk ini.
+
+---
+
+## Goals Module (src/modules/goals/)
+
+**Kontribusi bulanan adalah SATU angka global, bukan per-goal.** Disimpan di `User.monthlyInvestmentIDR` (bukan di `Goal` entity — field `Goal.monthlyContributionIDR` sudah dihapus). Diisi lewat `MonthlyContributionInput` di `GoalsPage`, ditulis via `updateUserProfile.execute(userId, { monthlyInvestmentIDR })` + `setUser()` (pola yang sama dipakai `ChatPage` untuk update `targetAllocation`).
+
+```ts
+buildGoalRoadmap.execute(goals, currentValueIDR, cagrRatePct, totalMonthlyContributionIDR)
+```
+4 argumen — jangan lupa argumen ke-4 (dulu dihitung dari `sum(goal.monthlyContributionIDR)`, sekarang harus di-pass eksplisit dari `user?.monthlyInvestmentIDR ?? 0`).
+
+`GoalProgress.calculation` (tipe `GoalCalculationDetail`, null kalau goal tanpa `targetDate`) menyimpan pecahan angka mentah di balik "Proyeksi di tenggat" dan "Butuh per bulan" — `currentPortfolioValueIDR`, `growthFactor`, `portfolioFutureValueIDR`, `contributionFutureValueIDR`, `allocatedToEarlierGoalsIDR`, dll. Dipakai `GoalCard`'s expandable "Lihat cara hitungnya" untuk narasi langkah-demi-langkah dengan angka asli goal itu — supaya user (dan developer) benar-benar paham cara hitungnya, bukan cuma lihat hasil akhir. Kalau ubah formula di `BuildGoalRoadmap`, field `calculation` WAJIB ikut di-update supaya narasi UI tidak menyimpang dari hasil sebenarnya.
+
+Onboarding (`CompleteOnboarding`, step 3 `OnboardingPage`) juga sudah dipindah — field "Kontribusi Bulanan" di form onboarding sekarang menulis ke `user.monthlyInvestmentIDR`, bukan ke goal yang dibuat.
 
 ---
 

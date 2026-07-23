@@ -4,10 +4,37 @@ export interface Goal {
   name?: string;
   targetAmountIDR: number;
   targetDate?: Date;
-  monthlyContributionIDR?: number;
   description?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * Rincian angka mentah di balik proyeksi/kebutuhan setoran satu goal —
+ * dipakai UI untuk menjelaskan cara hitungnya langkah demi langkah, bukan
+ * cuma menampilkan hasil akhir. null kalau goal tidak punya targetDate
+ * (tidak ada proyeksi tanpa tenggat).
+ */
+export interface GoalCalculationDetail {
+  /** Nilai total portofolio saat ini (dipakai bersama oleh semua goal) */
+  currentPortfolioValueIDR: number;
+  /** Bagian portofolio yang "dijatah" ke goal-goal berprioritas lebih awal */
+  allocatedToEarlierGoalsIDR: number;
+  annualCagrPct: number;
+  monthlyRatePct: number;
+  monthsRemaining: number;
+  /** (1+monthlyRate)^monthsRemaining */
+  growthFactor: number;
+  /** Total setoran bulanan gabungan (satu angka untuk semua goal) */
+  totalMonthlyContributionIDR: number;
+  /** Proyeksi SELURUH portofolio (bukan cuma goal ini) tumbuh dari modal saat ini */
+  portfolioFutureValueIDR: number;
+  /** Proyeksi tambahan dari setoran bulanan majemuk selama monthsRemaining */
+  contributionFutureValueIDR: number;
+  /** portfolioFutureValueIDR + contributionFutureValueIDR */
+  totalFutureValueIDR: number;
+  /** Target goal ini + semua goal berprioritas lebih awal */
+  cumulativeTargetIDR: number;
 }
 
 export interface GoalProgress {
@@ -29,6 +56,8 @@ export interface GoalProgress {
   onTrack: boolean | null;
   /** Total setoran bulanan yang dibutuhkan agar target kumulatif goal ini tercapai di tenggat */
   requiredMonthlyIDR: number | null;
+  /** Rincian angka mentah untuk panel "cara hitungnya" — null kalau goal tidak punya targetDate */
+  calculation: GoalCalculationDetail | null;
 }
 
 export type RoadmapAdviceType =

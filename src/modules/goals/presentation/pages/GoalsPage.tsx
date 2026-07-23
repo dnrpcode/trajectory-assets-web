@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Target, Plus, Info } from 'lucide-react';
+import { Target, Plus, Info, ChevronDown } from 'lucide-react';
 import { Layout } from '@/shared/ui/Layout';
 import { Card } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
@@ -18,6 +18,7 @@ import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal, type GoalFormInp
 import { GoalCard } from '../components/GoalCard';
 import { GoalFormModal } from '../components/GoalFormModal';
 import { GoalRoadmapSection } from '../components/GoalRoadmapSection';
+import { MonthlyContributionInput } from '../components/MonthlyContributionInput';
 
 export function GoalsPage() {
   const { t } = useTranslation();
@@ -31,6 +32,7 @@ export function GoalsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [deletingGoal, setDeletingGoal] = useState<Goal | null>(null);
+  const [methodologyOpen, setMethodologyOpen] = useState(false);
 
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
@@ -39,10 +41,11 @@ export function GoalsPage() {
   const currentValue = summary?.totalValueIDR ?? 0;
   const riskProfile: RiskProfile = user?.riskProfile ?? 'moderate';
   const { rate: cagrRate } = computeSmartCAGR(history, summary?.allocationActual, riskProfile);
+  const monthlyContribution = user?.monthlyInvestmentIDR ?? 0;
 
   const roadmap = useMemo(
-    () => buildGoalRoadmap.execute(goals, currentValue, cagrRate),
-    [goals, currentValue, cagrRate],
+    () => buildGoalRoadmap.execute(goals, currentValue, cagrRate, monthlyContribution),
+    [goals, currentValue, cagrRate, monthlyContribution],
   );
   const isMulti = roadmap.items.length > 1;
 
@@ -92,16 +95,48 @@ export function GoalsPage() {
         </Button>
       </div>
 
+      {goals.length > 0 && (
+        <div className="mb-6" style={{ maxWidth: 380 }}>
+          <MonthlyContributionInput />
+        </div>
+      )}
+
       {/* Basis perhitungan */}
       {goals.length > 0 && (
         <div
-          className="flex items-center gap-2.5 rounded-xl px-4 py-3 mb-6"
+          className="rounded-xl px-4 py-3 mb-6"
           style={{ background: 'var(--blue-tint)', border: '1px solid var(--border-subtle)' }}
         >
-          <Info size={14} style={{ color: 'var(--blue-400)', flexShrink: 0 }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
-            {t(isMulti ? 'goals.basisMulti' : 'goals.basis', { value: formatCurrency(currentValue), rate: cagrRate })}
-          </p>
+          <div className="flex items-center gap-2.5">
+            <Info size={14} style={{ color: 'var(--blue-400)', flexShrink: 0 }} />
+            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)', flex: 1 }}>
+              {t(isMulti ? 'goals.basisMulti' : 'goals.basis', { value: formatCurrency(currentValue), rate: cagrRate })}
+            </p>
+            <button
+              onClick={() => setMethodologyOpen((v) => !v)}
+              className="flex items-center gap-1 flex-shrink-0"
+              style={{ color: 'var(--blue-400)', fontSize: 'var(--text-xs)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              {t('goals.methodology.toggle')}
+              <ChevronDown size={12} style={{ transform: methodologyOpen ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }} />
+            </button>
+          </div>
+          {methodologyOpen && (
+            <div className="mt-3 pt-3 space-y-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)', lineHeight: 1.6 }}>
+                {t('goals.methodology.step1')}
+              </p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)', lineHeight: 1.6 }}>
+                {t('goals.methodology.step2', { rate: cagrRate })}
+              </p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)', lineHeight: 1.6 }}>
+                {t('goals.methodology.step3')}
+              </p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)', lineHeight: 1.6 }}>
+                {t('goals.methodology.step4')}
+              </p>
+            </div>
+          )}
         </div>
       )}
 

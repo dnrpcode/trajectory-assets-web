@@ -6,7 +6,6 @@ export interface CreateGoalInput {
   targetAmountIDR: number;
   /** "YYYY-MM-DD" */
   targetDate?: string;
-  monthlyContributionIDR?: number;
   description?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -21,7 +20,6 @@ export interface UpdateGoalInput {
   targetAmountIDR: number;
   /** "YYYY-MM-DD" */
   targetDate?: string;
-  monthlyContributionIDR?: number;
   description?: string;
 }
 

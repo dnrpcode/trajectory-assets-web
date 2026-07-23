@@ -10,6 +10,8 @@ export interface User {
   targetAllocation: AllocationTarget;
   aiHistoryEnabled: boolean;
   onboardingComplete: boolean;
+  /** Setoran investasi rutin bulanan (IDR) — satu angka global, dipakai bersama oleh semua Target Finansial */
+  monthlyInvestmentIDR?: number;
   createdAt: Date;
   updatedAt: Date;
 }

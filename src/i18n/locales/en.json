@@ -525,7 +525,13 @@
       "monthsLeft": "{{count}} months left",
       "projected": "Projected at deadline",
       "requiredMonthly": "Required per month",
-      "plannedMonthly": "planned {{amount}}"
+      "howCalculated": "See how this is calculated",
+      "calc1": "Your portfolio is currently {{current}}, projected to grow {{rate}}%/year over {{months}} months → becomes ≈ {{result}}.",
+      "calc2": "Plus a recurring {{monthly}}/month contribution over {{months}} months (compounding from the day it's deposited) → adds ≈ {{result}}.",
+      "calcNoContribution": "You haven't set a monthly contribution (Rp 0) — this projection is purely from the growth of your existing investment, with no added contribution.",
+      "calc3": "Total projected portfolio value at that month = {{portfolioFv}} + {{contributionFv}} = {{total}}.",
+      "calc4": "Since {{earlier}} is already \"earmarked\" for earlier-priority goals, what's left for this goal = {{total}} − {{earlier}} = {{result}} — that's the \"Projected at deadline\" figure.",
+      "calc5": "For the total portfolio to exactly reach the cumulative target of {{cumulative}} by {{date}}, you need a TOTAL contribution (combined across all goals) of ≈ {{required}}/month starting now."
     },
     "form": {
       "addTitle": "Add Financial Goal",
@@ -538,13 +544,11 @@
       "targetRequired": "Enter a target amount",
       "targetDate": "Target Date (optional)",
       "targetDateHint": "Used to project whether you are on track.",
-      "monthlyContribution": "Monthly Contribution (optional)",
-      "monthlyContributionPlaceholder": "2.500.000",
-      "monthlyContributionHint": "Planned recurring monthly deposit for this goal.",
       "description": "Notes (optional)",
       "descriptionPlaceholder": "e.g. Target before turning 40",
       "create": "Create Goal",
-      "saveChanges": "Save Changes"
+      "saveChanges": "Save Changes",
+      "monthlyContributionMoved": "Monthly contribution is now a single global setting (not per goal) — set it at the top of the Financial Goals page, shared across all goals."
     },
     "basisMulti": "Goals are ordered by nearest deadline — your current portfolio value ({{value}}) is allocated sequentially (waterfall) assuming {{rate}}% CAGR per year, so no rupiah is counted twice.",
     "roadmap": {
@@ -567,6 +571,17 @@
       "focusNext": "Earlier goals are already covered by your portfolio value — your contributions are now effectively working toward “{{name}}”.",
       "addContribution": "Without monthly contributions, some goals will stay out of reach from portfolio growth alone. Set a planned monthly contribution on each goal.",
       "deadlinePassed": "The deadline for “{{name}}” has passed without being reached — update its date or adjust the target amount."
+    },
+    "monthlyContribution": {
+      "label": "Total Monthly Contribution",
+      "notSet": "Not set"
+    },
+    "methodology": {
+      "toggle": "How the math works",
+      "step1": "1) All goals are ordered by nearest deadline (a waterfall model). The same portfolio value is used sequentially: goal #1 gets \"filled\" first, the remainder is then counted toward goal #2, and so on — so a single rupiah is never counted twice for two different goals.",
+      "step2": "2) For each goal, the system projects the portfolio value forward using monthly compound interest: current value × (1 + monthly growth rate) raised to the number of months, plus the monthly contribution which also compounds. The growth rate currently used: {{rate}}%/year (from your portfolio's historical CAGR, same as the CAGR Simulator page).",
+      "step3": "3) That projection is compared against the cumulative target (this goal plus every earlier-priority goal) to determine the On Track / Falling Behind status.",
+      "step4": "4) \"Required per month\" is worked out backward from the same formula: the TOTAL monthly contribution (combined across all goals) that makes the projection land exactly on the cumulative target by the deadline."
     }
   },
   "income": {
@@ -767,7 +782,7 @@
       "Cash assets (savings, deposits) don't need monthly price updates — the system never marks them stale.",
       "Turn on \"Portfolio Context for AI\" in Settings so the Robo Advisor can analyze your actual data.",
       "Add at least 2 stocks to your Dividends & Coupons watchlist to see the Dividend Rotation Roadmap — a suggested rotation order based on historical dividend and price patterns.",
-      "Create a goal on the Financial Goals page with a date & monthly contribution — the system calculates whether your portfolio is on track and how much you need to contribute per month.",
+      "Set your Total Monthly Contribution once on the Financial Goals page (not per goal) — the system automatically calculates the on-track status for all your goals and can explain the math step by step via the \"See how this is calculated\" button.",
       "Check the Signal Backtest tab on a coin's detail page before trusting a BUY/SELL signal — see its historical win rate & avg return first, don't enter blind.",
       "Create a price or RSI alert on a coin's detail page (bell icon) so you don't have to keep watching the app — notifications fire automatically while the tab is open."
     ],
@@ -898,7 +913,7 @@
           },
           {
             "q": "What's the difference between \"Required per month\" and the monthly contribution I entered?",
-            "a": "The monthly contribution is your planned deposit for that goal. \"Required per month\" is the system's calculation: the minimum TOTAL monthly deposit (across all goals combined) needed to hit the cumulative target exactly by its deadline. If the required figure is well above your planned total, you'll need to contribute more, push back the deadline, or lower the target amount."
+            "a": "Monthly contribution is now a SINGLE global figure you set once on the Financial Goals page (no longer per goal) — representing a recurring deposit into one shared portfolio. \"Required per month\" on each goal card is the system's calculation: the TOTAL monthly contribution (combined, not per goal) needed for that goal's cumulative target to be reached exactly by its deadline. If the required figure is well above what you've set, you'll need to contribute more, push back the deadline, or lower the target amount. Click \"See how this is calculated\" on any goal card for a step-by-step breakdown using your actual numbers."
           },
           {
             "q": "Why does the goal I set during onboarding show up here?",

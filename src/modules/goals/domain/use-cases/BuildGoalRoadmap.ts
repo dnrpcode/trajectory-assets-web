@@ -1,4 +1,4 @@
-import type { Goal, GoalProgress, GoalRoadmap, GoalRoadmapItem, RoadmapAdvice } from '../entities/Goal';
+import type { Goal, GoalProgress, GoalRoadmap, GoalRoadmapItem, RoadmapAdvice, GoalCalculationDetail } from '../entities/Goal';
 
 const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30.44;
 const MAX_HORIZON_MONTHS = 600; // 50 tahun — di atas ini dianggap tidak terjangkau
@@ -10,11 +10,16 @@ const MAX_HORIZON_MONTHS = 600; // 50 tahun — di atas ini dianggap tidak terja
  * KUMULATIF (target dia + semua goal sebelumnya) supaya satu rupiah tidak
  * dihitung dua kali.
  *
+ * Setoran bulanan adalah SATU angka global (diisi user sekali, bukan per
+ * goal) — merepresentasikan kontribusi rutin ke satu portofolio bersama,
+ * bukan pot dana terpisah per goal.
+ *
  * Proyeksi memakai compound bulanan: FV(n) = V·(1+r)^n + C·((1+r)^n − 1)/r
- * dengan C = TOTAL kontribusi bulanan seluruh goal (satu portofolio bersama).
+ * dengan V = nilai portofolio saat ini, C = setoran bulanan global, dan
+ * r = CAGR tahunan dikonversi ke rate bulanan.
  */
 export class BuildGoalRoadmap {
-  execute(goals: Goal[], currentValueIDR: number, cagrRatePct: number): GoalRoadmap {
+  execute(goals: Goal[], currentValueIDR: number, cagrRatePct: number, totalMonthlyContributionIDR: number): GoalRoadmap {
     const sorted = [...goals].sort((a, b) => {
       if (a.targetDate && b.targetDate) return a.targetDate.getTime() - b.targetDate.getTime();
       if (a.targetDate) return -1;
@@ -22,7 +27,7 @@ export class BuildGoalRoadmap {
       return a.createdAt.getTime() - b.createdAt.getTime();
     });
 
-    const totalMonthly = sorted.reduce((s, g) => s + (g.monthlyContributionIDR ?? 0), 0);
+    const totalMonthly = totalMonthlyContributionIDR;
     const monthlyRate = Math.pow(1 + cagrRatePct / 100, 1 / 12) - 1;
     const annuity = (n: number) => (monthlyRate > 0 ? (Math.pow(1 + monthlyRate, n) - 1) / monthlyRate : n);
     const futureValue = (n: number) => currentValueIDR * Math.pow(1 + monthlyRate, n) + totalMonthly * annuity(n);
@@ -52,21 +57,39 @@ export class BuildGoalRoadmap {
       let projectedValueIDR: number | null = null;
       let onTrack: boolean | null = null;
       let requiredMonthlyIDR: number | null = null;
+      let calculation: GoalCalculationDetail | null = null;
 
       if (goal.targetDate) {
         monthsRemaining = Math.max(0, Math.round((goal.targetDate.getTime() - Date.now()) / MS_PER_MONTH));
-        const fvAtDeadline = futureValue(monthsRemaining);
-        projectedValueIDR = Math.max(0, Math.round(fvAtDeadline - cumBefore));
-        onTrack = fvAtDeadline >= cumulativeTarget;
+        const growthFactor = Math.pow(1 + monthlyRate, monthsRemaining);
+        const portfolioFutureValueIDR = currentValueIDR * growthFactor;
+        const contributionFutureValueIDR = totalMonthly * annuity(monthsRemaining);
+        const totalFutureValueIDR = portfolioFutureValueIDR + contributionFutureValueIDR;
+
+        projectedValueIDR = Math.max(0, Math.round(totalFutureValueIDR - cumBefore));
+        onTrack = totalFutureValueIDR >= cumulativeTarget;
 
         if (achieved) {
           requiredMonthlyIDR = 0;
         } else if (monthsRemaining >= 1) {
-          const growth = Math.pow(1 + monthlyRate, monthsRemaining);
-          const required = (cumulativeTarget - currentValueIDR * growth) / annuity(monthsRemaining);
+          const required = (cumulativeTarget - portfolioFutureValueIDR) / annuity(monthsRemaining);
           requiredMonthlyIDR = Math.max(0, Math.round(required));
         }
         // monthsRemaining === 0 && !achieved → tenggat lewat, required tak terdefinisi (null)
+
+        calculation = {
+          currentPortfolioValueIDR: currentValueIDR,
+          allocatedToEarlierGoalsIDR: cumBefore,
+          annualCagrPct: cagrRatePct,
+          monthlyRatePct: monthlyRate * 100,
+          monthsRemaining,
+          growthFactor,
+          totalMonthlyContributionIDR: totalMonthly,
+          portfolioFutureValueIDR: Math.round(portfolioFutureValueIDR),
+          contributionFutureValueIDR: Math.round(contributionFutureValueIDR),
+          totalFutureValueIDR: Math.round(totalFutureValueIDR),
+          cumulativeTargetIDR: cumulativeTarget,
+        };
       }
 
       const estimatedMonths = achieved ? 0 : monthsToReach(cumulativeTarget);
@@ -75,7 +98,7 @@ export class BuildGoalRoadmap {
 
       const progress: GoalProgress = {
         goal, allocatedIDR, progressPct, remainingIDR, achieved,
-        monthsRemaining, projectedValueIDR, onTrack, requiredMonthlyIDR,
+        monthsRemaining, projectedValueIDR, onTrack, requiredMonthlyIDR, calculation,
       };
       items.push({ progress, order: i + 1, cumulativeTargetIDR: cumulativeTarget, estimatedMonths, estimatedDate, slackMonths });
     }
